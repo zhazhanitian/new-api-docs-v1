@@ -1,0 +1,11 @@
+services:
+  docs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: new-api-docs
+    restart: always
+    ports:
+      - "9010:3000"
+    env_file:
+      - .env.local
