@@ -1,0 +1,145 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "提交异步图像生成任务",
+    "version": "1.0.0",
+    "description": "提交图像生成任务，返回任务 ID，可通过 GET 接口轮询任务状态和结果。\n\n适用于生成时间较长（通常 30 秒以上）的图像模型，推荐用于生产环境。\n"
+  },
+  "tags": [
+    {
+      "name": "图像（Images）/异步图像任务"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "使用 Bearer Token 认证。\n格式: `Authorization: Bearer sk-xxxxxx`\n"
+      }
+    }
+  },
+  "paths": {
+    "/v1/image-tasks/submit": {
+      "post": {
+        "tags": [
+          "图像（Images）/异步图像任务"
+        ],
+        "summary": "提交异步图像生成任务",
+        "description": "提交图像生成任务，返回任务 ID，可通过 GET 接口轮询任务状态和结果。\n\n适用于生成时间较长（通常 30 秒以上）的图像模型，推荐用于生产环境。\n",
+        "operationId": "submitImageTask",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "图像生成任务请求",
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "description": "模型名称",
+                    "examples": ["gpt-image-2"]
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "description": "图像描述提示词",
+                    "examples": ["一只橙色的猫坐在窗台上，背景是城市夜景"]
+                  },
+                  "size": {
+                    "type": "string",
+                    "description": "图像尺寸，格式为 `宽x高`，例如 `1024x1024`、`1024x1536`、`1536x1024`",
+                    "examples": ["1024x1024"]
+                  },
+                  "quality": {
+                    "type": "string",
+                    "description": "图像质量。`standard`（标准质量）或 `hd`（高清质量）。默认 `standard`。部分模型支持。",
+                    "examples": ["standard"]
+                  },
+                  "n": {
+                    "type": "integer",
+                    "description": "生成图像数量。默认 1。部分模型支持多张，不支持时忽略。",
+                    "examples": [1]
+                  },
+                  "style": {
+                    "type": "string",
+                    "description": "图像风格，如 `vivid`、`natural`。部分模型支持。",
+                    "examples": ["vivid"]
+                  },
+                  "output_format": {
+                    "type": "string",
+                    "description": "输出图像格式。支持 `png`（默认）、`jpeg`、`webp`。部分模型支持。",
+                    "examples": ["png"]
+                  },
+                  "output_compression": {
+                    "type": "integer",
+                    "description": "输出图像压缩质量（0-100），仅在 `output_format` 为 `jpeg` 或 `webp` 时有效。部分模型支持。",
+                    "examples": [85]
+                  },
+                  "metadata": {
+                    "type": "object",
+                    "description": "模型扩展参数，部分参数仅特定模型支持，不支持的字段将被忽略。",
+                    "properties": {
+                      "negative_prompt": {
+                        "type": "string",
+                        "description": "反向提示词，描述不希望在图像中出现的元素。部分模型支持。"
+                      },
+                      "seed": {
+                        "type": "integer",
+                        "description": "随机种子，用于控制生成结果的可复现性。部分模型支持。"
+                      }
+                    }
+                  }
+                },
+                "required": ["model", "prompt"],
+                "x-apifox-orders": ["model", "prompt", "size", "quality", "n", "style", "output_format", "output_compression", "metadata"]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "任务提交成功，返回任务信息",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "系统内部任务 ID（用于查询状态）"
+                    },
+                    "task_id": {
+                      "type": "string",
+                      "description": "同 `id`，兼容字段"
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "任务状态：`QUEUED`（排队中）、`IN_PROGRESS`（处理中）、`SUCCESS`（成功）、`FAILURE`（失败）"
+                    },
+                    "model": {
+                      "type": "string",
+                      "description": "使用的模型名称"
+                    },
+                    "created_at": {
+                      "type": "integer",
+                      "description": "任务创建时间（Unix 时间戳）"
+                    }
+                  },
+                  "required": ["id", "status"],
+                  "x-apifox-orders": ["id", "task_id", "status", "model", "created_at"]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

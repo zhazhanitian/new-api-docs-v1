@@ -37,7 +37,7 @@
                 "properties": {
                   "model": {
                     "type": "string",
-                    "description": "用于图像生成的模型。`dall-e-2`、`dall-e-3` 或 `gpt-image-1` 之一。默认为 `dall-e-2`，除非使用特定于 `gpt-image-1` 的参数。"
+                    "description": "用于图像生成的模型。`dall-e-2`、`dall-e-3`、`gpt-image-1` 或 `gpt-image-2` 之一。默认为 `dall-e-2`，除非使用特定于 `gpt-image-1`/`gpt-image-2` 的参数。"
                   },
                   "prompt": {
                     "type": "string",
@@ -71,6 +71,28 @@
                   },
                   "user": {
                     "type": "string"
+                  },
+                  "output_format": {
+                    "type": "string",
+                    "description": "生成图像的输出格式。支持 `png`（默认）、`jpeg`、`webp`。"
+                  },
+                  "output_compression": {
+                    "type": "integer",
+                    "description": "输出图像的压缩质量（0-100），仅在 `output_format` 为 `jpeg` 或 `webp` 时有效。"
+                  },
+                  "extra_fields": {
+                    "type": "object",
+                    "description": "模型扩展参数，部分参数仅特定模型支持，不支持的字段将被忽略。",
+                    "properties": {
+                      "negative_prompt": {
+                        "type": "string",
+                        "description": "反向提示词，描述不希望在图像中出现的元素。部分模型支持。"
+                      },
+                      "seed": {
+                        "type": "integer",
+                        "description": "随机种子，用于控制生成结果的可复现性。部分模型支持。"
+                      }
+                    }
                   }
                 },
                 "required": [
@@ -84,6 +106,9 @@
                   "background",
                   "moderation",
                   "quality",
+                  "output_format",
+                  "output_compression",
+                  "extra_fields",
                   "stream",
                   "style",
                   "user"

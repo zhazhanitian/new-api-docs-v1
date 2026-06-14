@@ -1,0 +1,114 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "查询图像生成任务状态",
+    "version": "1.0.0",
+    "description": "通过任务 ID 查询图像生成任务的当前状态和结果。\n\n建议轮询间隔：3–5 秒。任务通常在 30–90 秒内完成。\n"
+  },
+  "tags": [
+    {
+      "name": "图像（Images）/异步图像任务"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "使用 Bearer Token 认证。\n格式: `Authorization: Bearer sk-xxxxxx`\n"
+      }
+    }
+  },
+  "paths": {
+    "/v1/image-tasks/{task_id}": {
+      "get": {
+        "tags": [
+          "图像（Images）/异步图像任务"
+        ],
+        "summary": "查询图像生成任务状态",
+        "description": "通过任务 ID 查询图像生成任务的当前状态和结果。\n\n建议轮询间隔：3–5 秒。任务通常在 30–90 秒内完成。\n",
+        "operationId": "getImageTask",
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "description": "任务 ID（由提交接口返回的 `id` 字段）",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "任务详情",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "任务 ID"
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "任务状态：\n- `QUEUED` — 排队中\n- `IN_PROGRESS` — 处理中\n- `SUCCESS` — 已完成\n- `FAILURE` — 失败\n"
+                    },
+                    "progress": {
+                      "type": "string",
+                      "description": "处理进度，例如 `50%`、`100%`"
+                    },
+                    "model": {
+                      "type": "string",
+                      "description": "使用的模型名称"
+                    },
+                    "created_at": {
+                      "type": "integer",
+                      "description": "任务创建时间（Unix 时间戳）"
+                    },
+                    "completed_at": {
+                      "type": "integer",
+                      "description": "任务完成时间（Unix 时间戳），任务未完成时为空"
+                    },
+                    "output": {
+                      "type": "object",
+                      "description": "任务输出（仅 `status=SUCCESS` 时存在）",
+                      "properties": {
+                        "url": {
+                          "type": "string",
+                          "description": "生成图像的 URL"
+                        }
+                      }
+                    },
+                    "error": {
+                      "type": "object",
+                      "description": "错误信息（仅 `status=FAILURE` 时存在）",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "description": "错误码"
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "错误描述"
+                        }
+                      }
+                    }
+                  },
+                  "required": ["id", "status"],
+                  "x-apifox-orders": ["id", "status", "progress", "model", "created_at", "completed_at", "output", "error"]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
