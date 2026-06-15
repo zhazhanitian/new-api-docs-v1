@@ -1,7 +1,7 @@
 import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
 import { i18n } from '@/lib/i18n';
 import Image from 'next/image';
-import type { LinkItemType } from 'fumadocs-ui/layouts/docs';
+import type { LinkItemType } from 'fumadocs-ui/layouts/shared';
 
 export const linkItems: LinkItemType[] = [
   {
