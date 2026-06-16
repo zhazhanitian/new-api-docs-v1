@@ -20,6 +20,16 @@ Build the application for production:
 
 ```bash
 bun run build
+
+# 拉取代码后首次部署
+bun install
+bun run build
+pm2 start ecosystem.config.js
+pm2 save && pm2 startup
+
+# 后续更新
+git pull && bun install && bun run build && pm2 restart new-api-docs
+```全部完成，没有更多内容了。完成了。完成了。
 ```
 
 ## Project Structure

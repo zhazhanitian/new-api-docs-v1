@@ -75,7 +75,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       }
       pagesBySlug.get(slugKey)!.push({ lang, page });
 
-      const lm = toDate((page.data as any).lastModified);
+      const lm = toDate(page.data.lastModified);
       if (lm) {
         const prev = latestModifiedByLang.get(lang);
         if (!prev || lm.getTime() > prev.getTime()) {
@@ -101,7 +101,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
     for (const { lang, page } of langPages) {
       // Each language version should use its own lastModified.
-      const lastModified = toDate((page.data as any).lastModified);
+      const lastModified = toDate(page.data.lastModified);
 
       // Determine priority based on page depth
       const depth = page.slugs.length;
