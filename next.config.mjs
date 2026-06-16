@@ -1,4 +1,8 @@
 import { createMDX } from 'fumadocs-mdx/next';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const withMDX = createMDX();
 
@@ -6,6 +10,10 @@ const withMDX = createMDX();
 const config = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // Fix Turbopack workspace root detection when multiple lockfiles exist
+  turbopack: {
+    root: __dirname,
+  },
   experimental: {
     serverActions: {
       allowedOrigins: [
