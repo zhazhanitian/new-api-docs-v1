@@ -37,19 +37,34 @@
                 "properties": {
                   "model": {
                     "type": "string",
-                    "description": "用于图像生成的模型。`dall-e-2`、`dall-e-3`、`gpt-image-1` 或 `gpt-image-2` 之一。默认为 `dall-e-2`，除非使用特定于 `gpt-image-1`/`gpt-image-2` 的参数。"
+                    "description": "用于图像生成的模型。`dall-e-2`、`dall-e-3`、`gpt-image-1` 或 `gpt-image-2` 之一。默认为 `dall-e-2`，除非使用特定于 `gpt-image-1`/`gpt-image-2` 的参数。也支持豆包 Seedream 系列如 `doubao-seedream-4-5-251128`、`doubao-seedream-5-0-260128`。"
                   },
                   "prompt": {
                     "type": "string",
-                    "description": "所需图像的文本描述。`gpt-image-1` 的最大长度为 32000 个字符，`dall-e-2` 的最大长度为 1000 个字符，`dall-e-3` 的最大长度为 4000 个字符。"
+                    "description": "所需图像的文本描述。`gpt-image-1` 的最大长度为 32000 个字符，`dall-e-2` 的最大长度为 1000 个字符，`dall-e-3` 的最大长度为 4000 个字符。豆包 Seedream 系列建议不超过 300 汉字或 600 英文单词。"
+                  },
+                  "image": {
+                    "oneOf": [
+                      { "type": "string" },
+                      { "type": "array", "items": { "type": "string" } }
+                    ],
+                    "description": "图生图 / 多图融合的输入图片，支持图片 URL 或 Base64 编码字符串。可传单张（string）或多张（string[]，最多 14 张）。豆包 Seedream 系列支持。"
                   },
                   "n": {
                     "type": "integer",
-                    "description": "要生成的图像数量。必须介于 1 到 10 之间。对于 `dall-e-3`，仅支持 `n=1`。"
+                    "description": "要生成的图像数量。必须介于 1 到 10 之间。对于 `dall-e-3`，仅支持 `n=1`。豆包 Seedream 系列支持 1-15，传入 n>1 时后端自动转换为组图生成模式。"
                   },
                   "size": {
                     "type": "string",
-                    "description": "生成的图像的大小。`对于 gpt-image-1`，必须是 `1024x1024`、`1536x1024`（横向）、`1024x1536`（纵向）或`自动`（默认值）之一，`对于 dall-e-2`，必须是 `256x256、``512x512` 或 `1024x1024` 之一，对于 `dall-e-3`，必须是 `1024x1024`、`1792x1024` 或 `1024x1792` 之一。"
+                    "description": "生成的图像的大小。对于 `gpt-image-1`，必须是 `1024x1024`、`1536x1024`（横向）、`1024x1536`（纵向）或 `auto`（默认值）之一；对于 `dall-e-2`，必须是 `256x256`、`512x512` 或 `1024x1024` 之一；对于 `dall-e-3`，必须是 `1024x1024`、`1792x1024` 或 `1024x1792` 之一。豆包 Seedream 系列支持 `2K`、`4K` 或指定像素值如 `2048x2048`。"
+                  },
+                  "response_format": {
+                    "type": "string",
+                    "description": "返回格式。`url`（默认，返回图片下载链接，24小时有效）或 `b64_json`（返回 Base64 编码字符串）。"
+                  },
+                  "watermark": {
+                    "type": "boolean",
+                    "description": "是否在生成的图片上添加水印。豆包 Seedream 系列支持，默认 `false`。"
                   },
                   "background": {
                     "type": "string",
@@ -91,6 +106,10 @@
                       "seed": {
                         "type": "integer",
                         "description": "随机种子，用于控制生成结果的可复现性。部分模型支持。"
+                      },
+                      "guidance_scale": {
+                        "type": "number",
+                        "description": "引导强度，控制生成图与提示词的贴合程度。豆包 Seedream 系列支持，推荐取值范围 1-5。"
                       }
                     }
                   }
@@ -101,8 +120,11 @@
                 "x-apifox-orders": [
                   "model",
                   "prompt",
+                  "image",
                   "n",
                   "size",
+                  "response_format",
+                  "watermark",
                   "background",
                   "moderation",
                   "quality",
