@@ -1,0 +1,189 @@
+---
+title: 素材组接口
+description: 人像库素材组的创建、查询与更新接口。
+---
+
+## 创建素材组
+
+在平台侧创建素材组，并为**当前用户**落库一条映射记录。
+
+| 项 | 值 |
+|----|-----|
+| **Method** | `POST` |
+| **Path** | `/v1/portrait/groups` |
+| **认证** | 需要 `Authorization` |
+
+### 请求体（JSON）
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `name` | string | **是** | 素材组名称，见下方命名规范 |
+| `description` | string | 否 | 素材组描述 |
+| `group_type` | string | 否 | 素材组类型；**不传时默认 `AIGC`** |
+
+<Callout type="warn" title="素材组命名规范">
+- 必须以 `group-` 开头
+- 只允许使用**英文字母**、**数字**和**连字符 `-`**
+- 不允许中文、空格或其他特殊符号
+
+**合法示例：** `group-seedance-01`、`group-actor-main`、`group-ref2026`
+
+**非法示例：** `Seedance-角色素材组`、`group 01`、`group_test`
+</Callout>
+
+### 请求示例
+
+```bash
+curl -X POST 'https://api.mapi.zone/v1/portrait/groups' \
+  -H 'Authorization: Bearer sk-your-token' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name": "group-seedance-01",
+    "description": "用于 2.0 试用的角色参考图",
+    "group_type": "AIGC"
+  }'
+```
+
+### 成功响应
+
+```json
+{
+  "success": true,
+  "message": "",
+  "data": {
+    "group_id": "ag-7f3c2b1a9e8d4c6f",
+    "name": "group-seedance-01",
+    "id": 12
+  }
+}
+```
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `group_id` | string | **素材组 ID**（后续创建素材、过滤列表时使用此值） |
+| `name` | string | 素材组名称 |
+| `id` | integer | 本平台本地自增 ID（仅内部关联，不用于路径参数） |
+
+### 失败示例
+
+```json
+{ "success": false, "message": "素材组名称不能为空" }
+{ "success": false, "message": "上游服务调用失败: [InvalidParameter] xxx" }
+```
+
+---
+
+## 查询素材组列表
+
+返回**当前用户**在本平台登记过的全部素材组，按 `created_at` 降序，支持分页。
+
+<Callout type="info">数据来自本地缓存，不实时查询上游服务。</Callout>
+
+| 项 | 值 |
+|----|-----|
+| **Method** | `GET` |
+| **Path** | `/v1/portrait/groups` |
+| **认证** | 需要 `Authorization` |
+
+### Query 参数
+
+| 参数 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `p` | integer | 1 | 页码 |
+| `page_size` | integer | 20 | 每页数量，最大 100 |
+
+### 请求示例
+
+```bash
+curl 'https://api.mapi.zone/v1/portrait/groups?p=1&page_size=20' \
+  -H 'Authorization: Bearer sk-your-token'
+```
+
+### 成功响应
+
+```json
+{
+  "success": true,
+  "message": "",
+  "data": {
+    "page": 1,
+    "page_size": 20,
+    "total": 3,
+    "items": [
+      {
+        "id": 12,
+        "user_id": 1001,
+        "remote_group_id": "ag-7f3c2b1a9e8d4c6f",
+        "name": "group-seedance-01",
+        "project_name": "",
+        "created_at": "2026-05-20T10:00:00+08:00",
+        "updated_at": "2026-05-20T10:00:00+08:00"
+      }
+    ]
+  }
+}
+```
+
+**`items[]` 字段说明：**
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `id` | integer | 本平台本地自增 ID |
+| `user_id` | integer | 所属用户 ID |
+| `remote_group_id` | string | 素材组 ID（路径参数 `:groupId` 即此值） |
+| `name` | string | 素材组名称 |
+| `project_name` | string | 项目名称（由平台配置写入） |
+| `created_at` | string | 创建时间 |
+| `updated_at` | string | 更新时间 |
+
+---
+
+## 更新素材组
+
+更新素材组的名称或描述。
+
+| 项 | 值 |
+|----|-----|
+| **Method** | `PUT` |
+| **Path** | `/v1/portrait/groups/{groupId}` |
+| **Path 参数** | `groupId` = 素材组 ID（来自创建响应的 `group_id`） |
+| **认证** | 需要 `Authorization` |
+
+### 请求体（JSON）
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `name` | string | 条件必填 | 新名称（最多 64 字符）；`name` 和 `description` 至少传一个 |
+| `description` | string | 条件必填 | 新描述（最多 300 字符）；`name` 和 `description` 至少传一个 |
+
+### 请求示例
+
+```bash
+curl -X PUT 'https://api.mapi.zone/v1/portrait/groups/ag-7f3c2b1a9e8d4c6f' \
+  -H 'Authorization: Bearer sk-your-token' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name": "group-seedance-main",
+    "description": "更新后的描述"
+  }'
+```
+
+### 成功响应
+
+```json
+{
+  "success": true,
+  "message": "",
+  "data": {
+    "group_id": "ag-7f3c2b1a9e8d4c6f",
+    "name": "group-seedance-main"
+  }
+}
+```
+
+### 失败示例
+
+```json
+{ "success": false, "message": "素材组不存在" }
+{ "success": false, "message": "name 或 description 至少传一个" }
+```

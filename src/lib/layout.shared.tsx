@@ -45,11 +45,11 @@ export const linkItems: LinkItemType[] = [
 
 export const logo = (
   <Image
-    alt="New API"
-    src="/assets/newapi.svg"
-    width={20}
-    height={20}
-    className="size-5"
+    alt="MAPI"
+    src="/assets/mapi-logo.png"
+    width={100}
+    height={30}
+    className="h-8 w-auto"
     priority
     unoptimized
   />
@@ -59,14 +59,8 @@ export function baseOptions(locale: string): BaseLayoutProps {
   return {
     i18n,
     nav: {
-      title: (
-        <>
-          {logo}
-          <span className="font-medium in-[header]:text-[15px] [.uwu_&]:hidden">
-            New API
-          </span>
-        </>
-      ),
+      title: logo,
+      url: 'https://api.mapi.zone/',
     },
   };
 }

@@ -3,7 +3,10 @@ import { GoogleAnalytics } from '@next/third-parties/google';
 import './global.css';
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://www.newapi.ai'),
+  metadataBase: new URL('https://docs.mapi.zone'),
+  icons: {
+    icon: { url: '/favicon.png', type: 'image/png' },
+  },
   other: {
     charset: 'utf-8',
   },

@@ -64,8 +64,13 @@ export async function generateMetadata(props: {
   const page = source.getPage(slug, lang);
   if (!page) notFound();
 
+  // 首页（/zh/docs/api）需在标题中体现公司名称，满足 ICP 备案合规要求
+  const isHomepage = !slug || slug.length === 0 || slug.join('/') === 'api';
+
   return {
-    title: page.data.title,
+    title: isHomepage
+      ? '南京白鲸汇智能科技有限公司 - MAPI 接口文档'
+      : page.data.title,
     description: page.data.description,
     openGraph: { images: getPageImage(page).url },
   };

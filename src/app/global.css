@@ -7,43 +7,36 @@
 @theme {
   --spacing-fd-container: 1436px;
 
-  /* Pink theme color */
-  --color-brand: hsl(330, 70%, 55%);
+  /* MAPI brand blue */
+  --color-brand: #165dff;
   --color-brand-foreground: white;
-  --color-brand-secondary: hsl(340, 75%, 65%);
-  --color-brand-secondary-foreground: hsl(330, 60%, 20%);
-  --color-brand-200: hsl(330, 65%, 75%);
+  --color-brand-secondary: #4080ff;
+  --color-brand-secondary-foreground: #e8f0fe;
+  --color-brand-200: #94bfff;
 
   /* Fumadocs UI theme color (for navigation, TOC, etc.) */
-  --color-fd-primary: hsl(330, 70%, 55%);
+  --color-fd-primary: #165dff;
   --color-fd-primary-foreground: white;
 
-  --color-landing-foreground: #5c3a4a;
-  --color-landing-foreground-200: #a87b8b;
-
-  /* System fonts */
+  /* System fonts - matching MAPI v1 */
   --font-sans:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica,
-    Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+    'Segoe UI Variable Text', 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei UI', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
   --font-mono:
-    ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono',
-    monospace;
+    'SFMono-Regular', 'Roboto Mono', Consolas, 'Liberation Mono', Menlo, Monaco, monospace;
 }
 
 .dark {
-  --color-landing-foreground: #f5e0ea;
-  --color-landing-foreground-200: #e0b8d0;
+  /* MAPI brand blue (dark mode - slightly lighter for contrast) */
+  --color-brand: #4080ff;
+  --color-brand-secondary: #165dff;
+  --color-brand-secondary-foreground: #1a2a4a;
+  --color-brand-foreground: white;
+  --color-brand-200: #0e42d2;
 
-  /* Pink theme color (dark mode) */
-  --color-brand: hsl(330, 85%, 70%);
-  --color-brand-secondary: hsl(340, 80%, 75%);
-  --color-brand-secondary-foreground: hsl(330, 60%, 10%);
-  --color-brand-foreground: black;
-  --color-brand-200: hsl(330, 80%, 85%);
-
-  /* Fumadocs UI theme color (for navigation, TOC, etc. - dark mode) */
-  --color-fd-primary: hsl(330, 85%, 70%);
-  --color-fd-primary-foreground: black;
+  /* Fumadocs UI theme color (dark mode) */
+  --color-fd-primary: #4080ff;
+  --color-fd-primary-foreground: white;
 }
 
 @theme inline {
@@ -58,7 +51,7 @@ body {
     'calt' 1;
 }
 
-/* Homepage card enhanced styles */
+/* Card hover styles */
 [data-card] {
   transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
   position: relative;
@@ -67,11 +60,10 @@ body {
 
 [data-card]:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 8px 24px rgba(22, 93, 255, 0.12);
   border-color: var(--color-brand);
 }
 
-/* Card icon container enhancement */
 [data-card] > div:first-child {
   transition: all 0.3s ease;
 }
@@ -82,7 +74,6 @@ body {
   color: var(--color-brand-foreground);
 }
 
-/* Cards grid layout optimization */
 .prose
   :where([data-card]):not(
     :where([class~='not-prose'], [class~='not-prose'] *)

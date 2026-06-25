@@ -13,9 +13,9 @@ import {
   ShieldCheck,
   Headphones,
   Radio,
-  Image,
+  ImageIcon,
   Video,
-  FileQuestion,
+  Users,
 } from 'lucide-react';
 
 ## 概述
@@ -26,10 +26,10 @@ import {
 
 <Cards>
   <Card
-    icon={<List />}
-    title="模型列表"
-    description="获取可用的模型列表。"
-    href="/zh/docs/api/ai-model/models/list/listmodels"
+    icon={<Headphones />}
+    title="音频"
+    description="语音识别和语音合成接口。"
+    href="/zh/docs/api/ai-model/audio/openai/createspeech"
   />
   <Card
     icon={<MessageSquare />}
@@ -50,31 +50,7 @@ import {
     href="/zh/docs/api/ai-model/embeddings/createembedding"
   />
   <Card
-    icon={<Search />}
-    title="重排序"
-    description="文档重排序接口。"
-    href="/zh/docs/api/ai-model/rerank/creatererank"
-  />
-  <Card
-    icon={<ShieldCheck />}
-    title="审查"
-    description="内容安全审核接口。"
-    href="/zh/docs/api/ai-model/moderations/createmoderation"
-  />
-  <Card
-    icon={<Headphones />}
-    title="音频"
-    description="语音识别和语音合成接口。"
-    href="/zh/docs/api/ai-model/audio/openai/createspeech"
-  />
-  <Card
-    icon={<Radio />}
-    title="实时语音"
-    description="实时音频流接口。"
-    href="/zh/docs/api/ai-model/realtime/createrealtimesession"
-  />
-  <Card
-    icon={<Image />}
+    icon={<ImageIcon />}
     title="图像"
     description="AI 图像生成接口。"
     href="/zh/docs/api/ai-model/images/openai/post-v1-images-generations"
@@ -86,9 +62,33 @@ import {
     href="/zh/docs/api/ai-model/videos/sora/createvideo"
   />
   <Card
-    icon={<FileQuestion />}
-    title="未实现"
-    description="占位接口，暂未实现。"
-    href="/zh/docs/api/ai-model/unimplemented/files/listfiles"
+    icon={<Users />}
+    title="人像库审核"
+    description="Seedance 2.0 素材注册与审核状态管理接口。"
+    href="/zh/docs/api/ai-model/videos/portrait"
+  />
+  <Card
+    icon={<List />}
+    title="模型列表"
+    description="获取可用的模型列表。"
+    href="/zh/docs/api/ai-model/models/list/listmodels"
+  />
+  <Card
+    icon={<ShieldCheck />}
+    title="审查"
+    description="内容安全审核接口。"
+    href="/zh/docs/api/ai-model/moderations/createmoderation"
+  />
+  <Card
+    icon={<Radio />}
+    title="实时语音"
+    description="实时音频流接口。"
+    href="/zh/docs/api/ai-model/realtime/createrealtimesession"
+  />
+  <Card
+    icon={<Search />}
+    title="重排序"
+    description="文档重排序接口。"
+    href="/zh/docs/api/ai-model/rerank/creatererank"
   />
 </Cards>

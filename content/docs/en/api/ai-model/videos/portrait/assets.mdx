@@ -1,0 +1,302 @@
+---
+title: 素材接口
+description: 人像库素材的注册、查询与更新接口，包含审核状态实时刷新。
+---
+
+## 创建素材（注册 URL）
+
+向指定素材组提交一个**公网 URL**，平台拉取文件并进入审核流程。创建成功后本地状态初始为 **`Processing`**。
+
+| 项 | 值 |
+|----|-----|
+| **Method** | `POST` |
+| **Path** | `/v1/portrait/assets` |
+| **认证** | 需要 `Authorization` |
+
+### 请求体（JSON）
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `group_id` | string | **是** | 素材组 ID（来自创建素材组的 `group_id`） |
+| `url` | string | **是** | 素材文件的 **公网 HTTPS URL**；平台不转存，直接传递给上游 |
+| `asset_type` | string | **是** | 素材类型，仅允许：`Image`、`Video`、`Audio` |
+| `name` | string | 否 | 素材展示名称（最多 64 字符） |
+
+### URL 要求
+
+| 要求 | 说明 |
+|------|------|
+| 可公网访问 | 上游服务须能直接 GET 该 URL |
+| 建议 HTTPS | 避免明文传输与防盗链导致拉取失败 |
+| 不能是内网地址 | `127.0.0.1`、`10.x`、`192.168.x` 等无效 |
+
+### 请求示例
+
+```bash
+curl -X POST 'https://api.mapi.zone/v1/portrait/assets' \
+  -H 'Authorization: Bearer sk-your-token' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "group_id": "ag-7f3c2b1a9e8d4c6f",
+    "url": "https://cdn.example.com/portrait/ref-001.jpg",
+    "asset_type": "Image",
+    "name": "主角正面照"
+  }'
+```
+
+### 成功响应
+
+```json
+{
+  "success": true,
+  "message": "",
+  "data": {
+    "id": 88,
+    "asset_id": "asset-20260520181205-vvds9",
+    "remote_group_id": "ag-7f3c2b1a9e8d4c6f",
+    "status": "Submitted"
+  }
+}
+```
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `id` | integer | 本平台本地自增 ID |
+| `asset_id` | string | **素材 ID**（查询详情、Seedance 引用时使用此值） |
+| `remote_group_id` | string | 所属素材组 ID |
+| `status` | string | 初始为 **`Submitted`** |
+
+### 失败示例
+
+```json
+{ "success": false, "message": "asset_type 须为 Image / Video / Audio" }
+{ "success": false, "message": "group_id 不能为空" }
+```
+
+---
+
+## 查询素材列表
+
+返回**当前用户**的素材记录，支持分页和按素材组过滤。数据来自本地缓存（含后台轮询已更新的状态），**不逐条**实时查询上游。
+
+| 项 | 值 |
+|----|-----|
+| **Method** | `GET` |
+| **Path** | `/v1/portrait/assets` |
+| **认证** | 需要 `Authorization` |
+
+### Query 参数
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `group_id` | string | 否 | 素材组 ID；传入时只返回该组素材 |
+| `p` | integer | 否 | 页码，默认 1 |
+| `page_size` | integer | 否 | 每页数量，默认 20，最大 100 |
+
+### 请求示例
+
+```bash
+# 全部素材（第 1 页，每页 20 条）
+curl 'https://api.mapi.zone/v1/portrait/assets?p=1&page_size=20' \
+  -H 'Authorization: Bearer sk-your-token'
+
+# 按素材组过滤
+curl 'https://api.mapi.zone/v1/portrait/assets?group_id=ag-7f3c2b1a9e8d4c6f&p=1&page_size=10' \
+  -H 'Authorization: Bearer sk-your-token'
+```
+
+### 成功响应
+
+```json
+{
+  "success": true,
+  "message": "",
+  "data": {
+    "page": 1,
+    "page_size": 20,
+    "total": 5,
+    "items": [
+      {
+        "id": 88,
+        "user_id": 1001,
+        "remote_group_id": "ag-7f3c2b1a9e8d4c6f",
+        "remote_asset_id": "asset-20260520181205-vvds9",
+        "name": "主角正面照",
+        "asset_type": "Image",
+        "source_url": "https://cdn.example.com/portrait/ref-001.jpg",
+        "status": "Active",
+        "resolved_url": "https://cdn.example.com/resolved/portrait/ref-001.jpg",
+        "created_at": "2026-05-20T18:12:05.09398+08:00",
+        "updated_at": "2026-05-20T18:14:01.609274032+08:00"
+      }
+    ]
+  }
+}
+```
+
+**`items[]` 字段说明：**
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `id` | integer | 本平台本地自增 ID |
+| `user_id` | integer | 所属用户 ID |
+| `remote_group_id` | string | 素材组 ID |
+| `remote_asset_id` | string | 素材 ID（即路径参数 `:assetId`） |
+| `name` | string | 素材名称 |
+| `asset_type` | string | `Image` / `Video` / `Audio` |
+| `source_url` | string | 创建时提交的原始 URL |
+| `status` | string | 审核状态，见[概述页状态枚举](/zh/docs/api/ai-model/videos/portrait) |
+| `resolved_url` | string | 审核通过后的可用 URL；`Active` 前可能为空 |
+| `created_at` | string | 创建时间 |
+| `updated_at` | string | 最后更新时间 |
+
+---
+
+## 查询单个素材详情
+
+根据素材 ID 查询一条素材，非终态时**实时**刷新审核状态。
+
+| 本地 `status` | 行为 |
+|---------------|------|
+| 终态：`Active`、`Failed` | 直接返回本地缓存，**不**实时查询 |
+| 非终态：如 `Processing` | **实时**查询上游，更新本地后返回最新状态 |
+
+| 项 | 值 |
+|----|-----|
+| **Method** | `GET` |
+| **Path** | `/v1/portrait/assets/{assetId}` |
+| **Path 参数** | `assetId` = 素材 ID（创建响应的 `asset_id`，或列表中的 `remote_asset_id`） |
+| **认证** | 需要 `Authorization` |
+
+### 请求示例
+
+```bash
+curl 'https://api.mapi.zone/v1/portrait/assets/asset-20260520181205-vvds9' \
+  -H 'Authorization: Bearer sk-your-token'
+```
+
+### 成功响应（审核通过）
+
+```json
+{
+  "success": true,
+  "message": "",
+  "data": {
+    "asset_id": "asset-20260520181205-vvds9",
+    "status": "Active",
+    "resolved_url": "https://cdn.example.com/resolved/portrait/ref-001.jpg",
+    "name": "主角正面照",
+    "asset_type": "Image",
+    "source_url": "https://cdn.example.com/portrait/ref-001.jpg",
+    "created_at": "2026-05-20T18:12:05.09398+08:00",
+    "updated_at": "2026-05-20T18:14:01.609274032+08:00"
+  }
+}
+```
+
+### 成功响应（处理中）
+
+```json
+{
+  "success": true,
+  "message": "",
+  "data": {
+    "asset_id": "asset-20260520181205-vvds9",
+    "status": "Processing",
+    "resolved_url": "",
+    "name": "主角正面照",
+    "asset_type": "Image",
+    "source_url": "https://cdn.example.com/portrait/ref-001.jpg",
+    "created_at": "2026-05-20T18:12:05.09398+08:00",
+    "updated_at": "2026-05-20T18:12:10.000000000+08:00"
+  }
+}
+```
+
+### 成功响应（上游刷新失败，仍返回本地缓存）
+
+```json
+{
+  "success": true,
+  "message": "",
+  "data": {
+    "asset_id": "asset-20260520181205-vvds9",
+    "status": "Processing",
+    "resolved_url": "",
+    "name": "主角正面照",
+    "asset_type": "Image",
+    "source_url": "https://cdn.example.com/portrait/ref-001.jpg",
+    "refresh_error": "上游服务请求失败: timeout",
+    "created_at": "2026-05-20T18:12:05.09398+08:00",
+    "updated_at": "2026-05-20T18:12:05.09398+08:00"
+  }
+}
+```
+
+<Callout type="info" title="refresh_error 字段">
+仅在非终态且实时刷新**失败**时出现；其余字段仍为本地缓存值，不影响正常读取。
+</Callout>
+
+### 失败示例
+
+```json
+{ "success": false, "message": "素材不存在" }
+```
+
+---
+
+## 更新素材
+
+更新素材名称。
+
+| 项 | 值 |
+|----|-----|
+| **Method** | `PUT` |
+| **Path** | `/v1/portrait/assets/{assetId}` |
+| **Path 参数** | `assetId` = 素材 ID |
+| **认证** | 需要 `Authorization` |
+
+### 请求体（JSON）
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `name` | string | **是** | 新的素材名称，首尾空格会被剔除，不能为空（最多 64 字符） |
+
+### 请求示例
+
+```bash
+curl -X PUT 'https://api.mapi.zone/v1/portrait/assets/asset-20260520181205-vvds9' \
+  -H 'Authorization: Bearer sk-your-token' \
+  -H 'Content-Type: application/json' \
+  -d '{ "name": "主角正面照（修正版）" }'
+```
+
+### 成功响应
+
+```json
+{
+  "success": true,
+  "message": "",
+  "data": {
+    "asset_id": "asset-20260520181205-vvds9",
+    "name": "主角正面照（修正版）"
+  }
+}
+```
+
+### 失败示例
+
+```json
+{ "success": false, "message": "素材不存在" }
+{ "success": false, "message": "name 不能为空" }
+```
+
+---
+
+## ID 对照（易错）
+
+| 业务称呼 | 接口字段名 | 用途 |
+|----------|------------|------|
+| 素材组 ID | `group_id`（创建组响应）/ `remote_group_id`（列表） | `POST /assets` 的 `group_id`；列表过滤 `?group_id=`；`PUT /groups/:groupId` 路径 |
+| 素材 ID | `asset_id`（创建素材响应）/ `remote_asset_id`（列表） | `GET /assets/:assetId`；`PUT /assets/:assetId` 路径 |
+| 本平台本地自增 ID | `id` | 仅本平台内部关联，**不要**用于路径参数或 `group_id` |

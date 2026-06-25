@@ -43,22 +43,22 @@ const titleMap: Record<
   { default: string; template: string; description: string }
 > = {
   en: {
-    default: 'New API - The Foundation of Your AI Universe',
-    template: '%s | New API',
+    default: 'MAPI - AI API Gateway Documentation',
+    template: '%s | MAPI Docs',
     description:
-      'Connect all AI providers, manage your AI assets, and build the future on a unified infrastructure platform. Deploy in minutes, scale effortlessly.',
+      'MAPI is an AI API aggregation platform compatible with OpenAI format, supporting multi-model management, load balancing, and usage statistics.',
   },
   zh: {
-    default: 'New API - AI 基座',
-    template: '%s | New API',
+    default: 'MAPI - AI 接口聚合平台接口文档',
+    template: '%s | MAPI 文档',
     description:
-      '承载所有 AI 应用，管理你的数字资产，连接未来的统一基础设施平台。快速部署，轻松扩展。',
+      'MAPI 是兼容 OpenAI 格式的 AI 接口聚合平台，支持多模型管理、负载均衡、用量统计。',
   },
   ja: {
-    default: 'New API - あなたの AI ユニバースの基盤',
-    template: '%s | New API',
+    default: 'MAPI - AI APIゲートウェイドキュメント',
+    template: '%s | MAPI ドキュメント',
     description:
-      'すべての AI プロバイダーを接続し、AI アセットを管理し、統一されたインフラストラクチャプラットフォームで未来を構築。数分でデプロイ、簡単にスケール。',
+      'MAPIはOpenAI互換のAI APIアグリゲーションプラットフォームです。',
   },
 };
 
