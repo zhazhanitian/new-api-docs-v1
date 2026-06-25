@@ -1,8 +1,7 @@
 import { source } from '@/lib/source';
 import { DocsLayout } from 'fumadocs-ui/layouts/docs';
-import { baseOptions, linkItems } from '@/lib/layout.shared';
+import { baseOptions } from '@/lib/layout.shared';
 import { Footer } from '@/components/footer';
-import { ComplianceNotice } from '@/components/compliance-notice';
 // AI feature temporarily disabled
 // import { AISearchTrigger } from '@/components/search';
 import 'katex/dist/katex.min.css';
@@ -25,31 +24,24 @@ export default async function Layout({
 
   const base = baseOptions(lang);
 
+  // Flatten: if the docs root has a single folder (api/), lift its children
+  // directly to the root so no collapsible section header appears in the sidebar.
+  const rawTree = source.pageTree[lang];
+  const firstChild = rawTree.children[0];
+  const tree =
+    firstChild?.type === 'folder'
+      ? { ...rawTree, children: firstChild.children }
+      : rawTree;
+
   return (
     <DocsLayout
       {...base}
-      tabMode="top"
-      tree={source.pageTree[lang]}
-      links={linkItems.filter((item) => item.type === 'icon')}
+      tree={tree}
+      links={[]}
       sidebar={{
         defaultOpenLevel: 0,
-        tabs: {
-          transform(option, node) {
-            if (!node.icon) return option;
-
-            return {
-              ...option,
-              icon: (
-                <div className="max-md:bg-fd-primary/10 max-md:border-fd-primary/20 size-full rounded-lg max-md:border max-md:p-1.5 [&_svg]:size-full">
-                  {node.icon}
-                </div>
-              ),
-            };
-          },
-        },
       }}
     >
-      <ComplianceNotice lang={lang} />
       {children}
       <Footer lang={lang} />
       {/* AI feature temporarily disabled */}

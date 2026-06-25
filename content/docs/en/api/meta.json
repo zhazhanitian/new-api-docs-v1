@@ -2,6 +2,5 @@
   "title": "API Reference",
   "description": "New API Complete API Documentation",
   "icon": "Code",
-  "root": true,
-  "pages": ["index", "ai-model", "management"]
+  "pages": ["index", "ai-model/audio", "ai-model/chat", "ai-model/completions", "ai-model/embeddings", "ai-model/images", "ai-model/models", "ai-model/moderations", "ai-model/realtime", "ai-model/rerank", "ai-model/unimplemented", "ai-model/videos"]
 }
