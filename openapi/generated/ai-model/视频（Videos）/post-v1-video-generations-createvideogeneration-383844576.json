@@ -39,9 +39,9 @@
                 "properties": {
                   "model": {
                     "type": "string",
-                    "description": "模型/风格 ID",
+                    "description": "模型 ID",
                     "examples": [
-                      "kling-v1"
+                      "doubao-seedance-2-0-260128"
                     ]
                   },
                   "prompt": {
@@ -53,7 +53,7 @@
                   },
                   "image": {
                     "type": "string",
-                    "description": "图片输入 (URL 或 Base64)",
+                    "description": "图片输入 (URL 或 Base64)，图生视频时使用",
                     "examples": [
                       "https://example.com/image.jpg"
                     ]
@@ -65,25 +65,13 @@
                       5
                     ]
                   },
-                  "width": {
-                    "type": "integer",
-                    "description": "视频宽度",
+                  "size": {
+                    "type": "string",
+                    "description": "输出分辨率。支持两种格式：\n- `宽x高`（如 `\"1920x1080\"`）：自动推导分辨率档位和宽高比，优先级高于 metadata.resolution/ratio\n- 分辨率档位（如 `\"1080p\"`）：仅设置分辨率，宽高比由 metadata.ratio 或上游默认值决定\n\n豆包 Seedance 支持的档位：`480p`、`720p`、`1080p`（Fast/Mini 不支持）、`4K`（仅 2.0 支持）",
                     "examples": [
-                      1280
-                    ]
-                  },
-                  "height": {
-                    "type": "integer",
-                    "description": "视频高度",
-                    "examples": [
-                      720
-                    ]
-                  },
-                  "fps": {
-                    "type": "integer",
-                    "description": "视频帧率",
-                    "examples": [
-                      30
+                      "1920x1080",
+                      "720x1280",
+                      "1080p"
                     ]
                   },
                   "seed": {
@@ -116,10 +104,84 @@
                   },
                   "metadata": {
                     "type": "object",
-                    "description": "扩展参数 (如 negative_prompt, style, quality_level 等)",
+                    "description": "渠道专属扩展参数，按需传入。不同渠道支持的子字段不同，未列出的字段将被忽略。\n\n**豆包 Seedance 系列（`doubao-seedance-*`）：**\n- `resolution` (string)：输出分辨率，可选值 `\"480P\"`、`\"720P\"`、`\"1080P\"`、`\"4K\"`（影响计费）\n- `ratio` (string)：宽高比，如 `\"16:9\"`、`\"9:16\"`\n- `generate_audio` (boolean)：是否生成音频，`true` 为有声视频，`false` 为无声视频（影响 seedance-1-5-pro 计费）\n- `return_last_frame` (boolean)：是否同时返回最后一帧图片\n- `camera_fixed` (boolean)：是否固定镜头\n- `watermark` (boolean)：是否添加水印\n- `draft` (boolean)：草稿模式，生成速度更快但质量较低\n- `service_tier` (string)：服务等级\n- `content` (array)：多模态输入内容，视频生成（i2v）时可传入 `video_url` 类型条目\n",
                     "additionalProperties": true,
-                    "properties": {},
-                    "x-apifox-orders": []
+                    "properties": {
+                      "resolution": {
+                        "type": "string",
+                        "description": "输出分辨率档位（豆包 Seedance 系列）。推荐使用外层 `size` 字段代替，`size` 优先级更高且同时支持推导宽高比。",
+                        "examples": [
+                          "1080p"
+                        ]
+                      },
+                      "ratio": {
+                        "type": "string",
+                        "description": "宽高比（豆包 Seedance 系列）。若外层 `size` 使用 `宽x高` 格式，宽高比会自动推导，无需单独传此字段。",
+                        "examples": [
+                          "16:9"
+                        ]
+                      },
+                      "generate_audio": {
+                        "type": "boolean",
+                        "description": "是否生成音频（豆包 Seedance 系列，影响 seedance-1-5-pro 计费）",
+                        "examples": [
+                          true
+                        ]
+                      },
+                      "return_last_frame": {
+                        "type": "boolean",
+                        "description": "是否返回最后一帧图片（豆包 Seedance 系列）"
+                      },
+                      "camera_fixed": {
+                        "type": "boolean",
+                        "description": "是否固定镜头（豆包 Seedance 系列）"
+                      },
+                      "watermark": {
+                        "type": "boolean",
+                        "description": "是否添加水印（豆包 Seedance 系列）"
+                      },
+                      "draft": {
+                        "type": "boolean",
+                        "description": "草稿模式（豆包 Seedance 系列）"
+                      },
+                      "service_tier": {
+                        "type": "string",
+                        "description": "服务等级（豆包 Seedance 系列）"
+                      },
+                      "content": {
+                        "type": "array",
+                        "description": "多模态输入内容（豆包 Seedance 系列，视频生成时传入）",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "description": "内容类型，如 \"video_url\"、\"image_url\"、\"text\""
+                            },
+                            "video_url": {
+                              "type": "object",
+                              "properties": {
+                                "url": {
+                                  "type": "string",
+                                  "description": "视频 URL"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "x-apifox-orders": [
+                      "resolution",
+                      "ratio",
+                      "generate_audio",
+                      "return_last_frame",
+                      "camera_fixed",
+                      "watermark",
+                      "draft",
+                      "service_tier",
+                      "content"
+                    ]
                   }
                 },
                 "x-apifox-orders": [
@@ -127,9 +189,7 @@
                   "prompt",
                   "image",
                   "duration",
-                  "width",
-                  "height",
-                  "fps",
+                  "size",
                   "seed",
                   "n",
                   "response_format",

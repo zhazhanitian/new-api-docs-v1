@@ -3,7 +3,7 @@
   "info": {
     "title": "获取视频生成任务状态",
     "version": "1.0.0",
-    "description": "查询视频生成任务的状态和结果。\n\n任务状态：\n- `queued`: 排队中\n- `in_progress`: 生成中\n- `completed`: 已完成\n- `failed`: 失败\n"
+    "description": "查询视频生成任务的状态和结果。\n\n任务状态：\n- `queued`: 排队中\n- `in_progress`: 生成中\n- `success`: 已完成\n- `failed`: 失败\n"
   },
   "tags": [
     {
@@ -26,7 +26,7 @@
           "视频（Videos）"
         ],
         "summary": "获取视频生成任务状态",
-        "description": "查询视频生成任务的状态和结果。\n\n任务状态：\n- `queued`: 排队中\n- `in_progress`: 生成中\n- `completed`: 已完成\n- `failed`: 失败\n",
+        "description": "查询视频生成任务的状态和结果。\n\n任务状态：\n- `queued`: 排队中\n- `in_progress`: 生成中\n- `success`: 已完成\n- `failed`: 失败\n",
         "operationId": "getvideogeneration",
         "parameters": [
           {
@@ -66,11 +66,25 @@
                       "enum": [
                         "queued",
                         "in_progress",
-                        "completed",
+                        "success",
                         "failed"
                       ],
                       "examples": [
-                        "completed"
+                        "success"
+                      ]
+                    },
+                    "progress": {
+                      "type": "string",
+                      "description": "生成进度百分比",
+                      "examples": [
+                        "50%"
+                      ]
+                    },
+                    "model": {
+                      "type": "string",
+                      "description": "实际使用的模型名",
+                      "examples": [
+                        "doubao-seedance-2-0-260128"
                       ]
                     },
                     "url": {
@@ -80,43 +94,36 @@
                         "https://example.com/video.mp4"
                       ]
                     },
-                    "format": {
-                      "type": "string",
-                      "description": "视频格式",
+                    "created_at": {
+                      "type": "integer",
+                      "description": "任务创建时间戳（Unix 秒）",
                       "examples": [
-                        "mp4"
+                        1719820800
+                      ]
+                    },
+                    "completed_at": {
+                      "type": "integer",
+                      "description": "任务完成时间戳（Unix 秒），未完成时为 0",
+                      "examples": [
+                        1719820860
                       ]
                     },
                     "metadata": {
                       "type": "object",
-                      "description": "视频任务元数据",
+                      "description": "视频任务元数据，具体字段因渠道不同而有所差异",
                       "properties": {
                         "duration": {
                           "type": "number",
-                          "description": "实际生成的视频时长",
+                          "description": "实际生成的视频时长（秒）",
                           "examples": [
                             5
                           ]
                         },
                         "fps": {
                           "type": "integer",
-                          "description": "实际帧率",
+                          "description": "实际帧率（部分渠道返回）",
                           "examples": [
-                            30
-                          ]
-                        },
-                        "width": {
-                          "type": "integer",
-                          "description": "实际宽度",
-                          "examples": [
-                            1280
-                          ]
-                        },
-                        "height": {
-                          "type": "integer",
-                          "description": "实际高度",
-                          "examples": [
-                            720
+                            24
                           ]
                         },
                         "seed": {
@@ -125,22 +132,36 @@
                           "examples": [
                             20231234
                           ]
+                        },
+                        "resolution": {
+                          "type": "string",
+                          "description": "实际输出分辨率（豆包 Seedance 系列）",
+                          "examples": [
+                            "1080P"
+                          ]
+                        },
+                        "ratio": {
+                          "type": "string",
+                          "description": "实际输出宽高比（豆包 Seedance 系列）",
+                          "examples": [
+                            "16:9"
+                          ]
                         }
                       },
                       "x-apifox-orders": [
                         "duration",
                         "fps",
-                        "width",
-                        "height",
-                        "seed"
+                        "seed",
+                        "resolution",
+                        "ratio"
                       ]
                     },
                     "error": {
                       "type": "object",
-                      "description": "视频任务错误信息",
+                      "description": "失败时的错误信息",
                       "properties": {
                         "code": {
-                          "type": "integer",
+                          "type": "string",
                           "description": "错误码"
                         },
                         "message": {
@@ -157,8 +178,11 @@
                   "x-apifox-orders": [
                     "task_id",
                     "status",
+                    "progress",
+                    "model",
                     "url",
-                    "format",
+                    "created_at",
+                    "completed_at",
                     "metadata",
                     "error"
                   ]
