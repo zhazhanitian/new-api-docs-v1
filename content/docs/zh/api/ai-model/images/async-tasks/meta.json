@@ -1,3 +1,7 @@
 {
-  "title": "异步图像任务"
+  "title": "异步图像任务",
+  "pages": [
+    "post-v1-image-tasks-submit",
+    "get-v1-image-tasks-task-id"
+  ]
 }
