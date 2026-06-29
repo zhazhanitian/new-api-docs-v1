@@ -84,7 +84,8 @@
                       "type": "string",
                       "description": "实际使用的模型名",
                       "examples": [
-                        "doubao-seedance-2-0-260128"
+                        "doubao-seedance-2-0-260128",
+                        "happyhorse-1.0-t2v"
                       ]
                     },
                     "url": {

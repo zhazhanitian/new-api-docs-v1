@@ -9655,8 +9655,8 @@
                   "properties": {
                     "model": {
                       "type": "string",
-                      "description": "模型/风格 ID",
-                      "examples": ["kling-v1"]
+                      "description": "模型 ID。\n\n常用模型：\n- 豆包 Seedance：`doubao-seedance-2-0-260128`、`doubao-seedance-1-5-pro`\n- HappyHorse：`happyhorse-1.0-t2v`、`happyhorse-1.0-i2v`、`happyhorse-1.0-r2v`、`happyhorse-1.0-video-edit`",
+                      "examples": ["doubao-seedance-2-0-260128"]
                     },
                     "prompt": {
                       "type": "string",
@@ -9665,22 +9665,40 @@
                     },
                     "image": {
                       "type": "string",
-                      "description": "图片输入 (URL 或 Base64)",
+                      "description": "单张图片输入（URL 或 Base64），图生视频时使用。与 `images[0]` 等价，两者同时传时优先取 `image`。",
                       "examples": ["https://example.com/image.jpg"]
+                    },
+                    "images": {
+                      "type": "array",
+                      "description": "多张图片/视频 URL 数组，用于多素材输入场景：\n- `happyhorse-1.0-i2v`：传 1 个元素，为首帧图片 URL\n- `happyhorse-1.0-r2v`：传 1 个或多个参考图片 URL\n- `happyhorse-1.0-video-edit`：`images[0]` 为待编辑视频 URL，`images[1:]` 为参考图片 URL（可选）",
+                      "items": {
+                        "type": "string"
+                      },
+                      "examples": [["https://example.com/frame.jpg"]]
+                    },
+                    "input_reference": {
+                      "type": "string",
+                      "description": "参考媒体 URL。`happyhorse-1.0-i2v` 图生视频时可用此字段传入首帧图片，与 `images[0]` 等价，优先级高于 `images[0]`。",
+                      "examples": ["https://example.com/reference.jpg"]
                     },
                     "duration": {
                       "type": "number",
-                      "description": "视频时长（秒）",
+                      "description": "视频时长（秒）。HappyHorse t2v / i2v / r2v 支持，默认 5 秒；video-edit 不支持（时长跟随输入视频）。",
                       "examples": [5]
+                    },
+                    "size": {
+                      "type": "string",
+                      "description": "输出分辨率。支持两种格式：\n- `宽x高`（如 `\"1920x1080\"`）：豆包 Seedance 系列，自动推导分辨率档位和宽高比\n- 分辨率档位（如 `\"720p\"`、`\"1080p\"`）：HappyHorse 系列，仅设置分辨率档位",
+                      "examples": ["1920x1080", "720p", "1080p"]
                     },
                     "width": {
                       "type": "integer",
-                      "description": "视频宽度",
+                      "description": "视频宽度（像素），部分渠道使用",
                       "examples": [1280]
                     },
                     "height": {
                       "type": "integer",
-                      "description": "视频高度",
+                      "description": "视频高度（像素），部分渠道使用",
                       "examples": [720]
                     },
                     "fps": {
@@ -9690,7 +9708,7 @@
                     },
                     "seed": {
                       "type": "integer",
-                      "description": "随机种子",
+                      "description": "随机种子，用于复现生成结果。HappyHorse 支持此参数。",
                       "examples": [20231234]
                     },
                     "n": {
@@ -9710,7 +9728,7 @@
                     },
                     "metadata": {
                       "type": "object",
-                      "description": "扩展参数 (如 negative_prompt, style, quality_level 等)",
+                      "description": "渠道专属扩展参数，按需传入。\n\n**豆包 Seedance 系列：** `resolution`、`ratio`、`generate_audio`、`return_last_frame`、`camera_fixed`、`watermark`、`draft`、`service_tier`、`content`\n\n**HappyHorse 系列：**\n- `ratio` (string)：宽高比，如 `\"16:9\"`，仅 t2v / r2v 支持\n- `audio_setting` (string)：音频处理方式，仅 video-edit 支持，如 `\"mute\"`",
                       "additionalProperties": true,
                       "properties": {},
                       "x-apifox-orders": []
@@ -9720,7 +9738,10 @@
                     "model",
                     "prompt",
                     "image",
+                    "images",
+                    "input_reference",
                     "duration",
+                    "size",
                     "width",
                     "height",
                     "fps",

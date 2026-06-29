@@ -53,9 +53,28 @@
                   },
                   "image": {
                     "type": "string",
-                    "description": "图片输入 (URL 或 Base64)，图生视频时使用",
+                    "description": "单张图片输入（URL 或 Base64），图生视频时使用。\n\n与 `images[0]` 等价，两者同时传时优先取 `image`。",
                     "examples": [
                       "https://example.com/image.jpg"
+                    ]
+                  },
+                  "images": {
+                    "type": "array",
+                    "description": "多张图片/视频 URL 数组，用于多素材输入场景：\n- `happyhorse-1.0-i2v`（图生视频）：传 1 个元素，为首帧图片 URL\n- `happyhorse-1.0-r2v`（参考视频生成）：传 1 个或多个参考图片 URL\n- `happyhorse-1.0-video-edit`（视频编辑）：`images[0]` 为待编辑视频 URL，`images[1:]` 为参考图片 URL（可选）",
+                    "items": {
+                      "type": "string"
+                    },
+                    "examples": [
+                      [
+                        "https://example.com/frame.jpg"
+                      ]
+                    ]
+                  },
+                  "input_reference": {
+                    "type": "string",
+                    "description": "参考媒体 URL。`happyhorse-1.0-i2v` 图生视频时可用此字段传入首帧图片，与 `images[0]` 等价，优先级高于 `images[0]`。",
+                    "examples": [
+                      "https://example.com/reference.jpg"
                     ]
                   },
                   "duration": {
@@ -104,7 +123,7 @@
                   },
                   "metadata": {
                     "type": "object",
-                    "description": "渠道专属扩展参数，按需传入。不同渠道支持的子字段不同，未列出的字段将被忽略。\n\n**豆包 Seedance 系列（`doubao-seedance-*`）：**\n- `resolution` (string)：输出分辨率，可选值 `\"480P\"`、`\"720P\"`、`\"1080P\"`、`\"4K\"`（影响计费）\n- `ratio` (string)：宽高比，如 `\"16:9\"`、`\"9:16\"`\n- `generate_audio` (boolean)：是否生成音频，`true` 为有声视频，`false` 为无声视频（影响 seedance-1-5-pro 计费）\n- `return_last_frame` (boolean)：是否同时返回最后一帧图片\n- `camera_fixed` (boolean)：是否固定镜头\n- `watermark` (boolean)：是否添加水印\n- `draft` (boolean)：草稿模式，生成速度更快但质量较低\n- `service_tier` (string)：服务等级\n- `content` (array)：多模态输入内容，视频生成（i2v）时可传入 `video_url` 类型条目\n",
+                    "description": "渠道专属扩展参数，按需传入。不同渠道支持的子字段不同，未列出的字段将被忽略。\n\n**豆包 Seedance 系列（`doubao-seedance-*`）：**\n- `resolution` (string)：输出分辨率，可选值 `\"480P\"`、`\"720P\"`、`\"1080P\"`、`\"4K\"`（影响计费）\n- `ratio` (string)：宽高比，如 `\"16:9\"`、`\"9:16\"`\n- `generate_audio` (boolean)：是否生成音频，`true` 为有声视频，`false` 为无声视频（影响 seedance-1-5-pro 计费）\n- `return_last_frame` (boolean)：是否同时返回最后一帧图片\n- `camera_fixed` (boolean)：是否固定镜头\n- `watermark` (boolean)：是否添加水印\n- `draft` (boolean)：草稿模式，生成速度更快但质量较低\n- `service_tier` (string)：服务等级\n- `content` (array)：多模态输入内容，视频生成（i2v）时可传入 `video_url` 类型条目\n\n**HappyHorse 系列（`happyhorse-*`）：**\n- `ratio` (string)：宽高比，如 `\"16:9\"`、`\"9:16\"`、`\"1:1\"`。仅 t2v、r2v 支持；i2v 宽高比跟随首帧图片，video-edit 跟随输入视频\n- `audio_setting` (string)：音频处理方式，仅 video-edit 支持，如 `\"mute\"`（静音）\n",
                     "additionalProperties": true,
                     "properties": {
                       "resolution": {
@@ -116,7 +135,7 @@
                       },
                       "ratio": {
                         "type": "string",
-                        "description": "宽高比（豆包 Seedance 系列）。若外层 `size` 使用 `宽x高` 格式，宽高比会自动推导，无需单独传此字段。",
+                        "description": "宽高比。豆包 Seedance 系列：若外层 `size` 使用 `宽x高` 格式，宽高比会自动推导，无需单独传此字段。HappyHorse t2v / r2v：支持，i2v / video-edit 不支持。",
                         "examples": [
                           "16:9"
                         ]
@@ -169,6 +188,13 @@
                             }
                           }
                         }
+                      },
+                      "audio_setting": {
+                        "type": "string",
+                        "description": "音频处理方式（HappyHorse video-edit 专用）。可选值：`\"mute\"`（静音输出）",
+                        "examples": [
+                          "mute"
+                        ]
                       }
                     },
                     "x-apifox-orders": [
@@ -180,7 +206,8 @@
                       "watermark",
                       "draft",
                       "service_tier",
-                      "content"
+                      "content",
+                      "audio_setting"
                     ]
                   }
                 },
@@ -188,6 +215,8 @@
                   "model",
                   "prompt",
                   "image",
+                  "images",
+                  "input_reference",
                   "duration",
                   "size",
                   "seed",
@@ -196,6 +225,148 @@
                   "user",
                   "metadata"
                 ]
+              },
+              "examples": {
+                "doubao-seedance-2-0": {
+                  "summary": "doubao seedance 2.0 多模态视频",
+                  "value": {
+                    "model": "doubao-seedance-2-0-fast-260128",
+                    "prompt": "Use the first-person POV framing from Video 1 throughout, and use Audio 1 as the background music throughout. First-person POV fruit tea promotional ad, Seedance brand limited-edition apple fruit tea; opening frame is Image 1, your hand picks a dew-covered Aksu red apple, a light, crisp apple tapping sound; 2–4 seconds: fast cuts, your hand drops apple chunks into a shaker, adds ice and tea base, shakes forcefully, ice clinking and shaking sounds sync with upbeat rhythmic beats, background audio: {Fresh-cut, shaken fresh}; 4–6 seconds: first-person close-up of the finished drink, layered fruit tea is poured into a clear cup, your hand gently squeezes milk foam to spread across the top, a pink brand sticker is applied to the cup, the camera moves closer to show the layered textures of the foam and fruit tea; 6–8 seconds: first-person hand-held toast shot, you raise the fruit tea from Image 2 toward the camera (simulating handing it to the viewer), the cup label is clearly visible, background audio {Take a sip of fresh refreshment}, the final frame freezes on Image 2. All background voice audio uses a female voice.",
+                    "size": "1920x1080",
+                    "duration": 5,
+                    "seed": 20240303,
+                    "metadata": {
+                      "content": [
+                        {
+                          "type": "image_url",
+                          "image_url": {
+                            "url": "https://ark-doc.tos-ap-southeast-1.bytepluses.com/doc_image/r2v_tea_pic1.jpg"
+                          },
+                          "role": "reference_image"
+                        },
+                        {
+                          "type": "image_url",
+                          "image_url": {
+                            "url": "https://ark-doc.tos-ap-southeast-1.bytepluses.com/doc_image/r2v_tea_pic2.jpg"
+                          },
+                          "role": "reference_image"
+                        },
+                        {
+                          "type": "video_url",
+                          "video_url": {
+                            "url": "https://ark-doc.tos-ap-southeast-1.bytepluses.com/doc_video/r2v_tea_video1.mp4"
+                          },
+                          "role": "reference_video"
+                        },
+                        {
+                          "type": "audio_url",
+                          "audio_url": {
+                            "url": "https://ark-doc.tos-ap-southeast-1.bytepluses.com/doc_audio/r2v_tea_audio1.mp3"
+                          },
+                          "role": "reference_audio"
+                        }
+                      ],
+                      "generate_audio": true,
+                      "watermark": false,
+                      "camera_fixed": false,
+                      "return_last_frame": false,
+                      "draft": false
+                    }
+                  }
+                },
+                "doubao-seedance-2-0-fast": {
+                  "summary": "doubao seedance 2.0 fast",
+                  "value": {
+                    "model": "doubao-seedance-2-0-fast-260128",
+                    "prompt": "宇航员在月球表面缓缓行走，远处是蓝色地球，星空背景",
+                    "size": "1920x1080",
+                    "duration": 5,
+                    "seed": 20240303,
+                    "metadata": {
+                      "generate_audio": true,
+                      "watermark": false,
+                      "camera_fixed": false,
+                      "return_last_frame": false,
+                      "draft": false
+                    }
+                  }
+                },
+                "doubao-seedance-1-5-pro": {
+                  "summary": "doubao seedance 1.5 pro",
+                  "value": {
+                    "model": "doubao-seedance-1-5-pro",
+                    "prompt": "人物转过头微笑，背景轻微虚化",
+                    "size": "720x1280",
+                    "duration": 5,
+                    "metadata": {
+                      "content": [
+                        {
+                          "type": "image_url",
+                          "image_url": {
+                            "url": "https://example.com/portrait.jpg"
+                          }
+                        }
+                      ],
+                      "generate_audio": false,
+                      "watermark": false,
+                      "return_last_frame": true
+                    }
+                  }
+                },
+                "happyhorse-1-0-t2v": {
+                  "summary": "happyhorse-1.0-t2v 文生视频",
+                  "value": {
+                    "model": "happyhorse-1.0-t2v",
+                    "prompt": "一座由硬纸板和瓶盖搭建的微型城市，在夜晚焕发出生机，小灯点缀其间，照亮前路",
+                    "size": "1080p",
+                    "duration": 5,
+                    "seed": 20240101,
+                    "metadata": {
+                      "ratio": "16:9"
+                    }
+                  }
+                },
+                "happyhorse-1-0-i2v": {
+                  "summary": "happyhorse-1.0-i2v 图生视频",
+                  "value": {
+                    "model": "happyhorse-1.0-i2v",
+                    "prompt": "小猫慢慢睁开眼睛，环顾四周，轻轻伸了个懒腰",
+                    "image": "https://example.com/cat.jpg",
+                    "size": "720p",
+                    "duration": 5
+                  }
+                },
+                "happyhorse-1-0-r2v": {
+                  "summary": "happyhorse-1.0-r2v 参考生成",
+                  "value": {
+                    "model": "happyhorse-1.0-r2v",
+                    "prompt": "保持角色风格，让她在花海中奔跑，裙摆飘动",
+                    "images": [
+                      "https://example.com/character-ref1.jpg",
+                      "https://example.com/character-ref2.jpg"
+                    ],
+                    "size": "720p",
+                    "duration": 5,
+                    "seed": 20240202,
+                    "metadata": {
+                      "ratio": "9:16"
+                    }
+                  }
+                },
+                "happyhorse-1-0-video-edit": {
+                  "summary": "happyhorse-1.0-video-edit 视频编辑",
+                  "value": {
+                    "model": "happyhorse-1.0-video-edit",
+                    "prompt": "将视频中的白天场景替换为夜晚霓虹灯风格，保留人物动作不变",
+                    "images": [
+                      "https://example.com/source-video.mp4",
+                      "https://example.com/style-ref.jpg"
+                    ],
+                    "metadata": {
+                      "audio_setting": "mute"
+                    }
+                  }
+                }
               }
             }
           }
