@@ -47,6 +47,24 @@
                     "description": "图像描述提示词",
                     "examples": ["一只橙色的猫坐在窗台上，背景是城市夜景"]
                   },
+                  "image": {
+                    "type": "string",
+                    "description": "参考图（单张）的 URL 或 Base64 字符串。与 `images` 等价，二者同时传时以 `images` 为准。传入后默认触发图生图（image-to-image）模式。",
+                    "examples": ["https://example.com/ref.png"]
+                  },
+                  "images": {
+                    "type": "array",
+                    "description": "参考图列表（支持多张）。每项为图片 URL 或 Base64 字符串。传入后默认触发图生图（image-to-image）模式。腾讯 VOD 渠道（`gpt-image-2`）支持此字段。",
+                    "items": {
+                      "type": "string"
+                    },
+                    "examples": [["https://example.com/ref1.png", "https://example.com/ref2.png"]]
+                  },
+                  "input_reference": {
+                    "type": "string",
+                    "description": "`image` 的别名，功能完全相同，二者任选其一传入即可。",
+                    "examples": ["https://example.com/ref.png"]
+                  },
                   "size": {
                     "type": "string",
                     "description": "图像尺寸，格式为 `宽x高`，例如 `1024x1024`、`1024x1536`、`1536x1024`",
@@ -54,8 +72,8 @@
                   },
                   "quality": {
                     "type": "string",
-                    "description": "图像质量。`standard`（标准质量）或 `hd`（高清质量）。默认 `standard`。部分模型支持。",
-                    "examples": ["standard"]
+                    "description": "图像质量。可选值：`low`（低质量，生成最快）、`medium`（中等质量）、`standard`（标准）、`hd` / `high`（高清，生成最慢）。默认 `standard`。部分模型支持全部选项，不支持的值将映射到最接近档位。",
+                    "examples": ["low"]
                   },
                   "n": {
                     "type": "integer",
@@ -93,7 +111,7 @@
                   }
                 },
                 "required": ["model", "prompt"],
-                "x-apifox-orders": ["model", "prompt", "size", "quality", "n", "style", "output_format", "output_compression", "metadata"]
+                "x-apifox-orders": ["model", "prompt", "image", "images", "input_reference", "size", "quality", "n", "style", "output_format", "output_compression", "metadata"]
               }
             }
           }
