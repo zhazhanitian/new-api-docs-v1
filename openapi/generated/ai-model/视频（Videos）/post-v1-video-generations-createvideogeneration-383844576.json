@@ -51,16 +51,9 @@
                       "宇航员站起身走了"
                     ]
                   },
-                  "image": {
-                    "type": "string",
-                    "description": "单张图片输入（URL 或 Base64），图生视频时使用。\n\n与 `images[0]` 等价，两者同时传时优先取 `image`。",
-                    "examples": [
-                      "https://example.com/image.jpg"
-                    ]
-                  },
                   "images": {
                     "type": "array",
-                    "description": "多张图片/视频 URL 数组，用于多素材输入场景：\n- `happyhorse-1.0-i2v`（图生视频）：传 1 个元素，为首帧图片 URL\n- `happyhorse-1.0-r2v`（参考视频生成）：传 1 个或多个参考图片 URL\n- `happyhorse-1.0-video-edit`（视频编辑）：`images[0]` 为待编辑视频 URL，`images[1:]` 为参考图片 URL（可选）",
+                    "description": "图片/视频 URL 数组，用于多素材输入场景：\n- `happyhorse-1.0-i2v`（图生视频）：传 1 个元素，为首帧图片 URL\n- `happyhorse-1.0-r2v`（参考视频生成）：传 1 个或多个参考图片 URL\n- `happyhorse-1.0-video-edit`（视频编辑）：`images[0]` 为待编辑视频 URL，`images[1:]` 为参考图片 URL（可选）",
                     "items": {
                       "type": "string"
                     },
@@ -68,13 +61,6 @@
                       [
                         "https://example.com/frame.jpg"
                       ]
-                    ]
-                  },
-                  "input_reference": {
-                    "type": "string",
-                    "description": "参考媒体 URL。`happyhorse-1.0-i2v` 图生视频时可用此字段传入首帧图片，与 `images[0]` 等价，优先级高于 `images[0]`。",
-                    "examples": [
-                      "https://example.com/reference.jpg"
                     ]
                   },
                   "duration": {
@@ -214,9 +200,7 @@
                 "x-apifox-orders": [
                   "model",
                   "prompt",
-                  "image",
                   "images",
-                  "input_reference",
                   "duration",
                   "size",
                   "seed",
@@ -331,7 +315,7 @@
                   "value": {
                     "model": "happyhorse-1.0-i2v",
                     "prompt": "小猫慢慢睁开眼睛，环顾四周，轻轻伸了个懒腰",
-                    "image": "https://example.com/cat.jpg",
+                    "images": ["https://example.com/cat.jpg"],
                     "size": "720p",
                     "duration": 5
                   }

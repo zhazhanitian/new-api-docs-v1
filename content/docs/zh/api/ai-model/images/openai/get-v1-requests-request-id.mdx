@@ -1,0 +1,22 @@
+---
+title: 查询同步生图请求扣费
+full: true
+_openapi:
+  method: GET
+  toc: []
+  structuredData:
+    headings: []
+    contents:
+      - content: |
+          通过 `request_id` 查询一次同步生图请求的实际扣费金额。
+
+          同步接口（`/v1/images/generations`）不在响应体中直接返回扣费，可在请求完成后取响应头 `X-Oneapi-Request-Id` 的值，调用本接口查询实际计费结果。
+---
+
+通过 `request_id` 查询一次同步生图请求（`/v1/images/generations`）的实际扣费金额。
+
+**`request_id` 来源**：调用同步生图接口后，从响应头 `X-Oneapi-Request-Id` 获取。
+
+> 账单记录在请求完成后异步落库，建议延迟 1–2 秒再调用本接口，避免记录尚未写入。
+
+<APIPage document={"openapi/generated/ai-model/图像（Images）/原生OpenAI格式/get-v1-requests-request-id.json"} operations={[{"path":"/v1/requests/{request_id}","method":"get"}]} />

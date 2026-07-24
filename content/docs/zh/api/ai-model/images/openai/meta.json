@@ -1,3 +1,8 @@
 {
-  "title": "原生OpenAI格式"
+  "title": "原生OpenAI格式",
+  "pages": [
+    "post-v1-images-generations",
+    "post-v1-images-edits",
+    "get-v1-requests-request-id"
+  ]
 }
