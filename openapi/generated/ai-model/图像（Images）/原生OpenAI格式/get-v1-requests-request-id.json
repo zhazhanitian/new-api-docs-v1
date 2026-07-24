@@ -1,0 +1,162 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "查询同步生图请求扣费",
+    "version": "1.0.0",
+    "description": "通过 `request_id` 查询一次同步生图请求（`/v1/images/generations`）的实际扣费金额和用量。\n\n**使用场景**：同步接口不在响应体中直接返回扣费信息，可在请求完成后用响应头 `X-Oneapi-Request-Id` 的值调用本接口查询实际计费结果。\n"
+  },
+  "tags": [
+    {
+      "name": "图像（Images）/原生OpenAI格式"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "使用 Bearer Token 认证。\n格式: `Authorization: Bearer sk-xxxxxx`\n"
+      }
+    }
+  },
+  "paths": {
+    "/v1/requests/{request_id}": {
+      "get": {
+        "tags": [
+          "图像（Images）/原生OpenAI格式"
+        ],
+        "summary": "查询同步生图请求扣费",
+        "description": "通过 `request_id` 查询一次同步生图请求的实际扣费金额和 Token 用量。\n\n**`request_id` 来源**：调用 `/v1/images/generations` 后，从响应头 `X-Oneapi-Request-Id` 获取。\n\n> 注意：账单记录在请求完成后异步落库，建议在请求返回后延迟 1–2 秒再查询，避免记录尚未写入。\n",
+        "operationId": "getRequestBilling",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "description": "请求 ID，从同步接口响应头 `X-Oneapi-Request-Id` 获取",
+            "schema": {
+              "type": "string"
+            },
+            "examples": {
+              "example": {
+                "value": "202607230903305897000BWuRdDUMM8oRJWK4"
+              }
+            }
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "账单详情",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "description": "响应码，成功时为 `success`",
+                      "examples": ["success"]
+                    },
+                    "data": {
+                      "type": "object",
+                      "description": "账单详情",
+                      "properties": {
+                        "request_id": {
+                          "type": "string",
+                          "description": "请求 ID",
+                          "examples": ["202607230903305897000BWuRdDUMM8oRJWK4"]
+                        },
+                        "model": {
+                          "type": "string",
+                          "description": "本次请求使用的模型名称",
+                          "examples": ["doubao-seedream-5-0-260128"]
+                        },
+                        "amount": {
+                          "type": "string",
+                          "description": "实际扣费金额（人民币），保留 6 位小数。反映实际生成图片数量，不会因上游少图而多扣。",
+                          "examples": ["0.235790"]
+                        },
+                        "prompt_tokens": {
+                          "type": "integer",
+                          "description": "输入 Token 数量",
+                          "examples": [1]
+                        },
+                        "completion_tokens": {
+                          "type": "integer",
+                          "description": "输出 Token 数量（图像 Token）",
+                          "examples": [16384]
+                        },
+                        "total_tokens": {
+                          "type": "integer",
+                          "description": "总 Token 数量",
+                          "examples": [16385]
+                        },
+                        "use_time": {
+                          "type": "integer",
+                          "description": "请求耗时（秒）",
+                          "examples": [36]
+                        },
+                        "created_at": {
+                          "type": "integer",
+                          "description": "账单记录创建时间（Unix 时间戳）",
+                          "examples": [1784797446]
+                        }
+                      },
+                      "required": ["request_id", "model", "amount", "prompt_tokens", "completion_tokens", "total_tokens", "use_time", "created_at"],
+                      "x-apifox-orders": ["request_id", "model", "amount", "prompt_tokens", "completion_tokens", "total_tokens", "use_time", "created_at"]
+                    }
+                  },
+                  "required": ["code", "data"],
+                  "x-apifox-orders": ["code", "data"]
+                },
+                "examples": {
+                  "success": {
+                    "summary": "查询成功",
+                    "value": {
+                      "code": "success",
+                      "data": {
+                        "request_id": "202607230903305897000BWuRdDUMM8oRJWK4",
+                        "model": "doubao-seedream-5-0-260128",
+                        "amount": "0.235790",
+                        "prompt_tokens": 1,
+                        "completion_tokens": 16384,
+                        "total_tokens": 16385,
+                        "use_time": 36,
+                        "created_at": 1784797446
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "账单记录不存在（请求 ID 无效，或记录尚未落库）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "examples": ["not_found"]
+                    },
+                    "message": {
+                      "type": "string",
+                      "examples": ["billing record not found"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

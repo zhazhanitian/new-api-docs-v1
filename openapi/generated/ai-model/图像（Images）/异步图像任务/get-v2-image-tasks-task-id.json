@@ -1,0 +1,165 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "查询异步图像生成任务",
+    "version": "2.0.0",
+    "description": "通过任务 ID 查询图像生成任务的当前状态和结果。\n\n建议轮询间隔：3–5 秒。任务通常在 10–90 秒内完成。\n"
+  },
+  "tags": [
+    {
+      "name": "图像（Images）/异步图像任务"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "使用 Bearer Token 认证。\n格式: `Authorization: Bearer sk-xxxxxx`\n"
+      }
+    }
+  },
+  "paths": {
+    "/v2/image-tasks/{task_id}": {
+      "get": {
+        "tags": [
+          "图像（Images）/异步图像任务"
+        ],
+        "summary": "查询异步图像生成任务",
+        "description": "通过任务 ID 查询图像生成任务的当前状态和结果。\n\n建议轮询间隔：3–5 秒。任务通常在 10–90 秒内完成。\n",
+        "operationId": "getImageTaskV2",
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "description": "任务 ID（由 POST /v2/image-tasks 返回的 `data.task_id` 字段）",
+            "schema": {
+              "type": "string"
+            },
+            "examples": {
+              "example": {
+                "value": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+              }
+            }
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "任务详情",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "description": "响应码，成功时为 `success`",
+                      "examples": ["success"]
+                    },
+                    "data": {
+                      "type": "object",
+                      "description": "任务详情",
+                      "properties": {
+                        "task_id": {
+                          "type": "string",
+                          "description": "任务 ID",
+                          "examples": ["task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"]
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": ["NOT_START", "SUBMITTED", "QUEUED", "IN_PROGRESS", "SUCCESS", "FAILURE", "UNKNOWN"],
+                          "description": "任务状态：\n- `NOT_START` — 已提交，等待处理（如腾讯 VOD 渠道初始状态）\n- `SUBMITTED` — 已提交至上游\n- `QUEUED` — 已进入处理队列（如豆包 Seedream 系列初始状态）\n- `IN_PROGRESS` — 处理中\n- `SUCCESS` — 已完成，`images` 数组包含结果\n- `FAILURE` — 失败，`fail_reason` 包含原因\n- `UNKNOWN` — 未知状态\n",
+                          "examples": ["SUCCESS"]
+                        },
+                        "progress": {
+                          "type": "string",
+                          "description": "处理进度，例如 `50%`、`100%`",
+                          "examples": ["100%"]
+                        },
+                        "model": {
+                          "type": "string",
+                          "description": "使用的模型名称",
+                          "examples": ["doubao-seedream-4-5-251128"]
+                        },
+                        "images": {
+                          "type": "array",
+                          "description": "生成图片列表（仅 `status=SUCCESS` 时有内容）。支持多张（n>1 时返回多项）。",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "url": {
+                                "type": "string",
+                                "description": "图片 URL，24小时内有效（response_format=url 时有值）"
+                              },
+                              "b64_json": {
+                                "type": "string",
+                                "description": "Base64 编码图片数据（response_format=b64_json 时有值）"
+                              }
+                            },
+                            "x-apifox-orders": ["url", "b64_json"]
+                          },
+                          "examples": [[{"url": "https://example.com/generated.png"}]]
+                        },
+                        "amount": {
+                          "type": "string",
+                          "description": "本次任务实际扣费金额（人民币），保留 6 位小数，例如 `\"0.014000\"`。",
+                          "examples": ["0.014000"]
+                        },
+                        "usage": {
+                          "type": "object",
+                          "description": "Token 用量统计。不支持的模型（如按次计费）返回全 0。",
+                          "properties": {
+                            "input_tokens": {
+                              "type": "integer",
+                              "description": "输入 Token 数量（提示词）"
+                            },
+                            "output_tokens": {
+                              "type": "integer",
+                              "description": "输出 Token 数量（图像）"
+                            },
+                            "total_tokens": {
+                              "type": "integer",
+                              "description": "总 Token 数量"
+                            }
+                          },
+                          "required": ["input_tokens", "output_tokens", "total_tokens"],
+                          "x-apifox-orders": ["input_tokens", "output_tokens", "total_tokens"]
+                        },
+                        "fail_reason": {
+                          "type": "string",
+                          "description": "失败原因（仅 `status=FAILURE` 时有值）"
+                        },
+                        "created_at": {
+                          "type": "integer",
+                          "description": "任务创建时间（Unix 时间戳）"
+                        },
+                        "submit_time": {
+                          "type": "integer",
+                          "description": "任务提交时间（Unix 时间戳）"
+                        },
+                        "finish_time": {
+                          "type": "integer",
+                          "description": "任务完成时间（Unix 时间戳），任务未完成时为 0"
+                        }
+                      },
+                      "required": ["task_id", "status"],
+                      "x-apifox-orders": ["task_id", "status", "progress", "model", "images", "amount", "usage", "fail_reason", "created_at", "submit_time", "finish_time"]
+                    }
+                  },
+                  "required": ["code", "data"],
+                  "x-apifox-orders": ["code", "data"]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

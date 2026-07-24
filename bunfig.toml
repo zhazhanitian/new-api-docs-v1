@@ -1,0 +1,2 @@
+echo '[install]
+registry = "https://registry.npmjs.org"' > bunfig.toml

@@ -54,16 +54,11 @@
                   },
                   "images": {
                     "type": "array",
-                    "description": "参考图列表（支持多张）。每项为图片 URL 或 Base64 字符串。传入后默认触发图生图（image-to-image）模式。腾讯 VOD 渠道（`gpt-image-2`）支持此字段。",
+                    "description": "参考图列表（支持多张）。每项为图片 URL 或 Base64 字符串。传入后默认触发图生图（image-to-image）模式。",
                     "items": {
                       "type": "string"
                     },
                     "examples": [["https://example.com/ref1.png", "https://example.com/ref2.png"]]
-                  },
-                  "input_reference": {
-                    "type": "string",
-                    "description": "`image` 的别名，功能完全相同，二者任选其一传入即可。",
-                    "examples": ["https://example.com/ref.png"]
                   },
                   "size": {
                     "type": "string",
@@ -111,7 +106,7 @@
                   }
                 },
                 "required": ["model", "prompt"],
-                "x-apifox-orders": ["model", "prompt", "image", "images", "input_reference", "size", "quality", "n", "style", "output_format", "output_compression", "metadata"]
+                "x-apifox-orders": ["model", "prompt", "image", "images", "size", "quality", "n", "style", "output_format", "output_compression", "metadata"]
               }
             }
           }

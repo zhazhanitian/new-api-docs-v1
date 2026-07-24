@@ -1,0 +1,195 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "提交异步图像生成任务",
+    "version": "2.0.0",
+    "description": "提交图像生成任务，立即返回任务 ID，生成在后台执行，可通过 GET /v2/image-tasks/:task_id 轮询状态和结果。\n\n入参格式与同步接口 `/v1/images/generations` 完全一致，可无缝切换。\n"
+  },
+  "tags": [
+    {
+      "name": "图像（Images）/异步图像任务"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "使用 Bearer Token 认证。\n格式: `Authorization: Bearer sk-xxxxxx`\n"
+      }
+    }
+  },
+  "paths": {
+    "/v2/image-tasks": {
+      "post": {
+        "tags": [
+          "图像（Images）/异步图像任务"
+        ],
+        "summary": "提交异步图像生成任务",
+        "description": "提交图像生成任务，立即返回任务 ID，生成在后台执行，可通过 GET /v2/image-tasks/:task_id 轮询状态和结果。\n\n入参格式与同步接口 `/v1/images/generations` 完全一致，可无缝切换。\n",
+        "operationId": "submitImageTaskV2",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "图像生成任务请求，格式与 `/v1/images/generations` 保持一致",
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "description": "模型名称。",
+                    "examples": ["doubao-seedream-4-5-251128"]
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "description": "图像描述提示词。豆包 Seedream 系列建议不超过 300 汉字或 600 英文单词。",
+                    "examples": ["一只橙色的猫坐在窗台上，背景是城市夜景"]
+                  },
+                  "image": {
+                    "oneOf": [
+                      { "type": "string" },
+                      { "type": "array", "items": { "type": "string" } }
+                    ],
+                    "description": "图生图 / 多图融合的输入图片，支持图片 URL 或 Base64 编码字符串。单张传字符串，多张传字符串数组（最多 14 张，视模型而定）。\n\n**豆包 Seedream 系列图片输入限制：**\n- 支持格式：jpeg、png、webp、bmp、tiff、gif、heic、heif\n- 宽高比（宽/高）范围：[1/16, 16]\n- 宽高长度（px）> 14\n- 大小：不超过 30MB\n- 总像素：不超过 36000000px（6000x6000）\n- Seedream 5.0 pro 最多支持传入 10 张参考图；Seedream 5.0 lite / 4.5 / 4.0 最多支持传入 14 张参考图。"
+                  },
+                  "n": {
+                    "type": "integer",
+                    "description": "生成图像数量。默认 1。豆包 Seedream 系列支持 1-15，传入 n>1 时后端自动转换为组图生成模式。",
+                    "examples": [1]
+                  },
+                  "size": {
+                    "type": "string",
+                    "description": "图像尺寸。\n\n**gpt-image-2**：指定 `宽x高`，总像素数范围 655,360 – 8,294,400。\n\n**豆包 Seedream 系列**：支持两种方式（不可混用）：\n\n*方式一：分辨率档位标签*（模型自动选择最佳宽高比）\n\n| 档位 | doubao-seedream-3-0-\\* | doubao-seedream-4-5-\\* | doubao-seedream-5-0-\\* |\n|------|:---:|:---:|:---:|\n| `1K` | ✅ | ❌ | ✅（仅 pro）|\n| `2K` | ❌ | ✅ | ✅ |\n| `3K` | ❌ | ❌ | ✅（仅 lite）|\n| `4K` | ❌ | ✅ | ✅（仅 lite）|\n\n*方式二：指定宽×高像素值*\n\n默认值 `2048x2048`（Seedream 3.0 默认 `1024x1024`）。常用推荐值：\n\n| 档位 | 1:1 | 16:9 | 9:16 | 4:3 | 3:4 |\n|------|-----|------|------|-----|-----|\n| 2K | `2048x2048` | `2560x1440` | `1440x2560` | `2304x1728` | `1728x2304` |\n| 4K | `4096x4096` | `5504x3040` | `3040x5504` | `4704x3520` | `3520x4704` |\n\nSeedream 总像素范围：`[3,686,400 – 16,777,216]`（最小约 2560×1440），宽高比范围 `[1/16, 16]`。",
+                    "examples": ["2048x2048"]
+                  },
+                  "response_format": {
+                    "type": "string",
+                    "description": "结果返回格式。`url`（默认，返回图片下载链接，24小时有效）或 `b64_json`（返回 Base64 编码字符串）。查询接口返回的 `images[]` 中对应字段会按此格式填充。",
+                    "examples": ["url"]
+                  },
+                  "quality": {
+                    "type": "string",
+                    "description": "图像质量。可选值：`low`、`medium`、`standard`、`hd` / `high`。默认 `standard`。部分模型支持。",
+                    "examples": ["standard"]
+                  },
+                  "style": {
+                    "type": "string",
+                    "description": "图像风格，如 `vivid`、`natural`。部分模型支持。",
+                    "examples": ["vivid"]
+                  },
+                  "output_format": {
+                    "type": "string",
+                    "description": "输出图像格式。支持 `png`（默认）、`jpeg`、`webp`。部分模型支持。",
+                    "examples": ["png"]
+                  },
+                  "output_compression": {
+                    "type": "integer",
+                    "description": "输出图像压缩质量（0-100），仅在 `output_format` 为 `jpeg` 或 `webp` 时有效。部分模型支持。",
+                    "examples": [85]
+                  },
+                  "watermark": {
+                    "type": "boolean",
+                    "description": "是否在生成的图片上添加水印。豆包 Seedream 系列支持，默认 `false`。"
+                  },
+                  "extra_fields": {
+                    "type": "object",
+                    "description": "模型扩展参数，部分参数仅特定模型支持，不支持的字段将被忽略。",
+                    "properties": {
+                      "guidance_scale": {
+                        "type": "number",
+                        "description": "引导强度，控制生成图与提示词的贴合程度。豆包 Seedream 系列支持，推荐取值范围 1-5。"
+                      },
+                      "negative_prompt": {
+                        "type": "string",
+                        "description": "反向提示词，描述不希望在图像中出现的元素。部分模型支持。"
+                      },
+                      "seed": {
+                        "type": "integer",
+                        "description": "随机种子，用于控制生成结果的可复现性。部分模型支持。"
+                      }
+                    }
+                  }
+                },
+                "required": ["model", "prompt"],
+                "x-apifox-orders": ["model", "prompt", "image", "n", "size", "response_format", "quality", "style", "output_format", "output_compression", "watermark", "extra_fields"]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "任务提交成功，返回任务信息",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "description": "响应码，成功时为 `success`",
+                      "examples": ["success"]
+                    },
+                    "data": {
+                      "type": "object",
+                      "description": "任务信息",
+                      "properties": {
+                        "task_id": {
+                          "type": "string",
+                          "description": "任务 ID，用于后续查询状态",
+                          "examples": ["task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"]
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": ["NOT_START", "QUEUED"],
+                          "description": "任务初始状态。不同渠道表现不同：\n- `QUEUED` — 豆包 Seedream 系列，已进入本地队列（goroutine 后台处理）\n- `NOT_START` — 腾讯 VOD 等原生异步渠道，已提交至上游，等待系统轮询\n\n请使用 `GET /v2/image-tasks/{task_id}` 轮询最终状态。",
+                          "examples": ["QUEUED"]
+                        },
+                        "progress": {
+                          "type": "string",
+                          "description": "处理进度",
+                          "examples": ["0%"]
+                        },
+                        "model": {
+                          "type": "string",
+                          "description": "使用的模型名称"
+                        },
+                        "images": {
+                          "type": "array",
+                          "description": "生成图片列表，提交时为空数组，完成后通过查询接口获取",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "url": {
+                                "type": "string",
+                                "description": "图片 URL（response_format=url 时有值）"
+                              },
+                              "b64_json": {
+                                "type": "string",
+                                "description": "Base64 编码图片数据（response_format=b64_json 时有值）"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "required": ["task_id", "status"],
+                      "x-apifox-orders": ["task_id", "status", "progress", "model", "images"]
+                    }
+                  },
+                  "required": ["code", "data"],
+                  "x-apifox-orders": ["code", "data"]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
