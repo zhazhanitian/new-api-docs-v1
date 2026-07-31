@@ -74,7 +74,7 @@
                         "status": {
                           "type": "string",
                           "enum": ["NOT_START", "SUBMITTED", "QUEUED", "IN_PROGRESS", "SUCCESS", "FAILURE", "UNKNOWN"],
-                          "description": "任务状态：\n- `NOT_START` — 已提交，等待处理（如腾讯 VOD 渠道初始状态）\n- `SUBMITTED` — 已提交至上游\n- `QUEUED` — 已进入处理队列（如豆包 Seedream 系列初始状态）\n- `IN_PROGRESS` — 处理中\n- `SUCCESS` — 已完成，`images` 数组包含结果\n- `FAILURE` — 失败，`fail_reason` 包含原因\n- `UNKNOWN` — 未知状态\n",
+                          "description": "任务状态：\n- `NOT_START` — 已提交，等待处理\n- `SUBMITTED` — 已提交至上游\n- `QUEUED` — 已进入处理队列（如豆包 Seedream 系列初始状态）\n- `IN_PROGRESS` — 处理中\n- `SUCCESS` — 已完成，`images` 数组包含结果\n- `FAILURE` — 失败，`fail_reason` 包含原因\n- `UNKNOWN` — 未知状态\n",
                           "examples": ["SUCCESS"]
                         },
                         "progress": {

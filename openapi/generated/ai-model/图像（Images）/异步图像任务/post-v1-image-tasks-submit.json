@@ -39,7 +39,7 @@
                 "properties": {
                   "model": {
                     "type": "string",
-                    "description": "模型名称",
+                    "description": "模型名称。\n\n**gpt-image-2**\n\n| 模型 ID | 说明 |\n|---|---|\n| `gpt-image-2` | OpenAI GPT Image 2 |\n\n**豆包 Seedream 系列**\n\n| 模型 ID | 说明 |\n|---|---|\n| `doubao-seedream-3-0-t2i-250415` | Seedream 3.0 |\n| `doubao-seedream-4-5-t2i-250505` | Seedream 4.5 |\n| `doubao-seedream-4-5-251128` | Seedream 4.5（增强版）|\n| `doubao-seedream-5-0-t2i-250804` | Seedream 5.0 |\n\n**Gemini 系列**\n\n| 模型 ID | 系列名 | 说明 |\n|---|---|---|\n| `gemini-2.5-flash-image` | Nano Banana | Gemini 2.5 Flash Image |\n| `gemini-3-pro-image` | Nano Banana Pro | Gemini 3 Pro Image |\n| `gemini-3.1-flash-image` | Nano Banana 2 | Gemini 3.1 Flash Image |\n\n**Kling 系列**\n\n| 模型 ID | 说明 |\n|---|---|\n| `kling-image-2.1` | Kling Image 2.1 |\n| `kling-image-3.0` | Kling Image 3.0 |\n| `kling-image-3.0-omni` | Kling Image 3.0 Omni，支持 `auto` 宽高比 |\n| `kling-image-o1` | Kling Image O1，支持 `auto` 宽高比 |\n| `kling-image-scene` | Kling Image Scene，扩图模式，需配合 `extra_fields.scene_type=\"image_expand\"` |\n\n**Vidu 系列**\n\n| 模型 ID | 说明 |\n|---|---|\n| `vidu-image-q2` | Vidu Q2 |\n\n**Qwen 系列**\n\n| 模型 ID | 说明 |\n|---|---|\n| `qwen-image-0925` | Qwen-Image-0925，通过 `size` 传自定义像素尺寸 |\n\n**Hunyuan 系列**\n\n| 模型 ID | 说明 |\n|---|---|\n| `hunyuan-image-3.0` | Hunyuan 3.0，通过 `size` 传自定义像素尺寸；支持全景图模式 |",
                     "examples": ["gpt-image-2"]
                   },
                   "prompt": {
@@ -54,7 +54,7 @@
                   },
                   "images": {
                     "type": "array",
-                    "description": "参考图列表（支持多张）。每项为图片 URL 或 Base64 字符串。传入后默认触发图生图（image-to-image）模式。",
+                    "description": "参考图列表（支持多张）。每项为图片 URL 或 Base64 字符串。传入后默认触发图生图（image-to-image）模式。\n\n**各模型参考图数量上限（超出将被自动截断）：**\n\n| 模型 | 最多参考图数 |\n|---|---|\n| `gemini-2.5-flash-image` | **3 张** |\n| `gemini-3-pro-image` | **14 张** |\n| `gemini-3.1-flash-image` | **14 张** |\n| `kling-image-2.1` | **4 张** |\n| `kling-image-3.0` | **1 张** |\n| `kling-image-3.0-omni` | **10 张** |\n| `kling-image-o1` | **10 张** |\n| `kling-image-scene` | **1 张**（扩图原图） |\n| `vidu-image-q2` | **7 张** |\n| `qwen-image-0925` | **1 张** |\n| `hunyuan-image-3.0` | **3 张** |\n\n超出上限的图片将被自动截断。",
                     "items": {
                       "type": "string"
                     },
@@ -62,17 +62,17 @@
                   },
                   "size": {
                     "type": "string",
-                    "description": "图像尺寸，格式为 `宽x高`，例如 `1024x1024`、`1024x1536`、`1536x1024`",
+                    "description": "图像尺寸。\n\n**Gemini（GG）系列**：映射到宽高比（AspectRatio），不支持自定义像素尺寸。\n- 直接传宽高比（推荐）：`\"1:1\"`、`\"16:9\"`、`\"9:16\"` 等\n- 传像素尺寸：系统自动转换为最近邻宽高比，如 `\"1024x1024\"` → `\"1:1\"`\n\n各版本支持的宽高比：GG 2.5/3.0 支持 `1:1, 2:3, 3:2, 3:4, 4:3, 4:5, 5:4, 9:16, 16:9, 21:9`；GG 3.1 额外支持 `1:4, 1:8, 4:1, 8:1`。\n\n**gpt-image-2**：指定 `宽x高`，总像素数范围 655,360 – 8,294,400。\n\n**Kling 系列**（除 scene）：映射到宽高比（AspectRatio）。\n支持：`1:1, 2:3, 3:2, 3:4, 4:3, 9:16, 16:9, 21:9`；`3.0-omni` / `o1` 额外支持 `auto`。\n`kling-image-scene` 扩图模式 `size` 参数无效，输出尺寸由扩图参数决定。\n\n**Vidu（`vidu-image-q2`）**：映射到宽高比。支持：`1:1, 2:3, 3:2, 3:4, 4:3, 9:16, 16:9, 21:9`。\n\n**Qwen（`qwen-image-0925`）**：指定 `宽x高`，总像素范围 261,632 – 4,194,304（512×512 至 2048×2048）。\n\n**Hunyuan（`hunyuan-image-3.0`）**：指定 `宽x高`，宽高均在 [512, 2048] 内，且宽×高 ≤ 1,048,576。",
                     "examples": ["1024x1024"]
                   },
                   "quality": {
                     "type": "string",
-                    "description": "图像质量。可选值：`low`（低质量，生成最快）、`medium`（中等质量）、`standard`（标准）、`hd` / `high`（高清，生成最慢）。默认 `standard`。部分模型支持全部选项，不支持的值将映射到最接近档位。",
+                    "description": "图像质量 / 分辨率档位。各模型语义不同：\n\n**Gemini（GG）系列**：映射到分辨率档位（Resolution）。\n- 直接传档位（推荐）：`1K`、`2K`、`4K`；`gemini-3.1-flash-image` 额外支持 `720P`\n- 兼容标准值：`low` / `standard` → `1K`，`medium` / `hd` / `high` → `2K`\n- 默认：`1K`\n\n**gpt-image-2**：`low` / `standard` → image2_low，`medium` → image2_medium，`hd` / `high` → image2_high。默认 `standard`（image2_low）。\n\n**Kling 系列**（除 scene）：映射到分辨率档位（小写）。\n- 直接传档位（推荐）：`1k`、`2k`；`3.0-omni` / `o1` 额外支持 `4k`\n- 兼容标准值：`low` / `standard` / `medium` → `1k`，`hd` / `high` → `2k`\n- 默认：`1k`；`kling-image-scene` 忽略此参数\n\n**Vidu（`vidu-image-q2`）**：映射到分辨率档位。\n- 直接传档位（推荐）：`1080p`、`2K`、`4K`\n- 兼容标准值：`low` / `standard` → `1080p`，`medium` / `hd` / `high` → `2K`\n- 默认：`1080p`\n\n**Qwen / Hunyuan**：不使用此参数（通过 `size` 传像素尺寸）。\n\n**其他模型**：`low`、`medium`、`standard`、`hd` / `high`，默认 `standard`。",
                     "examples": ["low"]
                   },
                   "n": {
                     "type": "integer",
-                    "description": "生成图像数量。默认 1。部分模型支持多张，不支持时忽略。",
+                    "description": "生成图像数量。默认 1。\n\n**豆包 Seedream 系列**：`n` 映射为组图生成的 `max_images`（最多允许生成的张数上限），模型以 `auto` 模式根据 prompt 自主推理实际生成张数，最终张数 ≤ `n`。如需精确控制张数，建议在 prompt 中明确描述（如「生成 4 张不同风格的图片」）。支持范围 1-15。\n\n**Kling 系列**：支持 1-9 张，超出自动截断。\n\n**OG（gpt-image-2）**：支持 1-8 张，超出自动截断。\n\n**其他模型（Gemini / Vidu / Qwen / Hunyuan 等）**：底层 API 不支持数量参数，`n` 字段传入后会被忽略，固定返回 1 张。",
                     "examples": [1]
                   },
                   "style": {
@@ -82,8 +82,8 @@
                   },
                   "output_format": {
                     "type": "string",
-                    "description": "输出图像格式。支持 `png`（默认）、`jpeg`、`webp`。部分模型支持。",
-                    "examples": ["png"]
+                    "description": "输出图像文件格式。不传时跟随模型默认值。\n\n**gpt-image-2 / Kling 系列**：支持 `jpeg` / `png`。\n\n**豆包 Seedream 系列**：支持 `jpeg` / `png` / `webp`；仅 `doubao-seedream-5-0` 系列支持。\n\n**其他模型**：不支持，传入后忽略。",
+                    "examples": ["jpeg"]
                   },
                   "output_compression": {
                     "type": "integer",
@@ -92,15 +92,36 @@
                   },
                   "metadata": {
                     "type": "object",
-                    "description": "模型扩展参数，部分参数仅特定模型支持，不支持的字段将被忽略。",
+                    "description": "模型扩展参数，不支持的字段将被忽略。\n\n| 参数 | 类型 | 支持模型 | 说明 |\n|---|---|---|---|\n| `negative_prompt` | string | gpt-image-2、Gemini 系列、Kling 系列 | 反向提示词 |\n| `seed` | integer | gpt-image-2、Gemini 系列、Kling 系列 | 随机种子，控制生成结果可复现性 |\n| `enhance_prompt` | string | Gemini 系列 | 自动优化 prompt，取值 `Enabled` / `Disabled` |\n| `scene_type` | string | Kling scene、Hunyuan 3.0 | 场景类型：`image_expand`（Kling 扩图）/ `3d_panorama`（Hunyuan 全景图）|\n| `expansion` | object | kling-image-scene | 扩图比例，配合 `scene_type=\"image_expand\"` 使用，含 `up` / `down` / `left` / `right`，取值范围 `[0, 2]` |",
                     "properties": {
                       "negative_prompt": {
                         "type": "string",
-                        "description": "反向提示词，描述不希望在图像中出现的元素。部分模型支持。"
+                        "description": "反向提示词，描述不希望在图像中出现的元素。部分模型支持（含 gpt-image-2、Gemini GG 系列、Kling 系列）。"
                       },
                       "seed": {
                         "type": "integer",
-                        "description": "随机种子，用于控制生成结果的可复现性。部分模型支持。"
+                        "description": "随机种子，用于控制生成结果的可复现性。部分模型支持（含 gpt-image-2、Gemini GG 系列、Kling 系列）。"
+                      },
+                      "enhance_prompt": {
+                        "type": "string",
+                        "enum": ["Enabled", "Disabled"],
+                        "description": "自动优化提示词，开启后将自动优化传入的 prompt 以提升生成质量。\n**仅 Gemini（GG）系列支持**：`gemini-2.5-flash-image`、`gemini-3-pro-image`、`gemini-3.1-flash-image`。\n取值：`Enabled`（开启）/ `Disabled`（关闭）。",
+                        "examples": ["Enabled"]
+                      },
+                      "scene_type": {
+                        "type": "string",
+                        "description": "场景类型，用于触发特殊生成模式。\n\n**支持模型：**\n- `kling-image-scene`：传 `\"image_expand\"` 启用扩图模式（配合 `expansion` 参数使用）\n- `hunyuan-image-3.0`：传 `\"3d_panorama\"` 启用全景图生成模式\n\n其他模型忽略此参数。",
+                        "examples": ["image_expand"]
+                      },
+                      "expansion": {
+                        "type": "object",
+                        "description": "Kling 扩图参数，**仅 `kling-image-scene` 模型在 `scene_type=\"image_expand\"` 时有效**。\n各方向取值范围 `[0, 2]`，代表基于原图对应维度的扩充倍数；新图整体面积不得超过原图的 3 倍。\n需同时传入 `images`（原图）和 `scene_type=\"image_expand\"`。\n\n示例：`{\"up\": 0.1, \"down\": 0.2, \"left\": 0.3, \"right\": 0.4}`",
+                        "properties": {
+                          "up":    { "type": "number", "description": "向上扩充比例，基于原图高度，取值 [0, 2]" },
+                          "down":  { "type": "number", "description": "向下扩充比例，基于原图高度，取值 [0, 2]" },
+                          "left":  { "type": "number", "description": "向左扩充比例，基于原图宽度，取值 [0, 2]" },
+                          "right": { "type": "number", "description": "向右扩充比例，基于原图宽度，取值 [0, 2]" }
+                        }
                       }
                     }
                   }
