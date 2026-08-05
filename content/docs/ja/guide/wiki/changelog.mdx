@@ -4,13 +4,540 @@ title: 変更履歴
 
 import { Callout } from 'fumadocs-ui/components/callout';
 
-<Callout type="warn" title="バージョンログ情報 · データ更新日時 2026-6-29 18:05:29">
+<Callout type="warn" title="バージョンログ情報 · データ更新日時 2026-8-3 15:59:44">
 すべての履歴バージョンを表示するには、[GitHub Releases ページ](https://github.com/QuantumNous/new-api/releases)をご覧ください。このページは定期的に最新の更新情報を取得します。
 </Callout>
 
+## v1.0.0-rc.23
+
+<Callout type="info" title="最新リリース版 · 公開日 2026-08-01 23:25:04 (UTC+8)">
+
+Highlights: This release expands provider and channel compatibility with New API channels, DeepSeek Responses API support, zstd request decompression, and automatic group routing. It also improves operational accuracy with stream visibility in logs, more reliable tiered-retry billing, and upstream Bedrock cancellation when clients disconnect.
+
+### New Features
+- Added New API channel support with Gemini-to-OpenAI streaming conversion, Advanced Custom Responses Compact handling, and multipart image edit support (#6559).
+- Added DeepSeek Responses API support (#6562).
+- Added automatic group selection for request routing (#6590).
+- Added per-channel HTTP transport controls so administrators can tune connection behavior per channel.
+- Added support for zstd-compressed requests (#6545).
+- Log owners can now see whether a request was streamed (#6558).
+
+### Bug Fixes
+- Qwen `thinking_budget` is now preserved when requests are relayed (#5836).
+- Tiered retry billing now settles usage against the final selected group, including group-switch retries (#6570).
+- Bedrock requests are now cancelled when clients disconnect, reducing wasted upstream work (#6589).
+
+### Improvements
+- Public header navigation links now use a consistent font size (#6557).
+
+---
+
+### What's Changed
+* refactor: extract protocol conversion layer into standalone relaykit module by @Calcium-Ion in https://github.com/QuantumNous/new-api/pull/6369
+* fix: 慢查询/错误 SQL 日志参数化 by @feitianbubu in https://github.com/QuantumNous/new-api/pull/6493
+* feat(oidc): 支持自定义 OIDC 登录显示名称 by @mrchi in https://github.com/QuantumNous/new-api/pull/6012
+* fix: preserve Qwen thinking_budget passthrough by @wxwwt in https://github.com/QuantumNous/new-api/pull/5836
+* feat: support zstd request decompression by @seefs001 in https://github.com/QuantumNous/new-api/pull/6545
+* feat(logs): expose stream status to log owners by @seefs001 in https://github.com/QuantumNous/new-api/pull/6558
+* fix(relay): preserve multipart image edits for New API channels by @seefs001 in https://github.com/QuantumNous/new-api/pull/6559
+* fix(oauth): stop treating a foreign window.opener as a bind flow by @neimaravila in https://github.com/QuantumNous/new-api/pull/6425
+* style: unify public header nav link font size to 14px (text-sm) by @feitianbubu in https://github.com/QuantumNous/new-api/pull/6557
+* feat: deepseek responses api by @seefs001 in https://github.com/QuantumNous/new-api/pull/6562
+* fix(billing): settle tiered retries with final group by @faithleysath in https://github.com/QuantumNous/new-api/pull/6518
+* fix(billing): harden tiered retry group-switch billing (follow-up to #6518) by @Calcium-Ion in https://github.com/QuantumNous/new-api/pull/6570
+* fix(aws): cancel Bedrock requests on client disconnect by @Calcium-Ion in https://github.com/QuantumNous/new-api/pull/6589
+* Feat/auto group by @Calcium-Ion in https://github.com/QuantumNous/new-api/pull/6590
+
+### New Contributors
+* @mrchi made their first contribution in https://github.com/QuantumNous/new-api/pull/6012
+* @neimaravila made their first contribution in https://github.com/QuantumNous/new-api/pull/6425
+* @faithleysath made their first contribution in https://github.com/QuantumNous/new-api/pull/6518
+
+**Full Changelog**: https://github.com/QuantumNous/new-api/compare/v1.0.0-rc.22...v1.0.0-rc.23
+
+**Download Resources**
+
+<ul>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.23/checksums-linux.txt">checksums-linux.txt</a> (180 B)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.23/checksums-macos.txt">checksums-macos.txt</a> (93 B)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.23/checksums-windows.txt">checksums-windows.txt</a> (91 B)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.23/new-api-arm64-v1.0.0-rc.23">new-api-arm64-v1.0.0-rc.23</a> (110.1 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.23/new-api-macos-v1.0.0-rc.23">new-api-macos-v1.0.0-rc.23</a> (132.6 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.23/new-api-v1.0.0-rc.23">new-api-v1.0.0-rc.23</a> (113.2 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.23/new-api-v1.0.0-rc.23.exe">new-api-v1.0.0-rc.23.exe</a> (115.0 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v1.0.0-rc.23.zip">Source code (zip)</a></li>
+<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v1.0.0-rc.23.tar.gz">Source code (tar.gz)</a></li>
+</ul>
+
+</Callout>
+
+---
+
+## v1.0.0-rc.22
+
+<Callout type="note" title="リリース版 · 公開日 2026-07-26 21:19:04 (UTC+8)">
+
+This release expands channel and model administration with upstream model discovery, new Gemini image models, configurable billing options, and Sub2API support. It also improves reliability across streaming, pricing, refunds, user management, and admin UI workflows.
+
+### New Features
+- Channels can now discover available models from advanced custom and Codex-compatible upstreams (#6184).
+- Added support for the latest Gemini image GA models (#6371).
+- Added configurable tool pricing with Sub2API channel support and alpha-search billing.
+- OpenAI Realtime GA models are now available with improved routing compatibility (#6032).
+
+### Bug Fixes
+- Responses-to-Chat streaming no longer emits duplicate tool calls (#6225).
+- Creating a model with an existing name no longer clears its saved pricing (#6365).
+- The unset-price models view now lists only models available from the selected channels (#6126).
+- Very large user quota values are now handled without overflow (#6134).
+- User list sorting now works correctly with paginated results (#6194).
+- MiniMax models are now correctly associated with the MiniMax vendor (#6164).
+- Playground model group selectors now handle auto-group listings and long options correctly (#6163).
+- Task refunds are no longer duplicated during concurrent status updates (#6074).
+- Top-up amount fields can now be cleared completely while editing (#6473).
+- Channel inline priority updates are more reliable (#6415).
+
+### Improvements
+- Admin JSON editing now has a more consistent experience and avoids UI issues that could hide content (#6421).
+- Users page search is debounced to reduce unnecessary requests and improve responsiveness (#6474).
+- Proxy-backed channel requests are more compatible and stable (#6157).
+- Upstream error logs now provide more useful fallback details when providers return unclear errors (#6431).
+
+---
+
+### What's Changed
+* fix: list only channel models in unset price models tab by @feitianbubu in https://github.com/QuantumNous/new-api/pull/6126
+* fix: purge authentication data on hard user deletion by @seefs001 in https://github.com/QuantumNous/new-api/pull/6168
+* fix(users): prevent large quota values from overflowing by @QuentinHsu in https://github.com/QuantumNous/new-api/pull/6134
+* fix: infer MiniMax vendor for MiniMax models by @fux-dev in https://github.com/QuantumNous/new-api/pull/6164
+* fix: add server-side sorting to user list, prevent client-side sort on paged data by @DawnMoon1542 in https://github.com/QuantumNous/new-api/pull/6194
+* fix(data-table): update table body immediately when toggling columns by @DawnMoon1542 in https://github.com/QuantumNous/new-api/pull/6253
+* fix: prevent duplicate tool calls in Responses-to-Chat streaming by @nikuleo in https://github.com/QuantumNous/new-api/pull/6225
+* feat(channel): support Codex upstream model discovery by @seefs001 in https://github.com/QuantumNous/new-api/pull/6184
+* feat: support upstream model fetch for advanced custom channels by @seefs001 in https://github.com/QuantumNous/new-api/pull/5971
+* refactor(auth): replace dashboard sessions with stateless tokens and session control by @Calcium-Ion in https://github.com/QuantumNous/new-api/pull/6329
+* fix: 中转 gpt-realtime 系列 GA 模型时不再发送 realtime beta 标识 by @feitianbubu in https://github.com/QuantumNous/new-api/pull/6032
+* fix(playground): prevent model group option stretching by @QuentinHsu in https://github.com/QuantumNous/new-api/pull/6120
+* perf(data-table): optimize action column width allocation by @QuentinHsu in https://github.com/QuantumNous/new-api/pull/6135
+* fix(web): show used quota for unlimited API keys by @RedwindA in https://github.com/QuantumNous/new-api/pull/6224
+* fix(channel): improve proxy client compatibility and cache lifecycle by @yyhhyyyyyy in https://github.com/QuantumNous/new-api/pull/6157
+* fix(playground): resolve auto group model listing by @QuentinHsu in https://github.com/QuantumNous/new-api/pull/6163
+* fix: prevent duplicate suno task refunds via cas status update by @feitianbubu in https://github.com/QuantumNous/new-api/pull/6074
+* chore(github): migrate issue templates to required forms by @seefs001 in https://github.com/QuantumNous/new-api/pull/6452
+* fix(github): restore issue form visibility by @seefs001 in https://github.com/QuantumNous/new-api/pull/6454
+* fix: log response body when parsed upstream error message is empty by @bigsongeth in https://github.com/QuantumNous/new-api/pull/6431
+* fix: prevent model create from wiping existing pricing for same name by @feitianbubu in https://github.com/QuantumNous/new-api/pull/6365
+* fix(web/channel): stabilize inline priority updates by @RedwindA in https://github.com/QuantumNous/new-api/pull/6415
+* perf(json-editor): unify admin JSON editing experience by @QuentinHsu in https://github.com/QuantumNous/new-api/pull/6421
+* feat: add gemini-3-pro-image and gemini-3.1-flash-image GA models by @feitianbubu in https://github.com/QuantumNous/new-api/pull/6371
+* feat: support Tencent TokenHub API key via OpenAI-compatible protocol by @feitianbubu in https://github.com/QuantumNous/new-api/pull/6232
+* fix: allow topup amount input to be fully cleared by @feitianbubu in https://github.com/QuantumNous/new-api/pull/6473
+* fix: debounce users page search input by @feitianbubu in https://github.com/QuantumNous/new-api/pull/6474
+
+### New Contributors
+* @fux-dev made their first contribution in https://github.com/QuantumNous/new-api/pull/6164
+* @DawnMoon1542 made their first contribution in https://github.com/QuantumNous/new-api/pull/6194
+* @nikuleo made their first contribution in https://github.com/QuantumNous/new-api/pull/6225
+* @bigsongeth made their first contribution in https://github.com/QuantumNous/new-api/pull/6431
+
+**Full Changelog**: https://github.com/QuantumNous/new-api/compare/v1.0.0-rc.21...v1.0.0-rc.22
+
+**Download Resources**
+
+<ul>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.22/checksums-linux.txt">checksums-linux.txt</a> (180 B)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.22/checksums-macos.txt">checksums-macos.txt</a> (93 B)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.22/checksums-windows.txt">checksums-windows.txt</a> (91 B)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.22/new-api-arm64-v1.0.0-rc.22">new-api-arm64-v1.0.0-rc.22</a> (109.9 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.22/new-api-macos-v1.0.0-rc.22">new-api-macos-v1.0.0-rc.22</a> (132.4 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.22/new-api-v1.0.0-rc.22">new-api-v1.0.0-rc.22</a> (113.0 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.22/new-api-v1.0.0-rc.22.exe">new-api-v1.0.0-rc.22.exe</a> (114.9 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v1.0.0-rc.22.zip">Source code (zip)</a></li>
+<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v1.0.0-rc.22.tar.gz">Source code (tar.gz)</a></li>
+</ul>
+
+</Callout>
+
+---
+
+## v1.0.0-rc.21
+
+<Callout type="note" title="リリース版 · 公開日 2026-07-11 23:01:26 (UTC+8)">
+
+### Highlights
+The headline change is GPT-5.6 cache write billing: OpenAI `cache_write_tokens` are now charged at the cache-creation rate, with accounting safeguards around cached and uncached prompt tokens. This release also improves pricing workflows, Playground controls, channel table usability, and billing/logging reliability.
+
+### New Features
+- Added GPT-5.6 cache write billing support, charging OpenAI `cache_write_tokens` at the cache-creation rate while keeping cached and uncached prompt token accounting consistent.
+- Pricing pages now support group-aware dynamic calculations and avoid showing sample-only special groups (#5906).
+- Model pricing settings now include an Unset Price Models tab plus status and sync filters, making it easier to find and configure models without prices (#6124).
+- The Playground now includes request parameter panels for chat and generation tuning, so users can adjust model behavior directly in the UI (#6044).
+- Channel lists now support manual column resizing and keep resized tables filling the available width (#5948).
+- Logs now show stream timing metrics and task detail views for clearer troubleshooting.
+- Added enhanced text protocol conversion and advanced custom routing capabilities for more flexible channel routing (#5825).
+
+### Bug Fixes
+- Browser translation can no longer corrupt React-rendered pages (#5963).
+- Custom model names that differ only by case can now be added consistently, including from multi-select controls (#6061).
+- Billing now handles quota pre-consumption and image-stream disconnect edge cases more accurately.
+- Subscription reset handling is more reliable under concurrent updates (#6057).
+- Codex response passthrough fields now sync correctly (#6018).
+- Playground model selector lists now stay synchronized after model changes.
+- Custom home iframes can trigger top navigation after a user action as intended (#5955).
+- Restored paste behavior for default channel connection settings.
+
+### Improvements
+- Upstream price sync tables in model pricing now load and render more efficiently (#6092).
+- Refined table badges, pricing layouts, sync dialogs, and default theme styling for a cleaner admin UI.
+- Font assets now resolve correctly across workspace layouts.
+
+---
+
+### What's Changed
+* fix(web): prevent browser translation from mutating React roots by @cat0825 in https://github.com/QuantumNous/new-api/pull/5963
+* feat(web): 支持渠道列表手动调整列宽 by @zuiho-kai in https://github.com/QuantumNous/new-api/pull/5948
+* fix(web): let channel table fill available width by @zuiho-kai in https://github.com/QuantumNous/new-api/pull/6031
+* chore: remove dead files resurrected by v1.0 launch commit by @feitianbubu in https://github.com/QuantumNous/new-api/pull/6041
+* fix: use GORM v2 row locking for subscription resets by @seefs001 in https://github.com/QuantumNous/new-api/pull/6057
+* feat(playground): add playground parameter settings panel by @QuentinHsu in https://github.com/QuantumNous/new-api/pull/6044
+* fix: allow adding model names that differ only by case in multi-select by @feitianbubu in https://github.com/QuantumNous/new-api/pull/6061
+* fix: remove sample special usable groups leaking into pricing page by @feitianbubu in https://github.com/QuantumNous/new-api/pull/5906
+* perf(model-pricing): optimize upstream price sync tables by @QuentinHsu in https://github.com/QuantumNous/new-api/pull/6092
+* fix(web): allow user-activated top navigation for custom home iframe by @Heykode in https://github.com/QuantumNous/new-api/pull/5955
+* chore(deps): bump golang.org/x/crypto from 0.51.0 to 0.52.0 by @dependabot[bot] in https://github.com/QuantumNous/new-api/pull/6096
+* fix: sync codex responses passthrough fields by @seefs001 in https://github.com/QuantumNous/new-api/pull/6018
+* feat: enhance text protocol conversion and advanced custom routing by @Calcium-Ion in https://github.com/QuantumNous/new-api/pull/5825
+* feat: add unset price models tab to model pricing settings by @feitianbubu in https://github.com/QuantumNous/new-api/pull/6124
+
+### New Contributors
+* @cat0825 made their first contribution in https://github.com/QuantumNous/new-api/pull/5963
+
+**Full Changelog**: https://github.com/QuantumNous/new-api/compare/v1.0.0-rc.20...v1.0.0-rc.21
+
+**Download Resources**
+
+<ul>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.21/checksums-linux.txt">checksums-linux.txt</a> (180 B)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.21/checksums-macos.txt">checksums-macos.txt</a> (93 B)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.21/checksums-windows.txt">checksums-windows.txt</a> (91 B)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.21/new-api-arm64-v1.0.0-rc.21">new-api-arm64-v1.0.0-rc.21</a> (129.6 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.21/new-api-macos-v1.0.0-rc.21">new-api-macos-v1.0.0-rc.21</a> (152.2 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.21/new-api-v1.0.0-rc.21">new-api-v1.0.0-rc.21</a> (132.8 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.21/new-api-v1.0.0-rc.21.exe">new-api-v1.0.0-rc.21.exe</a> (134.6 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v1.0.0-rc.21.zip">Source code (zip)</a></li>
+<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v1.0.0-rc.21.tar.gz">Source code (tar.gz)</a></li>
+</ul>
+
+</Callout>
+
+---
+
+## v1.0.0-rc.20
+
+<Callout type="note" title="リリース版 · 公開日 2026-07-07 21:46:39 (UTC+8)">
+
+### Highlights
+This release adds GPT-5.6 pricing support and stale instance cleanup tools for administrators. It also fixes several quota and pricing edge cases, including wallet reward transfers and decimal ratio input.
+
+### New Features
+- Added token pricing support for GPT-5.6 models.
+- Added system-info actions for cleaning up stale instances. (#5953)
+
+### Bug Fixes
+- Wallet reward transfers now respect the configured quota unit instead of using an incorrect fixed unit. (#5808)
+- Group ratio fields now allow decimal values such as `0.05` to be typed normally. (#5995)
+- Tiered pricing now uses a default token estimate during pre-consumption, improving quota calculation for affected pricing rules.
+
+---
+
+### What's Changed
+* fix: 分组倍率 Ratio 输入框保留小数中间态,修复无法输入 0.05 by @feitianbubu in https://github.com/QuantumNous/new-api/pull/5995
+* feat(system-info): add stale instance cleanup actions by @seefs001 in https://github.com/QuantumNous/new-api/pull/5953
+* fix(wallet): honor configured quota units for reward transfers by @A-Words in https://github.com/QuantumNous/new-api/pull/5808
+
+### New Contributors
+* @A-Words made their first contribution in https://github.com/QuantumNous/new-api/pull/5808
+
+**Full Changelog**: https://github.com/QuantumNous/new-api/compare/v1.0.0-rc.19-i18nfix.2...v1.0.0-rc.20
+
+**Download Resources**
+
+<ul>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.20/checksums-linux.txt">checksums-linux.txt</a> (180 B)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.20/checksums-macos.txt">checksums-macos.txt</a> (93 B)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.20/checksums-windows.txt">checksums-windows.txt</a> (91 B)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.20/new-api-arm64-v1.0.0-rc.20">new-api-arm64-v1.0.0-rc.20</a> (129.3 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.20/new-api-macos-v1.0.0-rc.20">new-api-macos-v1.0.0-rc.20</a> (151.7 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.20/new-api-v1.0.0-rc.20">new-api-v1.0.0-rc.20</a> (132.4 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.20/new-api-v1.0.0-rc.20.exe">new-api-v1.0.0-rc.20.exe</a> (134.2 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v1.0.0-rc.20.zip">Source code (zip)</a></li>
+<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v1.0.0-rc.20.tar.gz">Source code (tar.gz)</a></li>
+</ul>
+
+</Callout>
+
+---
+
+## v1.0.0-rc.19-i18nfix.2
+
+<Callout type="note" title="リリース版 · 公開日 2026-07-07 14:06:07 (UTC+8)">
+
+Fix i18n error
+
+**Download Resources**
+
+<ul>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.19-i18nfix.2/checksums-linux.txt">checksums-linux.txt</a> (200 B)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.19-i18nfix.2/checksums-macos.txt">checksums-macos.txt</a> (103 B)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.19-i18nfix.2/checksums-windows.txt">checksums-windows.txt</a> (101 B)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.19-i18nfix.2/new-api-arm64-v1.0.0-rc.19-i18nfix.2">new-api-arm64-v1.0.0-rc.19-i18nfix.2</a> (129.3 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.19-i18nfix.2/new-api-macos-v1.0.0-rc.19-i18nfix.2">new-api-macos-v1.0.0-rc.19-i18nfix.2</a> (151.7 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.19-i18nfix.2/new-api-v1.0.0-rc.19-i18nfix.2">new-api-v1.0.0-rc.19-i18nfix.2</a> (132.4 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.19-i18nfix.2/new-api-v1.0.0-rc.19-i18nfix.2.exe">new-api-v1.0.0-rc.19-i18nfix.2.exe</a> (134.2 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v1.0.0-rc.19-i18nfix.2.zip">Source code (zip)</a></li>
+<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v1.0.0-rc.19-i18nfix.2.tar.gz">Source code (tar.gz)</a></li>
+</ul>
+
+</Callout>
+
+---
+
+## v1.0.0-rc.19
+
+<Callout type="note" title="リリース版 · 公開日 2026-07-07 13:19:27 (UTC+8)">
+
+### New Features
+- Admins can now reset subscription quotas and review quota saturation events for auditing, making quota management easier (#5952).
+- Added Traditional Chinese (zh-TW) localization for the new UI (#5942).
+
+### Bug Fixes
+- Fixed billing quota calculations for very large quotas so limits are applied correctly.
+
+---
+
+### What's Changed
+* Localized new ui to zh-TW by @MeowTechOpenSource in https://github.com/QuantumNous/new-api/pull/5942
+* feat(subscription): add admin quota reset actions by @seefs001 in https://github.com/QuantumNous/new-api/pull/5952
+
+### New Contributors
+* @MeowTechOpenSource made their first contribution in https://github.com/QuantumNous/new-api/pull/5942
+
+**Full Changelog**: https://github.com/QuantumNous/new-api/compare/v1.0.0-rc.18...v1.0.0-rc.19
+
+**Download Resources**
+
+<ul>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.19/checksums-linux.txt">checksums-linux.txt</a> (180 B)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.19/checksums-macos.txt">checksums-macos.txt</a> (93 B)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.19/checksums-windows.txt">checksums-windows.txt</a> (91 B)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.19/new-api-arm64-v1.0.0-rc.19">new-api-arm64-v1.0.0-rc.19</a> (129.3 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.19/new-api-macos-v1.0.0-rc.19">new-api-macos-v1.0.0-rc.19</a> (151.7 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.19/new-api-v1.0.0-rc.19">new-api-v1.0.0-rc.19</a> (132.4 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.19/new-api-v1.0.0-rc.19.exe">new-api-v1.0.0-rc.19.exe</a> (134.2 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v1.0.0-rc.19.zip">Source code (zip)</a></li>
+<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v1.0.0-rc.19.tar.gz">Source code (tar.gz)</a></li>
+</ul>
+
+</Callout>
+
+---
+
+## v1.0.0-rc.18
+
+<Callout type="note" title="リリース版 · 公開日 2026-07-07 01:16:57 (UTC+8)">
+
+Billing quota handling is more reliable in this release, with stricter quantity validation to prevent incorrect quota calculations.
+
+**Bug Fixes**
+- Improved billing quantity validation so quota and usage calculations handle invalid or extreme values more reliably.
+
+---
+
+**Full Changelog**: https://github.com/QuantumNous/new-api/compare/v1.0.0-rc.17...v1.0.0-rc.18
+
+**Download Resources**
+
+<ul>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.18/checksums-linux.txt">checksums-linux.txt</a> (180 B)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.18/checksums-macos.txt">checksums-macos.txt</a> (93 B)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.18/checksums-windows.txt">checksums-windows.txt</a> (91 B)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.18/new-api-arm64-v1.0.0-rc.18">new-api-arm64-v1.0.0-rc.18</a> (128.9 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.18/new-api-macos-v1.0.0-rc.18">new-api-macos-v1.0.0-rc.18</a> (151.4 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.18/new-api-v1.0.0-rc.18">new-api-v1.0.0-rc.18</a> (132.0 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.18/new-api-v1.0.0-rc.18.exe">new-api-v1.0.0-rc.18.exe</a> (133.9 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v1.0.0-rc.18.zip">Source code (zip)</a></li>
+<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v1.0.0-rc.18.tar.gz">Source code (tar.gz)</a></li>
+</ul>
+
+</Callout>
+
+---
+
+## v1.0.0-rc.17
+
+<Callout type="note" title="リリース版 · 公開日 2026-07-06 22:37:46 (UTC+8)">
+
+### Highlights
+This release improves channel testing, redemption management, theme handling, and several web UI flows. It also fixes usage reporting, classic web builds, streaming disconnect handling, and quota/video duration calculations.
+
+### New Features
+- Redemption management now supports status filtering and cleanup actions for easier administration.
+- Group ratio editing is easier to use, with clearer visibility behavior and more robust JSON input handling.
+- Redeem failures now show clearer messages so users can understand what went wrong.
+
+### Bug Fixes
+- AI Elements integrations now read nested usage data so token usage is reported correctly.
+- Classic web builds now complete successfully again (#5892).
+- Field passthrough controls now appear correctly for Codex channels (#5902).
+- Home iframes now stay in sync with the selected theme and language (#5917).
+- Custom HTML rendered inside Shadow DOM now follows light and dark mode changes correctly (#5890).
+- Logged-in users are now redirected away from the sign-up page consistently with the login and classic themes (#5910).
+- Streaming responses no longer continue writing after the client disconnects (#5710).
+- Quota settlement and Ali video duration handling were corrected after task balance settlement (#5923).
+- Build date generation no longer fails when DNS lookup fails (#5945).
+
+### Improvements
+- Channel and model test dialogs are more compact and easier to operate (#5886).
+- Dynamic pricing details now use styling consistent with the log details dialog (#5905).
+- Mobile user cards have been refined for better readability and layout.
+- Legacy top-up warning text is clearer and easier to understand (#5855).
+
+---
+
+### What's Changed
+* chore(deps-dev): bump tmp from 0.2.5 to 0.2.7 in /electron by @dependabot[bot] in https://github.com/QuantumNous/new-api/pull/5147
+* chore(web): update default web dependencies by @QuentinHsu in https://github.com/QuantumNous/new-api/pull/5884
+* perf(web): refine channel test dialog interactions by @QuentinHsu in https://github.com/QuantumNous/new-api/pull/5886
+* fix(classic): fix classic web build failures by @QuentinHsu in https://github.com/QuantumNous/new-api/pull/5892
+* fix(channels): show field passthrough controls for Codex by @seefs001 in https://github.com/QuantumNous/new-api/pull/5902
+* fix: align dynamic pricing style with log details dialog sections by @feitianbubu in https://github.com/QuantumNous/new-api/pull/5905
+* fix: 任务差额结算后 quota 和阿里视频时长优化 by @feitianbubu in https://github.com/QuantumNous/new-api/pull/5923
+* fix(web): sync home iframe theme and language by @guoruqiang in https://github.com/QuantumNous/new-api/pull/5917
+* fix(web): 修复 Shadow DOM 隔离渲染下自定义 HTML 深浅色失效的问题 by @olwater in https://github.com/QuantumNous/new-api/pull/5890
+* fix(web): 注册页补充已登录重定向守卫，与登录页 / classic 主题保持一致 (#5908) by @Heykode in https://github.com/QuantumNous/new-api/pull/5910
+* feat: optimize legacy top-up warning banner copy (#5851) by @Gravirei in https://github.com/QuantumNous/new-api/pull/5855
+* fix: avoid stale stream writes after client disconnect by @seefs001 in https://github.com/QuantumNous/new-api/pull/5710
+* Fix/build date dns error by @seefs001 in https://github.com/QuantumNous/new-api/pull/5945
+
+### New Contributors
+* @Heykode made their first contribution in https://github.com/QuantumNous/new-api/pull/5910
+* @Gravirei made their first contribution in https://github.com/QuantumNous/new-api/pull/5855
+
+**Full Changelog**: https://github.com/QuantumNous/new-api/compare/v1.0.0-rc.16...v1.0.0-rc.17
+
+**Download Resources**
+
+<ul>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.17/checksums-linux.txt">checksums-linux.txt</a> (180 B)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.17/checksums-macos.txt">checksums-macos.txt</a> (93 B)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.17/checksums-windows.txt">checksums-windows.txt</a> (91 B)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.17/new-api-arm64-v1.0.0-rc.17">new-api-arm64-v1.0.0-rc.17</a> (128.9 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.17/new-api-macos-v1.0.0-rc.17">new-api-macos-v1.0.0-rc.17</a> (151.4 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.17/new-api-v1.0.0-rc.17">new-api-v1.0.0-rc.17</a> (132.0 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.17/new-api-v1.0.0-rc.17.exe">new-api-v1.0.0-rc.17.exe</a> (133.8 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v1.0.0-rc.17.zip">Source code (zip)</a></li>
+<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v1.0.0-rc.17.tar.gz">Source code (tar.gz)</a></li>
+</ul>
+
+</Callout>
+
+---
+
+## v1.0.0-rc.16
+
+<Callout type="note" title="リリース版 · 公開日 2026-07-03 15:41:42 (UTC+8)">
+
+**Highlights**
+
+This release expands model and media compatibility with Responses/Chat interoperability, Doubao Seedance 2.0 updates, and Wan2.7 i2v media mapping. It also improves the web experience around Playground rendering, channel management, page state retention, and graceful restarts.
+
+**New Features**
+
+- Added Responses API to Chat compatibility so providers and clients using either format can interoperate more reliably (#5787).
+- Expanded Doubao Seedance 2.0 support with material asset APIs, resolution-aware billing, video-input billing, 4K billing, and new request options (#5824).
+- Added Wan2.7 image-to-video media mapping support (#4984).
+- Added graceful shutdown support to reduce interrupted replies and avoid losing cached panel data during restarts (#4258).
+- Improved channel management with a clearer layout and a more capable advanced custom route editor.
+
+**Bug Fixes**
+
+- Fixed the model pricing tiered expression editor so it refreshes correctly when switching between models (#5752).
+- Fixed async task usage logs so usage is attributed to the node that initiated the task (#5684).
+- Fixed theme switching so the app returns to the home page instead of landing on a 404 route (#5612).
+- Fixed custom HTML and Markdown rendering so content keeps consistent styling and spacing, including isolated HTML views (#5795).
+- Fixed page state resets when switching tabs within the same route, including dashboard time ranges (#5796).
+- Fixed channel status filters so they persist across page navigation (#5863).
+- Fixed Ollama non-streaming tool call handling (#5865).
+- Fixed Waffo product information and webhook behavior (#5704).
+
+**Improvements**
+
+- Improved the Playground chat experience and Markdown rendering (#5217).
+- Streamlined table actions and destructive confirmation dialogs for a cleaner web UI (#5645).
+- Improved ClickHouse log filtering for LIKE queries.
+- Optimized the frontend build pipeline for faster web builds (#5786).
+
+---
+
+### What's Changed
+* chore(deps): bump dompurify from 3.4.5 to 3.4.11 in /web/default by @dependabot[bot] in https://github.com/QuantumNous/new-api/pull/5718
+* fix(ci): install classic workspace dependencies for releases by @seefs001 in https://github.com/QuantumNous/new-api/pull/5719
+* perf(web): streamline table actions and destructive dialogs by @QuentinHsu in https://github.com/QuantumNous/new-api/pull/5645
+* fix: add Waffo goods info and webhook SDK update by @zhongyuanzhao-alt in https://github.com/QuantumNous/new-api/pull/5704
+* fix(model-pricing): refresh tiered expression editor when switching models by @feitianbubu in https://github.com/QuantumNous/new-api/pull/5752
+* fix: sync bun.lock with dompurify 3.4.11 to restore frozen-lockfile build by @feitianbubu in https://github.com/QuantumNous/new-api/pull/5738
+* fix(theme): 切换前端主题后重置到首页，避免路由 404 by @zhangzhichaolove in https://github.com/QuantumNous/new-api/pull/5612
+* fix(task): attribute async task usage log to the initiating node by @feitianbubu in https://github.com/QuantumNous/new-api/pull/5684
+* feat: add Casbin admin permissions by @Calcium-Ion in https://github.com/QuantumNous/new-api/pull/5755
+* feat(playground): improve Playground chat experience and Markdown rendering by @QuentinHsu in https://github.com/QuantumNous/new-api/pull/5217
+* fix(auth): align password validation copy by @QuentinHsu in https://github.com/QuantumNous/new-api/pull/5759
+* fix(web): render custom HTML and Markdown content consistently by @QuentinHsu in https://github.com/QuantumNous/new-api/pull/5760
+* fix(openai): harden Chat-to-Responses compatibility by @Calcium-Ion in https://github.com/QuantumNous/new-api/pull/5772
+* feat: support Responses to Chat by @Calcium-Ion in https://github.com/QuantumNous/new-api/pull/5787
+* feat: doubao-seedance-2-0-260128支持按分辨率区分计费 by @feitianbubu in https://github.com/QuantumNous/new-api/pull/5300
+* feat: support doubao seedance 2.0 safety_identifier/priority and 4k billing by @feitianbubu in https://github.com/QuantumNous/new-api/pull/5824
+* fix(web): 修复自定义 HTML 样式被过滤及排版间距异常的问题 by @olwater in https://github.com/QuantumNous/new-api/pull/5795
+* feat: support Wan2.7 i2v media mapping by @wxwwt in https://github.com/QuantumNous/new-api/pull/4984
+* perf(web): optimize web Rsbuild and Tailwind build pipeline by @QuentinHsu in https://github.com/QuantumNous/new-api/pull/5786
+* fix(makefile): run only default web dev server from dev-web by @QuentinHsu in https://github.com/QuantumNous/new-api/pull/5794
+* fix(web): inject app styles into isolated HTML by @QuentinHsu in https://github.com/QuantumNous/new-api/pull/5860
+* fix: preserve route state when switching same-route tabs (dashboard time range resets) by @feitianbubu in https://github.com/QuantumNous/new-api/pull/5796
+* 支持服务优雅关闭,避免重启回复中断和面板缓存数据丢失 by @feitianbubu in https://github.com/QuantumNous/new-api/pull/4258
+* fix: only treat 401 as session expiry in default theme auth guard by @feitianbubu in https://github.com/QuantumNous/new-api/pull/5872
+* fix: persist channel status filter across page navigation by @feitianbubu in https://github.com/QuantumNous/new-api/pull/5863
+* chore(deps): bump golang.org/x/net from 0.50.0 to 0.55.0 by @dependabot[bot] in https://github.com/QuantumNous/new-api/pull/5862
+* chore(deps): bump golang.org/x/image from 0.38.0 to 0.41.0 by @dependabot[bot] in https://github.com/QuantumNous/new-api/pull/5873
+* fix: handle ollama non-stream tool calls by @stevenjoezhang in https://github.com/QuantumNous/new-api/pull/5865
+
+### New Contributors
+* @zhangzhichaolove made their first contribution in https://github.com/QuantumNous/new-api/pull/5612
+* @olwater made their first contribution in https://github.com/QuantumNous/new-api/pull/5795
+* @wxwwt made their first contribution in https://github.com/QuantumNous/new-api/pull/4984
+* @stevenjoezhang made their first contribution in https://github.com/QuantumNous/new-api/pull/5865
+
+**Full Changelog**: https://github.com/QuantumNous/new-api/compare/v1.0.0-rc.15...v1.0.0-rc.16
+
+**Download Resources**
+
+<ul>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.16/checksums-linux.txt">checksums-linux.txt</a> (180 B)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.16/checksums-macos.txt">checksums-macos.txt</a> (93 B)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.16/checksums-windows.txt">checksums-windows.txt</a> (91 B)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.16/new-api-arm64-v1.0.0-rc.16">new-api-arm64-v1.0.0-rc.16</a> (127.4 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.16/new-api-macos-v1.0.0-rc.16">new-api-macos-v1.0.0-rc.16</a> (149.8 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.16/new-api-v1.0.0-rc.16">new-api-v1.0.0-rc.16</a> (130.5 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/releases/download/v1.0.0-rc.16/new-api-v1.0.0-rc.16.exe">new-api-v1.0.0-rc.16.exe</a> (132.3 MB)</li>
+<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v1.0.0-rc.16.zip">Source code (zip)</a></li>
+<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v1.0.0-rc.16.tar.gz">Source code (tar.gz)</a></li>
+</ul>
+
+</Callout>
+
+---
+
 ## v1.0.0-rc.15
 
-<Callout type="info" title="最新リリース版 · 公開日 2026-06-24 21:00:04 (UTC+8)">
+<Callout type="note" title="リリース版 · 公開日 2026-06-24 21:00:04 (UTC+8)">
 
 ### Highlights
 This release adds several operations-focused controls, including passive channel monitoring, ClickHouse-backed log storage, system task execution, and instance visibility. It also improves frontend reliability and polish across usage logs, markdown rendering, channel selection, and optional wallet UI behavior.
@@ -1177,387 +1704,6 @@ This release introduces powerful support for `expr` expression-based tiered bill
 <li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.14/new-api-v0.12.14.exe">new-api-v0.12.14.exe</a> (67.6 MB)</li>
 <li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v0.12.14.zip">Source code (zip)</a></li>
 <li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v0.12.14.tar.gz">Source code (tar.gz)</a></li>
-</ul>
-
-</Callout>
-
----
-
-## v0.12.13
-
-<Callout type="note" title="リリース版 · 公開日 2026-04-18 00:04:31 (UTC+8)">
-
-This release improves admin workflows for top-ups and makes account status changes apply more consistently.
-
-#### Bug Fixes
-- Disabling a user now takes effect immediately instead of being delayed by stale cached account data.
-
-#### Improvements
-- Top-up logs now include additional admin-only audit details to make review and troubleshooting easier.
-
-#### Breaking Changes
-- Top-up searches are now limited to a maximum 30-day date range to keep queries responsive and reliable.
-
----
-
-**Full Changelog**: https://github.com/QuantumNous/new-api/compare/v0.12.12...v0.12.13
-
-**Download Resources**
-
-<ul>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.13/checksums-linux.txt">checksums-linux.txt</a> (172 B)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.13/checksums-macos.txt">checksums-macos.txt</a> (89 B)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.13/checksums-windows.txt">checksums-windows.txt</a> (87 B)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.13/New-API-App.0.12.13.exe">New-API-App.0.12.13.exe</a> (106.3 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.13/New-API-App.Setup.0.12.13.exe">New-API-App.Setup.0.12.13.exe</a> (106.5 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.13/new-api-arm64-v0.12.13">new-api-arm64-v0.12.13</a> (63.6 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.13/new-api-macos-v0.12.13">new-api-macos-v0.12.13</a> (81.9 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.13/new-api-v0.12.13">new-api-v0.12.13</a> (66.0 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.13/new-api-v0.12.13.exe">new-api-v0.12.13.exe</a> (67.6 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v0.12.13.zip">Source code (zip)</a></li>
-<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v0.12.13.tar.gz">Source code (tar.gz)</a></li>
-</ul>
-
-</Callout>
-
----
-
-## v0.12.12
-
-<Callout type="note" title="リリース版 · 公開日 2026-04-17 14:05:08 (UTC+8)">
-
-This release adds support for Claude Opus 4.7, expanding the set of available models in the API.
-
-### New Features
-- Added support for the Claude Opus 4.7 model, making it available through the API alongside existing model options (#4293).
-
----
-
-### What's Changed
-* feat: support claude-opus-4-7 by @prnake in https://github.com/QuantumNous/new-api/pull/4293
-* chore(deps): bump github.com/jackc/pgx/v5 from 5.7.1 to 5.9.0 by @dependabot[bot] in https://github.com/QuantumNous/new-api/pull/4294
-
-
-**Full Changelog**: https://github.com/QuantumNous/new-api/compare/v0.12.11...v0.12.12
-
-**Download Resources**
-
-<ul>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.12/checksums-linux.txt">checksums-linux.txt</a> (172 B)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.12/checksums-macos.txt">checksums-macos.txt</a> (89 B)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.12/checksums-windows.txt">checksums-windows.txt</a> (87 B)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.12/New-API-App.0.12.12.exe">New-API-App.0.12.12.exe</a> (106.3 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.12/New-API-App.Setup.0.12.12.exe">New-API-App.Setup.0.12.12.exe</a> (106.5 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.12/new-api-arm64-v0.12.12">new-api-arm64-v0.12.12</a> (63.6 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.12/new-api-macos-v0.12.12">new-api-macos-v0.12.12</a> (81.8 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.12/new-api-v0.12.12">new-api-v0.12.12</a> (65.9 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.12/new-api-v0.12.12.exe">new-api-v0.12.12.exe</a> (67.5 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v0.12.12.zip">Source code (zip)</a></li>
-<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v0.12.12.tar.gz">Source code (tar.gz)</a></li>
-</ul>
-
-</Callout>
-
----
-
-## v0.12.11
-
-<Callout type="note" title="リリース版 · 公開日 2026-04-16 20:13:49 (UTC+8)">
-
-#### New Features
-* Added payment method tracking and validation for top-ups.
-
-#### Bug Fixes
-* Improved handling of empty string content during OpenAI to Claude message conversion.
-
----
-
-**Full Changelog**: https://github.com/QuantumNous/new-api/compare/v0.12.10...v0.12.11
-
-**Download Resources**
-
-<ul>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.11/checksums-linux.txt">checksums-linux.txt</a> (172 B)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.11/checksums-macos.txt">checksums-macos.txt</a> (89 B)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.11/checksums-windows.txt">checksums-windows.txt</a> (87 B)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.11/New-API-App.0.12.11.exe">New-API-App.0.12.11.exe</a> (106.3 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.11/New-API-App.Setup.0.12.11.exe">New-API-App.Setup.0.12.11.exe</a> (106.5 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.11/new-api-arm64-v0.12.11">new-api-arm64-v0.12.11</a> (63.4 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.11/new-api-macos-v0.12.11">new-api-macos-v0.12.11</a> (81.6 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.11/new-api-v0.12.11">new-api-v0.12.11</a> (65.7 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.11/new-api-v0.12.11.exe">new-api-v0.12.11.exe</a> (67.4 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v0.12.11.zip">Source code (zip)</a></li>
-<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v0.12.11.tar.gz">Source code (tar.gz)</a></li>
-</ul>
-
-</Callout>
-
----
-
-## v0.12.10
-
-<Callout type="note" title="リリース版 · 公開日 2026-04-15 21:02:01 (UTC+8)">
-
-### New Features
-- Added passthrough support for Claude `cache_control` and `speed` options, giving you more control over request behavior when using Claude models (#4247).
-
-### Bug Fixes
-- Fixed OpenAI Responses API compatibility issues when `instructions` contain structured content instead of plain text (#4260).
-
-### Improvements
-- Improved Stripe payment processing to better handle asynchronous webhook events, making delayed payment confirmations more reliable.
-- Quota adjustment logs now record the acting admin username, making administrative audit trails easier to follow (#4216).
-
----
-
-### What's Changed
-* fix: use json.RawMessage for Instructions field in OpenAIResponsesResponse by @linbin524 in https://github.com/QuantumNous/new-api/pull/4260
-* fix(channel): 修复多密钥管理弹窗索引显示，将索引值调整为从1开始 by @wans10 in https://github.com/QuantumNous/new-api/pull/4231
-* feat(claude): add cache_control and speed passthrough controls by @seefs001 in https://github.com/QuantumNous/new-api/pull/4247
-* feat: include admin username in quota adjustment logs by @feitianbubu in https://github.com/QuantumNous/new-api/pull/4216
-
-### New Contributors
-* @linbin524 made their first contribution in https://github.com/QuantumNous/new-api/pull/4260
-
-**Full Changelog**: https://github.com/QuantumNous/new-api/compare/v0.12.9...v0.12.10
-
-**Download Resources**
-
-<ul>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.10/checksums-linux.txt">checksums-linux.txt</a> (172 B)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.10/checksums-macos.txt">checksums-macos.txt</a> (89 B)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.10/checksums-windows.txt">checksums-windows.txt</a> (87 B)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.10/New-API-App.0.12.10.exe">New-API-App.0.12.10.exe</a> (106.3 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.10/New-API-App.Setup.0.12.10.exe">New-API-App.Setup.0.12.10.exe</a> (106.5 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.10/new-api-arm64-v0.12.10">new-api-arm64-v0.12.10</a> (63.4 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.10/new-api-macos-v0.12.10">new-api-macos-v0.12.10</a> (81.6 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.10/new-api-v0.12.10">new-api-v0.12.10</a> (65.7 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.10/new-api-v0.12.10.exe">new-api-v0.12.10.exe</a> (67.4 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v0.12.10.zip">Source code (zip)</a></li>
-<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v0.12.10.tar.gz">Source code (tar.gz)</a></li>
-</ul>
-
-</Callout>
-
----
-
-## v0.12.9
-
-<Callout type="note" title="リリース版 · 公開日 2026-04-13 15:28:47 (UTC+8)">
-
-### New Features
-- Subscription cards now show the next quota reset time, making it easier to see when usage limits will refresh (#4181).
-
-### Bug Fixes
-- Claude requests are now more reliable by avoiding incompatible Top P settings when needed.
-- Azure channels now correctly support the `/v1/responses/compact` route (#4149).
-- Editing values in GroupTable no longer forces the cursor to jump to the end on each keystroke (#4208).
-
-### Improvements
-- Dashboard charts have been refined to present rankings and chart sizing more clearly for easier monitoring.
-
----
-
-### What's Changed
-* fix(GroupTable): prevent Input cursor jumping to end on keystroke by @Xbang0222 in https://github.com/QuantumNous/new-api/pull/4208
-* feat: display next quota reset time in subscription card by @ShengM97 in https://github.com/QuantumNous/new-api/pull/4181
-* fix: add Azure channel support for /v1/responses/compact URL routing by @woan1136 in https://github.com/QuantumNous/new-api/pull/4149
-
-### New Contributors
-* @Xbang0222 made their first contribution in https://github.com/QuantumNous/new-api/pull/4208
-* @ShengM97 made their first contribution in https://github.com/QuantumNous/new-api/pull/4181
-* @woan1136 made their first contribution in https://github.com/QuantumNous/new-api/pull/4149
-
-**Full Changelog**: https://github.com/QuantumNous/new-api/compare/v0.12.8...v0.12.9
-
-**Download Resources**
-
-<ul>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.9/checksums-linux.txt">checksums-linux.txt</a> (170 B)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.9/checksums-macos.txt">checksums-macos.txt</a> (88 B)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.9/checksums-windows.txt">checksums-windows.txt</a> (86 B)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.9/New-API-App.0.12.9.exe">New-API-App.0.12.9.exe</a> (106.3 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.9/New-API-App.Setup.0.12.9.exe">New-API-App.Setup.0.12.9.exe</a> (106.6 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.9/new-api-arm64-v0.12.9">new-api-arm64-v0.12.9</a> (63.4 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.9/new-api-macos-v0.12.9">new-api-macos-v0.12.9</a> (81.6 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.9/new-api-v0.12.9">new-api-v0.12.9</a> (65.7 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.9/new-api-v0.12.9.exe">new-api-v0.12.9.exe</a> (67.4 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v0.12.9.zip">Source code (zip)</a></li>
-<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v0.12.9.tar.gz">Source code (tar.gz)</a></li>
-</ul>
-
-</Callout>
-
----
-
-## v0.12.8
-
-<Callout type="note" title="リリース版 · 公開日 2026-04-12 23:58:29 (UTC+8)">
-
-#### Bug Fixes
-* Correctly report the stream status in error logs instead of defaulting to false (#4195).
-
----
-
-### What's Changed
-* fix: isStream status in error logs instead of hardcoded false by @feitianbubu in https://github.com/QuantumNous/new-api/pull/4195
-* chore(deps): bump axios from 1.13.5 to 1.15.0 in /web by @dependabot[bot] in https://github.com/QuantumNous/new-api/pull/4201
-
-
-**Full Changelog**: https://github.com/QuantumNous/new-api/compare/v0.12.7...v0.12.8
-
-**Download Resources**
-
-<ul>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.8/checksums-linux.txt">checksums-linux.txt</a> (170 B)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.8/checksums-macos.txt">checksums-macos.txt</a> (88 B)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.8/checksums-windows.txt">checksums-windows.txt</a> (86 B)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.8/New-API-App.0.12.8.exe">New-API-App.0.12.8.exe</a> (106.3 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.8/New-API-App.Setup.0.12.8.exe">New-API-App.Setup.0.12.8.exe</a> (106.5 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.8/new-api-arm64-v0.12.8">new-api-arm64-v0.12.8</a> (63.4 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.8/new-api-macos-v0.12.8">new-api-macos-v0.12.8</a> (81.6 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.8/new-api-v0.12.8">new-api-v0.12.8</a> (65.7 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.8/new-api-v0.12.8.exe">new-api-v0.12.8.exe</a> (67.4 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v0.12.8.zip">Source code (zip)</a></li>
-<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v0.12.8.tar.gz">Source code (tar.gz)</a></li>
-</ul>
-
-</Callout>
-
----
-
-## v0.12.7
-
-<Callout type="note" title="リリース版 · 公開日 2026-04-12 17:47:25 (UTC+8)">
-
-### Improvements
-- Quota management now uses an amount-first input flow and applies changes atomically, making balance adjustments simpler and more reliable.
-- Model pricing errors now use cleaner, role-aware messages so it is easier to understand and resolve failed pricing actions.
-
----
-
-**Full Changelog**: https://github.com/QuantumNous/new-api/compare/v0.12.6...v0.12.7
-
-**Download Resources**
-
-<ul>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.7/checksums-linux.txt">checksums-linux.txt</a> (170 B)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.7/checksums-macos.txt">checksums-macos.txt</a> (88 B)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.7/checksums-windows.txt">checksums-windows.txt</a> (86 B)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.7/New-API-App.0.12.7.exe">New-API-App.0.12.7.exe</a> (106.3 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.7/New-API-App.Setup.0.12.7.exe">New-API-App.Setup.0.12.7.exe</a> (106.5 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.7/new-api-arm64-v0.12.7">new-api-arm64-v0.12.7</a> (63.4 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.7/new-api-macos-v0.12.7">new-api-macos-v0.12.7</a> (81.6 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.7/new-api-v0.12.7">new-api-v0.12.7</a> (65.7 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.7/new-api-v0.12.7.exe">new-api-v0.12.7.exe</a> (67.4 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v0.12.7.zip">Source code (zip)</a></li>
-<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v0.12.7.tar.gz">Source code (tar.gz)</a></li>
-</ul>
-
-</Callout>
-
----
-
-## v0.12.6
-
-<Callout type="note" title="リリース版 · 公開日 2026-04-09 14:44:42 (UTC+8)">
-
-#### New Features
-* Fill in custom fields for vllm-omini (#4154)
-
-#### Bug Fixes
-* Accept string usage values in Alibaba task polling (#4155)
-* Use correct endpoint for coding plan image generation in Zhipu 4V (#4146)
-* Prefer explicit pricing for compact models (#4156)
-* Fix document rendering (#4153)
-
-#### Improvements
-* Refine PR template and add PR submission checks (#4076)
-
----
-
-### What's Changed
-* fix(zhipu_4v): use correct endpoint for coding plan image generation by @NyaMisty in https://github.com/QuantumNous/new-api/pull/4146
-* fix: prefer explicit pricing for compact models by @seefs001 in https://github.com/QuantumNous/new-api/pull/4156
-* fix(ali): accept string usage values in task polling by @seefs001 in https://github.com/QuantumNous/new-api/pull/4155
-* feat: fill in some custom fields for vllm-omini by @seefs001 in https://github.com/QuantumNous/new-api/pull/4154
-* fix: document render by @seefs001 in https://github.com/QuantumNous/new-api/pull/4153
-* ci: refine PR template and add PR submission checks by @seefs001 in https://github.com/QuantumNous/new-api/pull/4076
-
-### New Contributors
-* @NyaMisty made their first contribution in https://github.com/QuantumNous/new-api/pull/4146
-
-**Full Changelog**: https://github.com/QuantumNous/new-api/compare/v0.12.5...v0.12.6
-
-**Download Resources**
-
-<ul>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.6/checksums-linux.txt">checksums-linux.txt</a> (170 B)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.6/checksums-macos.txt">checksums-macos.txt</a> (88 B)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.6/checksums-windows.txt">checksums-windows.txt</a> (86 B)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.6/New-API-App.0.12.6.exe">New-API-App.0.12.6.exe</a> (106.3 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.6/New-API-App.Setup.0.12.6.exe">New-API-App.Setup.0.12.6.exe</a> (106.5 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.6/new-api-arm64-v0.12.6">new-api-arm64-v0.12.6</a> (63.4 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.6/new-api-macos-v0.12.6">new-api-macos-v0.12.6</a> (81.6 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.6/new-api-v0.12.6">new-api-v0.12.6</a> (65.7 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/releases/download/v0.12.6/new-api-v0.12.6.exe">new-api-v0.12.6.exe</a> (67.4 MB)</li>
-<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v0.12.6.zip">Source code (zip)</a></li>
-<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/v0.12.6.tar.gz">Source code (tar.gz)</a></li>
-</ul>
-
-</Callout>
-
----
-
-## nightly-20260409-4d2993e
-
-<Callout type="note" title="リリース版 · 公開日 2026-04-09 17:14:49 (UTC+8)">
-
-#### Highlights / 重点更新
-
-This release introduces comprehensive support for **tiered billing (阶梯计费)**. It allows for flexible pricing expressions, detailed tool call quota calculations, and channel test support for tiered models. 
-本次发布重点增加了对**阶梯计费**的全面支持，支持灵活的计费表达式解析、自定义工具调用额度计算，并完善了UI配置项和渠道测试支持。
-
-**Docker image:** `calciumion/new-api:nightly`
-**Docker 镜像:** `calciumion/new-api:nightly`
-
-<img width="500" alt="" src="https://github.com/user-attachments/assets/893d5789-64b3-414d-8e71-cc178b724ac6" />
-
-#### New Features
-* Added comprehensive support for tiered billing, including flexible expression evaluation, tool pricing settings UI, and channel test support (#4145).
-* Added custom fields support for vllm-omini models (#4154).
-
-#### Bug Fixes
-* Fixed an issue in Alibaba Cloud task polling to correctly accept string usage values (#4155).
-* Fixed the endpoint for Zhipu 4v coding plan image generation (#4146).
-* Fixed pricing calculation to prefer explicit pricing for compact models (#4156).
-
-#### Improvements
-* Improved UI layout consistency by replacing card components with divs.
-* Added nightly branch trigger to Docker image CI workflows.
-* Refined PR templates and added PR submission checks (#4076).
-
----
-
-### What's Changed
-* fix(zhipu_4v): use correct endpoint for coding plan image generation by @NyaMisty in https://github.com/QuantumNous/new-api/pull/4146
-* fix: prefer explicit pricing for compact models by @seefs001 in https://github.com/QuantumNous/new-api/pull/4156
-* fix(ali): accept string usage values in task polling by @seefs001 in https://github.com/QuantumNous/new-api/pull/4155
-* feat: fill in some custom fields for vllm-omini by @seefs001 in https://github.com/QuantumNous/new-api/pull/4154
-* fix: document render by @seefs001 in https://github.com/QuantumNous/new-api/pull/4153
-* ci: refine PR template and add PR submission checks by @seefs001 in https://github.com/QuantumNous/new-api/pull/4076
-* fix(channel-test): support tiered billing model tests by @yyhhyyyyyy in https://github.com/QuantumNous/new-api/pull/4145
-
-### New Contributors
-* @NyaMisty made their first contribution in https://github.com/QuantumNous/new-api/pull/4146
-
-**Full Changelog**: https://github.com/QuantumNous/new-api/compare/v0.12.5...nightly-20260409
-
-**Download Resources**
-
-<ul>
-<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/nightly-20260409.zip">Source code (zip)</a></li>
-<li><a href="https://github.com/QuantumNous/new-api/archive/refs/tags/nightly-20260409.tar.gz">Source code (tar.gz)</a></li>
 </ul>
 
 </Callout>

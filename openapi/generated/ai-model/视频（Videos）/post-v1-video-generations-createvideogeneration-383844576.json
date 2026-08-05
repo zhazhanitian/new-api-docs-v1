@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "创建视频生成任务",
-    "version": "1.0.0",
-    "description": "提交视频生成任务，支持文生视频和图生视频。\n\n返回任务 ID，可通过 GET 接口查询任务状态。\n"
+    "version": "2.0.0",
+    "description": "提交视频生成任务，支持文生视频（t2v）和图生视频（i2v）。\n\n立即返回任务 ID，生成在后台执行，可通过 GET /v1/video/generations/:task_id 轮询状态和结果。\n"
   },
   "tags": [
     {
@@ -26,7 +26,7 @@
           "视频（Videos）"
         ],
         "summary": "创建视频生成任务",
-        "description": "提交视频生成任务，支持文生视频和图生视频。\n\n返回任务 ID，可通过 GET 接口查询任务状态。\n",
+        "description": "提交视频生成任务，支持文生视频（t2v）和图生视频（i2v）。\n\n立即返回任务 ID，生成在后台执行，可通过 GET /v1/video/generations/:task_id 轮询状态和结果。\n",
         "operationId": "createvideogeneration",
         "parameters": [],
         "requestBody": {
@@ -35,141 +35,210 @@
             "application/json": {
               "schema": {
                 "type": "object",
+                "required": ["model"],
                 "description": "视频生成请求",
                 "properties": {
                   "model": {
                     "type": "string",
-                    "description": "模型 ID",
+                    "description": "模型 ID。",
+                    "descriptions": "模型 ID。\n\n| 系列 | 模型 ID | 说明 |\n|---|---|---|\n| Seedance | `doubao-seedance-1-5-pro` | Seedance 1.5 Pro |\n| Seedance | `doubao-seedance-1-0-lite-t2v-250428` | 1.0 Lite 文生视频 |\n| Seedance | `doubao-seedance-1-0-lite-i2v-250428` | 1.0 Lite 图生视频 |\n| Seedance | `doubao-seedance-2-0-fast-260128` | 2.0 Fast |\n| Seedance | `doubao-seedance-2-0-260128` | 2.0 |\n| HappyHorse | `happyhorse-1.0-t2v` | 文生视频 |\n| HappyHorse | `happyhorse-1.0-i2v` | 图生视频（首帧） |\n| HappyHorse | `happyhorse-1.0-r2v` | 参考图生成 |\n| HappyHorse | `happyhorse-1.0-video-edit` | 视频编辑 |\n| Kling | `kling-video-1.6` | — |\n| Kling | `kling-video-2.0` | — |\n| Kling | `kling-video-2.1` | 支持首尾帧（须 1080P） |\n| Kling | `kling-video-2.5` | — |\n| Kling | `kling-video-2.6` | — |\n| Kling | `kling-video-o1` | — |\n| Kling | `kling-video-3.0` | — |\n| Kling | `kling-video-3.0-omni` | — |\n| Vidu | `vidu-video-q2` | 宽高比支持 4:3、3:4 |\n| Vidu | `vidu-video-q2-pro` | 支持首尾帧、视频参考 |\n| Vidu | `vidu-video-q2-turbo` | 支持首尾帧 |\n| Vidu | `vidu-video-q3` | — |\n| Vidu | `vidu-video-q3-pro` | — |\n| Vidu | `vidu-video-q3-turbo` | — |\n| Hailuo | `hailuo-video-02` | 时长仅 6s/10s；不支持 AspectRatio |\n| Hailuo | `hailuo-video-2.3` | 同上 |\n| Hailuo | `hailuo-video-2.3-fast` | 同上 |\n| Hailuo | `hailuo-video-h3` | 同上 |\n| Google Veo | `veo-video-3.1` | 时长固定 8s；支持音频生成；支持首尾帧 |\n| Google Veo | `veo-video-3.1-fast` | 同上 |\n| Sora | `sora-video-2.0` | 时长仅 4s/8s/12s；分辨率仅 720P；支持音频生成 |\n| Hunyuan | `hunyuan-video-1.5` | 不传 Duration / Resolution / AspectRatio |\n| Mingmou | `mingmou-video-1.0` | 不传 Duration / Resolution / AspectRatio |\n| PixVerse | `pixverse-video-v5.6` | 分辨率全小写（540p~4k）；宽高比支持最广 |\n| PixVerse | `pixverse-video-v6` | 同上 |\n| PixVerse | `pixverse-video-c1` | 同上；支持多主体参考 |",
                     "examples": [
-                      "doubao-seedance-2-0-260128"
+                      "kling-video-2.1",
+                      "doubao-seedance-2-0-260128",
+                      "vidu-video-q2"
                     ]
                   },
                   "prompt": {
                     "type": "string",
-                    "description": "文本描述提示词",
+                    "description": "文本描述提示词。t2v 模式必填；i2v / 参考图模式建议填写以精确描述运动效果。",
                     "examples": [
-                      "宇航员站起身走了"
+                      "宇航员站起身走了",
+                      "小猫慢慢睁开眼睛，轻轻伸了个懒腰"
                     ]
                   },
                   "images": {
                     "type": "array",
-                    "description": "图片/视频 URL 数组，用于多素材输入场景：\n- `happyhorse-1.0-i2v`（图生视频）：传 1 个元素，为首帧图片 URL\n- `happyhorse-1.0-r2v`（参考视频生成）：传 1 个或多个参考图片 URL\n- `happyhorse-1.0-video-edit`（视频编辑）：`images[0]` 为待编辑视频 URL，`images[1:]` 为参考图片 URL（可选）",
                     "items": {
                       "type": "string"
                     },
+                    "description": "图片 / 视频 URL 数组，用于图生视频和多素材输入场景。\n\n**Kling / Vidu / Hailuo / Google Veo / Sora / PixVerse / Hunyuan / Mingmou** 输入模式由数组长度和 `metadata` 中的控制字段共同决定：\n\n| 场景 | images 长度 | 其他条件 | 说明 |\n|---|---|---|---|\n| 文生视频（t2v） | 0（不传） | — | Prompt 必填 |\n| 图生视频首帧（i2v） | 1 | 默认 | 第一张为首帧图片 |\n| 首尾帧模式 | 1 | `metadata.last_frame` 非空 | 首帧 + 尾帧；不能单独传尾帧 |\n| 参考图模式 | 1 | `metadata.input_usage=\"Reference\"` | 单张参考图 |\n| 多图（首帧 + 参考） | ≥ 2 | — | `images[0]` 为首帧，`images[1:]` 为参考图 |\n| 视频参考 / 编辑 | — | `metadata.video_url` 非空 | 追加视频输入；仅 Kling / Vidu 支持 |\n| PixVerse 多主体 | — | `metadata.pixverse_subjects` 非空 | 通过 JSON 数组精确指定每张图的角色 |\n\n**per-model 支持情况：**\n\n| 模型 | i2v 首帧 | 尾帧 (last_frame) | 参考图 | 视频输入 |\n|---|:---:|:---:|:---:|:---:|\n| Kling | ✅ | ✅ **仅 2.1 + size=1080P** | ✅ | ✅ |\n| Vidu | ✅ | ✅ **仅 q2-pro、q2-turbo** | ✅ | ✅ **仅 q2-pro** |\n| Google Veo | ✅ | ✅ 需同时传首帧 | ✅ | ❌ |\n| Hailuo | ✅ | ❌ | ❌ | ❌ |\n| Sora | ✅ | ❌ | ❌ | ❌ |\n| PixVerse | ✅ | ❌ | ✅（多主体参考） | ❌ |\n| Hunyuan | ✅ | ❌ | ✅ | ❌ |\n| Mingmou | 文档未明确 | ❌ | 文档未明确 | ❌ |\n\n**Kling i2v 注意**：使用首帧图片生成时，视频宽高比由首帧图片自动决定，**AspectRatio 无效**（传了也会被忽略）。\n\n**HappyHorse 系列**：\n- `happyhorse-1.0-i2v`：`images[0]` 为首帧图片\n- `happyhorse-1.0-r2v`：传 1 个或多个参考图片 URL\n- `happyhorse-1.0-video-edit`：`images[0]` 为待编辑视频 URL，`images[1:]` 为参考图（可选）\n\n**豆包 Seedance 系列**：图片 / 视频通过 `metadata.content` 多模态数组传入，不使用 `images` 字段。",
                     "examples": [
-                      [
-                        "https://example.com/frame.jpg"
-                      ]
+                      ["https://example.com/frame.jpg"],
+                      ["https://example.com/first.jpg", "https://example.com/ref.jpg"]
                     ]
                   },
                   "duration": {
                     "type": "number",
-                    "description": "视频时长（秒）",
-                    "examples": [
-                      5
-                    ]
+                    "description": "视频时长（秒）。各模型对时长的支持方式不同：\n\n| 模型 | 合法值 | 默认值 | 实现行为 |\n|---|---|---|---|\n| Kling 系列 | 连续范围 [3, 15] | 5 | clamp 到 [3, 15]；不传则使用 API 默认 |\n| Hailuo 系列 | 离散值：**6 或 10** | 6 | 取最近值：≤ 8 → 6；> 8 → 10 |\n| Vidu 系列 | 连续范围 [1, 10] | — | clamp 到 [1, 10] |\n| Google Veo 系列 | **固定 8** | 8 | 忽略用户输入，始终发送 8 |\n| Sora 系列 | 离散值：**4、8、12** | 8 | 取最近合法值 |\n| PixVerse 系列 | 连续范围 [1, 15] | 5 | clamp 到 [1, 15]；不传则使用 API 默认 |\n| Hunyuan | 不支持 | — | **忽略此字段** |\n| Mingmou | 不支持 | — | **忽略此字段** |\n| 豆包 Seedance 系列 | 5 或 10 | 5 | 具体取决于模型 |\n| HappyHorse 系列 | 5 或 10 | — | — |",
+                    "examples": [5, 8, 10]
                   },
                   "size": {
                     "type": "string",
-                    "description": "输出分辨率。支持两种格式：\n- `宽x高`（如 `\"1920x1080\"`）：自动推导分辨率档位和宽高比，优先级高于 metadata.resolution/ratio\n- 分辨率档位（如 `\"1080p\"`）：仅设置分辨率，宽高比由 metadata.ratio 或上游默认值决定\n\n豆包 Seedance 支持的档位：`480p`、`720p`、`1080p`（Fast/Mini 不支持）、`4K`（仅 2.0 支持）",
+                    "description": "输出分辨率 / 宽高比。优先级高于 `metadata.resolution`。\n\n支持两种格式：\n- `宽x高`（如 `\"1920x1080\"`）：按短边自动归档到最近分辨率档位\n- 分辨率档位（如 `\"720P\"`、`\"720p\"`、`\"1080P\"`）：直接匹配模型合法值\n\n**分辨率档位 per-model 对照表：**\n\n| 模型 | 合法值 | 默认值 | 注意事项 |\n|---|---|---|---|\n| Kling 系列 | `720P`、`1080P` | `720P` | **大写 P**；`kling-video-2.1` 仅 `1080P` 时支持尾帧 |\n| Hailuo 系列 | `768P`、`1080P` | `768P` | **大写 P** |\n| Vidu 系列 | `720P`、`1080P` | `720P` | **大写 P** |\n| Google Veo 系列 | `720P`、`1080P` | `720P` | **大写 P** |\n| Sora 系列 | `720P`（唯一值） | `720P` | **大写 P**；传其他值报错 |\n| PixVerse 系列 | `540p`、`720p`、`1080p`、`2k`、`4k` | `720p` | **全小写**，与其他模型不同 |\n| Hunyuan | 不支持 | — | 忽略此字段 |\n| Mingmou | 不支持 | — | 忽略此字段 |\n\n**宽高比 per-model 对照表：**\n\n宽高比通过 `size` 字段同时传入（如 `\"16:9\"`），也可传 `宽x高` 由系统自动推导。\n\n| 宽高比 | Kling | Vidu q2 | Vidu 其他 | Google Veo | Sora | PixVerse |\n|---|:---:|:---:|:---:|:---:|:---:|:---:|\n| 16:9 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |\n| 9:16 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |\n| 1:1 | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ |\n| 4:3 | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ |\n| 3:4 | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ |\n| 2:3 | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |\n| 3:2 | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |\n| 21:9 | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |\n| Hailuo | **不支持**（传了会报错） |\n| Hunyuan / Mingmou | **不支持** |\n\n> 不支持的宽高比会自动取最近邻值。传入 `\"WxH\"` 格式时同时推导宽高比和分辨率档位。\n\n**豆包 Seedance 系列** 请参考 `metadata.resolution` 和 `metadata.ratio`。",
                     "examples": [
                       "1920x1080",
                       "720x1280",
-                      "1080p"
+                      "1080P",
+                      "720p"
                     ]
                   },
                   "seed": {
                     "type": "integer",
-                    "description": "随机种子",
-                    "examples": [
-                      20231234
-                    ]
+                    "description": "随机种子，控制生成结果可复现性。全部模型支持。",
+                    "examples": [20231234]
                   },
                   "n": {
                     "type": "integer",
-                    "description": "生成视频数量",
-                    "examples": [
-                      1
-                    ]
+                    "description": "生成视频数量。固定为 1，全部模型均不支持批量生成（视频生成为异步任务，每次提交产生一个任务）。",
+                    "examples": [1]
                   },
                   "response_format": {
                     "type": "string",
-                    "description": "响应格式",
-                    "examples": [
-                      "url"
-                    ]
+                    "description": "响应格式，默认 `url`。",
+                    "examples": ["url"]
                   },
                   "user": {
                     "type": "string",
-                    "description": "用户标识",
-                    "examples": [
-                      "user-1234"
-                    ]
+                    "description": "用户标识，用于日志追踪。",
+                    "examples": ["user-1234"]
                   },
                   "metadata": {
                     "type": "object",
-                    "description": "渠道专属扩展参数，按需传入。不同渠道支持的子字段不同，未列出的字段将被忽略。\n\n**豆包 Seedance 系列（`doubao-seedance-*`）：**\n- `resolution` (string)：输出分辨率，可选值 `\"480P\"`、`\"720P\"`、`\"1080P\"`、`\"4K\"`（影响计费）\n- `ratio` (string)：宽高比，如 `\"16:9\"`、`\"9:16\"`\n- `generate_audio` (boolean)：是否生成音频，`true` 为有声视频，`false` 为无声视频（影响 seedance-1-5-pro 计费）\n- `return_last_frame` (boolean)：是否同时返回最后一帧图片\n- `camera_fixed` (boolean)：是否固定镜头\n- `watermark` (boolean)：是否添加水印\n- `draft` (boolean)：草稿模式，生成速度更快但质量较低\n- `service_tier` (string)：服务等级\n- `content` (array)：多模态输入内容，视频生成（i2v）时可传入 `video_url` 类型条目\n\n**HappyHorse 系列（`happyhorse-*`）：**\n- `ratio` (string)：宽高比，如 `\"16:9\"`、`\"9:16\"`、`\"1:1\"`。仅 t2v、r2v 支持；i2v 宽高比跟随首帧图片，video-edit 跟随输入视频\n- `audio_setting` (string)：音频处理方式，仅 video-edit 支持，如 `\"mute\"`（静音）\n",
+                    "description": "扩展参数，按需传入。不同渠道 / 模型支持的字段不同，不支持的字段将被忽略。\n\n### Kling / Vidu / Hailuo / Google Veo / Sora / PixVerse / Hunyuan / Mingmou 系列字段\n\n| 字段 | 类型 | 支持模型 | 说明 |\n|---|---|---|---|\n| `negative_prompt` | string | Kling / Vidu / Hailuo / Google Veo / Sora / Hunyuan / Mingmou / PixVerse | 反向提示词，描述不希望出现的内容 |\n| `enhance_prompt` | string | Kling / Vidu / Hailuo / Google Veo / Sora / Hunyuan / Mingmou / PixVerse | 自动优化提示词，取值 `\"Enabled\"` / `\"Disabled\"` |\n| `scene_type` | string | Kling / Vidu（其他模型忽略） | 场景类型：`\"motion_control\"`（Kling 动作控制）、`\"avatar_i2v\"`（Kling 数字人）、`\"lip_sync\"`（Kling 对口型）、`\"template_effect\"`（Vidu 特效模板） |\n| `ext_info` | string | Kling（其他模型忽略） | 透传 ExtInfo 原始字符串（Kling motion_control 等特殊场景参数，JSON 格式） |\n| `audio_generation` | string | Kling / Vidu / Google Veo / Sora | 是否生成 AI 音频，取值 `\"Enabled\"` / `\"Disabled\"` |\n| `enhance_switch` | string | Kling / Vidu / Hailuo / Google Veo / Sora / Hunyuan / Mingmou / PixVerse | 视频超分增强，取值 `\"Enabled\"` / `\"Disabled\"` |\n| `frame_interpolate` | string | Vidu | 智能插帧，取值 `\"Enabled\"` / `\"Disabled\"` |\n| `last_frame` | string | kling-video-2.1（须 1080P）、vidu-video-q2-pro / q2-turbo、veo-video-3.1 | 尾帧图片 URL；必须同时在 `images[0]` 传首帧，不支持单独传尾帧 |\n| `resolution` | string | Kling / Vidu / Hailuo / Google Veo / Sora / PixVerse（低优先级） | 分辨率档位，被外层 `size` 字段覆盖；格式要求同 `size` |\n| `input_region` | string | Kling / Vidu / Hailuo / Google Veo / Sora / Hunyuan / Mingmou / PixVerse | 输入资源所在地区，`\"Mainland\"` / `\"Oversea\"` |\n| `input_usage` | string | Kling / Vidu / Hailuo / Google Veo / Sora / Hunyuan / Mingmou / PixVerse | 设为 `\"Reference\"` 可将单张图片切换为参考图模式（默认为首帧） |\n| `reference_type` | string | Kling / Google Veo / PixVerse | 参考图类型：Kling：`\"feature\"`（特征参考）/ `\"base\"`（待编辑视频）；Google Veo：`\"asset\"`（素材参考）/ `\"style\"`（风格参考）；PixVerse：`\"subject\"`（主体）/ `\"background\"`（背景） |\n| `video_url` | string | Kling / Vidu | 视频参考 / 编辑输入 URL，作为视频类型输入追加到 FileInfos |\n| `pixverse_subjects` | string | PixVerse c1 | 多主体参考，JSON 字符串，格式见下方说明 |\n\n**`pixverse_subjects` 格式示例：**\n```json\n[\n  {\"url\": \"https://example.com/cat.jpg\", \"type\": \"subject\", \"name\": \"小猫\"},\n  {\"url\": \"https://example.com/bg.jpg\", \"type\": \"background\", \"name\": \"背景\"}\n]\n```\n在 Prompt 中用 `@名字` 引用对应主体（如 `\"让 @小猫 奔跑\"`）。\n\n---\n\n### 豆包 Seedance 专用字段\n\n| 字段 | 类型 | 说明 |\n|---|---|---|\n| `resolution` | string | 分辨率，可选值 `\"480P\"` / `\"720P\"` / `\"1080P\"` / `\"4K\"`（影响计费）。推荐使用外层 `size` 字段 |\n| `ratio` | string | 宽高比，如 `\"16:9\"`、`\"9:16\"` |\n| `generate_audio` | boolean | 是否生成音频，`true` 为有声（影响 seedance-1-5-pro 计费） |\n| `return_last_frame` | boolean | 是否同时返回最后一帧图片 |\n| `camera_fixed` | boolean | 是否固定镜头 |\n| `watermark` | boolean | 是否添加水印 |\n| `draft` | boolean | 草稿模式，生成速度更快但质量较低 |\n| `service_tier` | string | 服务等级 |\n| `content` | array | 多模态输入内容，用于传入图片 / 视频 / 音频参考素材，格式见下方说明 |\n\n**`content` 格式说明：**\n\n每个元素为一个对象，字段如下：\n\n| 字段 | 类型 | 说明 |\n|---|---|---|\n| `type` | string | 内容类型：`\"image_url\"`、`\"video_url\"`、`\"audio_url\"`、`\"text\"` |\n| `role` | string | 素材角色：`\"reference_image\"`、`\"reference_video\"`、`\"reference_audio\"` 等 |\n| `image_url` | object | `type` 为 `\"image_url\"` 时有效，包含 `{\"url\": \"...\"}` |\n| `video_url` | object | `type` 为 `\"video_url\"` 时有效，包含 `{\"url\": \"...\"}` |\n| `audio_url` | object | `type` 为 `\"audio_url\"` 时有效，包含 `{\"url\": \"...\"}` |\n\n**示例（图片参考）：**\n```json\n[\n  {\n    \"type\": \"image_url\",\n    \"role\": \"reference_image\",\n    \"image_url\": {\"url\": \"https://example.com/portrait.jpg\"}\n  }\n]\n```\n\n---\n\n### HappyHorse 专用字段\n\n| 字段 | 类型 | 支持子模型 | 说明 |\n|---|---|---|---|\n| `ratio` | string | t2v / r2v | 宽高比，如 `\"16:9\"`、`\"9:16\"`、`\"1:1\"`。i2v 跟随首帧，video-edit 跟随输入视频 |\n| `audio_setting` | string | video-edit | 音频处理方式，`\"mute\"` 表示静音输出 |",
                     "additionalProperties": true,
                     "properties": {
+                      "negative_prompt": {
+                        "type": "string",
+                        "description": "反向提示词，描述不希望在视频中出现的元素。支持模型：Kling / Vidu / Hailuo / Google Veo / Sora / Hunyuan / Mingmou / PixVerse。"
+                      },
+                      "enhance_prompt": {
+                        "type": "string",
+                        "enum": ["Enabled", "Disabled"],
+                        "description": "自动优化提示词，取值 `\"Enabled\"` / `\"Disabled\"`。支持模型：Kling / Vidu / Hailuo / Google Veo / Sora / Hunyuan / Mingmou / PixVerse。",
+                        "examples": ["Enabled"]
+                      },
+                      "scene_type": {
+                        "type": "string",
+                        "description": "场景类型，用于触发特殊生成模式。支持模型：Kling / Vidu（其他模型忽略）。\n\n- `\"motion_control\"` — Kling 动作控制（需配合 `ext_info` 传控制参数）\n- `\"avatar_i2v\"` — Kling 数字人生成\n- `\"lip_sync\"` — Kling 对口型\n- `\"template_effect\"` — Vidu 特效模板\n\n不支持的模型传入后忽略（不报错）。",
+                        "examples": ["motion_control", "template_effect"]
+                      },
+                      "ext_info": {
+                        "type": "string",
+                        "description": "透传 ExtInfo 字段，JSON 字符串格式。Kling motion_control 等特殊场景的扩展参数。支持模型：Kling（其他模型忽略）。"
+                      },
+                      "audio_generation": {
+                        "type": "string",
+                        "enum": ["Enabled", "Disabled"],
+                        "description": "是否开启 AI 音频生成，取值 `\"Enabled\"` / `\"Disabled\"`。支持模型：Kling / Vidu / Google Veo / Sora。其他模型忽略。",
+                        "examples": ["Enabled"]
+                      },
+                      "enhance_switch": {
+                        "type": "string",
+                        "enum": ["Enabled", "Disabled"],
+                        "description": "视频超分增强开关，取值 `\"Enabled\"` / `\"Disabled\"`。支持模型：Kling / Vidu / Hailuo / Google Veo / Sora / Hunyuan / Mingmou / PixVerse。Sora 仅支持 720P，超分意义不大。",
+                        "examples": ["Enabled"]
+                      },
+                      "frame_interpolate": {
+                        "type": "string",
+                        "enum": ["Enabled", "Disabled"],
+                        "description": "智能插帧，取值 `\"Enabled\"` / `\"Disabled\"`。支持模型：Vidu。其他模型忽略。",
+                        "examples": ["Enabled"]
+                      },
+                      "last_frame": {
+                        "type": "string",
+                        "description": "尾帧图片 URL（首尾帧模式）。**必须同时在 `images[0]` 传首帧**，不支持单独传尾帧。\n\n支持模型：\n- `kling-video-2.1`（须同时 `size=1080P`）\n- `vidu-video-q2-pro`、`vidu-video-q2-turbo`\n- `veo-video-3.1`、`veo-video-3.1-fast`",
+                        "examples": ["https://example.com/last-frame.jpg"]
+                      },
                       "resolution": {
                         "type": "string",
-                        "description": "输出分辨率档位（豆包 Seedance 系列）。推荐使用外层 `size` 字段代替，`size` 优先级更高且同时支持推导宽高比。",
-                        "examples": [
-                          "1080p"
-                        ]
+                        "description": "分辨率档位（低优先级，被外层 `size` 字段覆盖）。\n\nKling / Vidu / Hailuo / Google Veo / Sora：大写 `720P` / `1080P`；PixVerse：小写 `720p` / `1080p` / `2k` 等。格式要求见 `size` 字段说明。\n\nDoubao Seedance：`\"480P\"` / `\"720P\"` / `\"1080P\"` / `\"4K\"`。",
+                        "examples": ["1080P", "720p"]
+                      },
+                      "input_region": {
+                        "type": "string",
+                        "enum": ["Mainland", "Oversea"],
+                        "description": "输入资源（图片 / 视频 URL）所在地区，`\"Mainland\"`（中国大陆）/ `\"Oversea\"`（境外）。支持模型：Kling / Vidu / Hailuo / Google Veo / Sora / Hunyuan / Mingmou / PixVerse。"
+                      },
+                      "input_usage": {
+                        "type": "string",
+                        "description": "强制指定单张图片的用途。设为 `\"Reference\"` 可将 `images[0]` 切换为参考图模式（默认单张图为首帧 `\"FirstFrame\"`）。支持模型：Kling / Vidu / Hailuo / Google Veo / Sora / Hunyuan / Mingmou / PixVerse。",
+                        "examples": ["Reference"]
+                      },
+                      "reference_type": {
+                        "type": "string",
+                        "description": "参考图 / 视频的类型标注。适用于多张输入的参考图（`images[1:]`）。支持模型：Kling / Google Veo / PixVerse，其他模型忽略。\n\n| 模型 | 有效值 | 说明 |\n|---|---|---|\n| Kling | `\"feature\"` | 特征参考（风格 / 外观一致） |\n| Kling | `\"base\"` | 待编辑视频（视频编辑模式） |\n| Google Veo | `\"asset\"` | 素材参考 |\n| Google Veo | `\"style\"` | 风格参考 |\n| PixVerse | `\"subject\"` | 主体参考 |\n| PixVerse | `\"background\"` | 背景参考 |\n\n单主体场景通常无需显式传此字段（由模式自动决定）。",
+                        "examples": ["feature", "asset", "subject"]
+                      },
+                      "video_url": {
+                        "type": "string",
+                        "description": "视频参考 / 编辑输入 URL。传入后会作为 `Category=Video` 的 FileInfo 追加到请求中。支持模型：Kling / Vidu，其他模型忽略。",
+                        "examples": ["https://example.com/source.mp4"]
+                      },
+                      "pixverse_subjects": {
+                        "type": "string",
+                        "description": "PixVerse 多主体参考，JSON 字符串格式。支持模型：pixverse-video-c1，其他模型忽略。\n\n格式：`[{\"url\":\"...\",\"type\":\"subject\"|\"background\",\"name\":\"名字\"}, ...]`\n\n在 Prompt 中用 `@名字` 引用对应主体，如 `\"让 @小猫 向前奔跑\"`。",
+                        "examples": ["[{\"url\":\"https://example.com/cat.jpg\",\"type\":\"subject\",\"name\":\"小猫\"}]"]
                       },
                       "ratio": {
                         "type": "string",
-                        "description": "宽高比。豆包 Seedance 系列：若外层 `size` 使用 `宽x高` 格式，宽高比会自动推导，无需单独传此字段。HappyHorse t2v / r2v：支持，i2v / video-edit 不支持。",
-                        "examples": [
-                          "16:9"
-                        ]
+                        "description": "[Doubao 专用 / HappyHorse 专用] 宽高比。\n\nDoubao Seedance 系列：外层 `size` 使用 `宽x高` 格式时会自动推导宽高比，无需单独传此字段。\n\nHappyHorse t2v / r2v：支持。i2v 宽高比跟随首帧图片，video-edit 跟随输入视频，均不支持。",
+                        "examples": ["16:9", "9:16", "1:1"]
                       },
                       "generate_audio": {
                         "type": "boolean",
-                        "description": "是否生成音频（豆包 Seedance 系列，影响 seedance-1-5-pro 计费）",
-                        "examples": [
-                          true
-                        ]
+                        "description": "[Doubao 专用] 是否生成音频，`true` 为有声视频，`false` 为无声。",
+                        "examples": [true]
                       },
                       "return_last_frame": {
                         "type": "boolean",
-                        "description": "是否返回最后一帧图片（豆包 Seedance 系列）"
+                        "description": "[Doubao 专用] 是否同时返回最后一帧图片。"
                       },
                       "camera_fixed": {
                         "type": "boolean",
-                        "description": "是否固定镜头（豆包 Seedance 系列）"
+                        "description": "[Doubao 专用] 是否固定镜头，抑制镜头移动。"
                       },
                       "watermark": {
                         "type": "boolean",
-                        "description": "是否添加水印（豆包 Seedance 系列）"
+                        "description": "[Doubao 专用] 是否添加水印，默认 `false`。"
                       },
                       "draft": {
                         "type": "boolean",
-                        "description": "草稿模式（豆包 Seedance 系列）"
+                        "description": "[Doubao 专用] 草稿模式，生成速度更快但质量较低。"
                       },
                       "service_tier": {
                         "type": "string",
-                        "description": "服务等级（豆包 Seedance 系列）"
+                        "description": "[Doubao 专用] 服务等级。"
                       },
                       "content": {
                         "type": "array",
-                        "description": "多模态输入内容（豆包 Seedance 系列，视频生成时传入）",
+                        "description": "[Doubao 专用] 多模态输入内容，用于传入图片 / 视频 / 音频参考素材。",
                         "items": {
                           "type": "object",
                           "properties": {
                             "type": {
                               "type": "string",
-                              "description": "内容类型，如 \"video_url\"、\"image_url\"、\"text\""
+                              "description": "内容类型：`\"image_url\"`、`\"video_url\"`、`\"audio_url\"`、`\"text\"`"
+                            },
+                            "role": {
+                              "type": "string",
+                              "description": "素材角色：`\"reference_image\"`、`\"reference_video\"`、`\"reference_audio\"` 等"
+                            },
+                            "image_url": {
+                              "type": "object",
+                              "properties": {
+                                "url": { "type": "string", "description": "图片 URL" }
+                              }
                             },
                             "video_url": {
                               "type": "object",
                               "properties": {
-                                "url": {
-                                  "type": "string",
-                                  "description": "视频 URL"
-                                }
+                                "url": { "type": "string", "description": "视频 URL" }
+                              }
+                            },
+                            "audio_url": {
+                              "type": "object",
+                              "properties": {
+                                "url": { "type": "string", "description": "音频 URL" }
                               }
                             }
                           }
@@ -177,14 +246,25 @@
                       },
                       "audio_setting": {
                         "type": "string",
-                        "description": "音频处理方式（HappyHorse video-edit 专用）。可选值：`\"mute\"`（静音输出）",
-                        "examples": [
-                          "mute"
-                        ]
+                        "description": "[HappyHorse 专用] 音频处理方式，仅 `happyhorse-1.0-video-edit` 支持。`\"mute\"` 表示静音输出。",
+                        "examples": ["mute"]
                       }
                     },
                     "x-apifox-orders": [
+                      "negative_prompt",
+                      "enhance_prompt",
+                      "scene_type",
+                      "ext_info",
+                      "audio_generation",
+                      "enhance_switch",
+                      "frame_interpolate",
+                      "last_frame",
                       "resolution",
+                      "input_region",
+                      "input_usage",
+                      "reference_type",
+                      "video_url",
+                      "pixverse_subjects",
                       "ratio",
                       "generate_audio",
                       "return_last_frame",
@@ -211,11 +291,121 @@
                 ]
               },
               "examples": {
+                "kling-video-2-1-i2v": {
+                  "summary": "Kling 2.1 图生视频（i2v）",
+                  "value": {
+                    "model": "kling-video-2.1",
+                    "prompt": "小猫慢慢睁开眼睛，轻轻伸了个懒腰",
+                    "images": ["https://example.com/cat.jpg"],
+                    "size": "1080P",
+                    "duration": 5,
+                    "seed": 20240101,
+                    "metadata": {
+                      "audio_generation": "Enabled"
+                    }
+                  }
+                },
+                "kling-video-2-1-first-last-frame": {
+                  "summary": "Kling 2.1 首尾帧（须 1080P）",
+                  "value": {
+                    "model": "kling-video-2.1",
+                    "prompt": "人物从坐到站，缓缓转身",
+                    "images": ["https://example.com/start.jpg"],
+                    "size": "1080P",
+                    "duration": 5,
+                    "metadata": {
+                      "last_frame": "https://example.com/end.jpg"
+                    }
+                  }
+                },
+                "kling-video-3-0-t2v": {
+                  "summary": "Kling 3.0 文生视频（t2v）",
+                  "value": {
+                    "model": "kling-video-3.0",
+                    "prompt": "宇航员站起身走了，背景是星空",
+                    "size": "1920x1080",
+                    "duration": 5,
+                    "seed": 20240303
+                  }
+                },
+                "vidu-video-q2-i2v": {
+                  "summary": "Vidu q2 图生视频",
+                  "value": {
+                    "model": "vidu-video-q2",
+                    "prompt": "人物转过头微笑，背景轻微虚化",
+                    "images": ["https://example.com/portrait.jpg"],
+                    "size": "1080P",
+                    "duration": 4,
+                    "metadata": {
+                      "frame_interpolate": "Enabled"
+                    }
+                  }
+                },
+                "vidu-video-q2-pro-first-last": {
+                  "summary": "Vidu q2-pro 首尾帧",
+                  "value": {
+                    "model": "vidu-video-q2-pro",
+                    "prompt": "人物优雅地站起身来",
+                    "images": ["https://example.com/first.jpg"],
+                    "size": "1080P",
+                    "duration": 4,
+                    "metadata": {
+                      "last_frame": "https://example.com/last.jpg"
+                    }
+                  }
+                },
+                "hailuo-video-2-3": {
+                  "summary": "Hailuo 2.3 文生视频（时长 6 或 10）",
+                  "value": {
+                    "model": "hailuo-video-2.3",
+                    "prompt": "海浪拍打礁石，浪花四溅",
+                    "size": "1080P",
+                    "duration": 6
+                  }
+                },
+                "veo-video-3-1-i2v": {
+                  "summary": "Google Veo 3.1 图生视频（固定 8s）",
+                  "value": {
+                    "model": "veo-video-3.1",
+                    "prompt": "保持画面风格，让场景流动起来",
+                    "images": ["https://example.com/scene.jpg"],
+                    "metadata": {
+                      "audio_generation": "Enabled",
+                      "reference_type": "style"
+                    }
+                  }
+                },
+                "pixverse-video-c1-multi-subject": {
+                  "summary": "PixVerse c1 多主体参考",
+                  "value": {
+                    "model": "pixverse-video-c1",
+                    "prompt": "让 @小猫 在 @花园 中自由奔跑",
+                    "size": "1080p",
+                    "duration": 5,
+                    "metadata": {
+                      "pixverse_subjects": "[{\"url\":\"https://example.com/cat.jpg\",\"type\":\"subject\",\"name\":\"小猫\"},{\"url\":\"https://example.com/garden.jpg\",\"type\":\"background\",\"name\":\"花园\"}]"
+                    }
+                  }
+                },
+                "kling-video-motion-control": {
+                  "summary": "Kling 动作控制（scene_type=motion_control）",
+                  "value": {
+                    "model": "kling-video-3.0",
+                    "prompt": "人物向前走三步",
+                    "images": ["https://example.com/person.jpg"],
+                    "size": "720P",
+                    "duration": 5,
+                    "metadata": {
+                      "scene_type": "motion_control",
+                      "ext_info": "{\"AdditionalParameters\":\"...\"}"
+                    }
+                  }
+                },
                 "doubao-seedance-2-0": {
-                  "summary": "doubao seedance 2.0 多模态视频",
+                  "summary": "豆包 Seedance 2.0 多模态视频（图片 + 视频 + 音频参考）",
                   "value": {
                     "model": "doubao-seedance-2-0-fast-260128",
-                    "prompt": "Use the first-person POV framing from Video 1 throughout, and use Audio 1 as the background music throughout. First-person POV fruit tea promotional ad, Seedance brand limited-edition apple fruit tea; opening frame is Image 1, your hand picks a dew-covered Aksu red apple, a light, crisp apple tapping sound; 2–4 seconds: fast cuts, your hand drops apple chunks into a shaker, adds ice and tea base, shakes forcefully, ice clinking and shaking sounds sync with upbeat rhythmic beats, background audio: {Fresh-cut, shaken fresh}; 4–6 seconds: first-person close-up of the finished drink, layered fruit tea is poured into a clear cup, your hand gently squeezes milk foam to spread across the top, a pink brand sticker is applied to the cup, the camera moves closer to show the layered textures of the foam and fruit tea; 6–8 seconds: first-person hand-held toast shot, you raise the fruit tea from Image 2 toward the camera (simulating handing it to the viewer), the cup label is clearly visible, background audio {Take a sip of fresh refreshment}, the final frame freezes on Image 2. All background voice audio uses a female voice.",
+                    "prompt": "Use the first-person POV framing from Video 1 throughout, and use Audio 1 as the background music throughout.",
                     "size": "1920x1080",
                     "duration": 5,
                     "seed": 20240303,
@@ -224,28 +414,28 @@
                         {
                           "type": "image_url",
                           "image_url": {
-                            "url": "https://ark-doc.tos-ap-southeast-1.bytepluses.com/doc_image/r2v_tea_pic1.jpg"
+                            "url": "https://example.com/ref1.jpg"
                           },
                           "role": "reference_image"
                         },
                         {
                           "type": "image_url",
                           "image_url": {
-                            "url": "https://ark-doc.tos-ap-southeast-1.bytepluses.com/doc_image/r2v_tea_pic2.jpg"
+                            "url": "https://example.com/ref2.jpg"
                           },
                           "role": "reference_image"
                         },
                         {
                           "type": "video_url",
                           "video_url": {
-                            "url": "https://ark-doc.tos-ap-southeast-1.bytepluses.com/doc_video/r2v_tea_video1.mp4"
+                            "url": "https://example.com/ref_video.mp4"
                           },
                           "role": "reference_video"
                         },
                         {
                           "type": "audio_url",
                           "audio_url": {
-                            "url": "https://ark-doc.tos-ap-southeast-1.bytepluses.com/doc_audio/r2v_tea_audio1.mp3"
+                            "url": "https://example.com/bgm.mp3"
                           },
                           "role": "reference_audio"
                         }
@@ -259,7 +449,7 @@
                   }
                 },
                 "doubao-seedance-2-0-fast": {
-                  "summary": "doubao seedance 2.0 fast",
+                  "summary": "豆包 Seedance 2.0 Fast 文生视频",
                   "value": {
                     "model": "doubao-seedance-2-0-fast-260128",
                     "prompt": "宇航员在月球表面缓缓行走，远处是蓝色地球，星空背景",
@@ -276,7 +466,7 @@
                   }
                 },
                 "doubao-seedance-1-5-pro": {
-                  "summary": "doubao seedance 1.5 pro",
+                  "summary": "豆包 Seedance 1.5 Pro 图生视频",
                   "value": {
                     "model": "doubao-seedance-1-5-pro",
                     "prompt": "人物转过头微笑，背景轻微虚化",
@@ -298,7 +488,7 @@
                   }
                 },
                 "happyhorse-1-0-t2v": {
-                  "summary": "happyhorse-1.0-t2v 文生视频",
+                  "summary": "HappyHorse 1.0 文生视频",
                   "value": {
                     "model": "happyhorse-1.0-t2v",
                     "prompt": "一座由硬纸板和瓶盖搭建的微型城市，在夜晚焕发出生机，小灯点缀其间，照亮前路",
@@ -311,7 +501,7 @@
                   }
                 },
                 "happyhorse-1-0-i2v": {
-                  "summary": "happyhorse-1.0-i2v 图生视频",
+                  "summary": "HappyHorse 1.0 图生视频",
                   "value": {
                     "model": "happyhorse-1.0-i2v",
                     "prompt": "小猫慢慢睁开眼睛，环顾四周，轻轻伸了个懒腰",
@@ -321,7 +511,7 @@
                   }
                 },
                 "happyhorse-1-0-r2v": {
-                  "summary": "happyhorse-1.0-r2v 参考生成",
+                  "summary": "HappyHorse 1.0 参考图生成",
                   "value": {
                     "model": "happyhorse-1.0-r2v",
                     "prompt": "保持角色风格，让她在花海中奔跑，裙摆飘动",
@@ -338,7 +528,7 @@
                   }
                 },
                 "happyhorse-1-0-video-edit": {
-                  "summary": "happyhorse-1.0-video-edit 视频编辑",
+                  "summary": "HappyHorse 1.0 视频编辑",
                   "value": {
                     "model": "happyhorse-1.0-video-edit",
                     "prompt": "将视频中的白天场景替换为夜晚霓虹灯风格，保留人物动作不变",
@@ -371,23 +561,17 @@
                   "properties": {
                     "task_id": {
                       "type": "string",
-                      "description": "任务 ID",
-                      "examples": [
-                        "abcd1234efgh"
-                      ]
+                      "description": "任务 ID，用于后续通过 GET /v1/video/generations/:task_id 查询状态",
+                      "examples": ["task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"]
                     },
                     "status": {
                       "type": "string",
-                      "description": "任务状态",
-                      "examples": [
-                        "queued"
-                      ]
+                      "enum": ["queued", "NOT_START"],
+                      "description": "任务初始状态。不同渠道表现不同：\n- `queued` — 已进入本地队列，后台处理\n- `NOT_START` — 已提交至上游，等待系统轮询\n\n请使用 `GET /v1/video/generations/{task_id}` 轮询最终状态。",
+                      "examples": ["queued"]
                     }
                   },
-                  "x-apifox-orders": [
-                    "task_id",
-                    "status"
-                  ]
+                  "x-apifox-orders": ["task_id", "status"]
                 }
               }
             }
@@ -411,31 +595,18 @@
                           "description": "错误类型"
                         },
                         "param": {
-                          "type": [
-                            "string",
-                            "null"
-                          ],
+                          "type": ["string", "null"],
                           "description": "相关参数"
                         },
                         "code": {
-                          "type": [
-                            "string",
-                            "null"
-                          ],
+                          "type": ["string", "null"],
                           "description": "错误代码"
                         }
                       },
-                      "x-apifox-orders": [
-                        "message",
-                        "type",
-                        "param",
-                        "code"
-                      ]
+                      "x-apifox-orders": ["message", "type", "param", "code"]
                     }
                   },
-                  "x-apifox-orders": [
-                    "error"
-                  ]
+                  "x-apifox-orders": ["error"]
                 }
               }
             }
