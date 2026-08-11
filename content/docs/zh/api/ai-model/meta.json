@@ -1,3 +1,16 @@
 {
-  "title": "AI 模型接口"
+  "title": "AI 模型接口",
+  "pages": [
+    "audio",
+    "chat",
+    "completions",
+    "embeddings",
+    "images",
+    "videos",
+    "3d",
+    "models",
+    "moderations",
+    "realtime",
+    "rerank"
+  ]
 }

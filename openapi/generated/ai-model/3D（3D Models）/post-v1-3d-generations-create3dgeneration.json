@@ -1,0 +1,555 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "创建 3D 生成任务",
+    "version": "1.0.0",
+    "description": "提交 3D 生成或 3D 后处理任务。\n\n通过 `model` 指定模型，其余 3D 参数统一放入 `metadata`。提交成功后立即返回任务 ID，可通过 `GET /v1/3d/generations/{task_id}` 查询任务状态、结果文件、用量和实际扣费。\n"
+  },
+  "tags": [
+    {
+      "name": "3D（3D Models）"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "使用 Bearer Token 认证。\n格式: `Authorization: Bearer sk-xxxxxx`\n"
+      }
+    }
+  },
+  "paths": {
+    "/v1/3d/generations": {
+      "post": {
+        "tags": [
+          "3D（3D Models）"
+        ],
+        "summary": "创建 3D 生成任务",
+        "description": "提交 3D 生成或 3D 后处理任务。\n\n### 支持模型\n\n| 模型 ID | 能力 | 主要输入 |\n|---|---|---|\n| `doubao-seed3d-2-0-260328` | 图生 3D | `metadata.images` 1 张 |\n| `hyper3d-gen2-260112` | 文生 3D / 图生 3D | 文生：`metadata.prompt`；图生：`metadata.images` 1-5 张 |\n| `hitem3d-2-0-251223` | 图生 3D | `metadata.images` 1-4 张 HTTP URL |\n| `hunyuan-3d-rapid` | 文生 3D / 图生 3D | `metadata.prompt` 或 `metadata.images[0]` 二选一 |\n| `hunyuan-3d-pro-3.0` | 文生 3D / 图生 3D / 多视角 / LowPoly / Sketch | `metadata.prompt` 或主图，带 `view` 图片可作为多视角 |\n| `hunyuan-3d-pro-3.1` | 文生 3D / 图生 3D / 多视角增强 / Sketch | `metadata.prompt` 或主图，支持更多多视角 |\n| `hunyuan-3d-reduce-face` | 智能拓扑 / 减面 | `metadata.input_file` |\n| `hunyuan-3d-texture-3.0` | 纹理生成 | `metadata.input_file` + (`metadata.prompt` 或参考图) |\n| `hunyuan-3d-texture-3.1` | 纹理生成 / 多视角参考 | `metadata.input_file` + (`metadata.prompt` 或参考图)，可加带 `view` 多视图 |\n| `hunyuan-3d-profile` | 3D 人物生成 | `metadata.images[0]`，`metadata.template` 可选 |\n| `hunyuan-3d-auto-rigging` | 绑骨蒙皮 | `metadata.input_file` |\n| `hunyuan-3d-motion` | 文生动作 | `metadata.prompt`，可选 `metadata.input_file` 重定向 |\n\n### 输入图片统一结构\n\n`metadata.images` 是对象数组，每项包含：\n- `url`: HTTP URL 或 `data:image/<格式>;base64,<数据>`\n- `view`: 可选视角，枚举 `front` / `back` / `left` / `right` / `top` / `bottom` / `left_front` / `right_front`\n\n`hunyuan-3d-rapid` 只会使用 `images[0]`；`hitem3d-2-0-251223` 的 `url` 仅支持 HTTP URL；`hunyuan-3d-pro-3.1` 和 `hunyuan-3d-texture-3.1` 会将带 `view` 的图片映射为多视角输入。\n\n### `geometry_only` 与 `generate_mode` 冲突规则\n\n`geometry_only=true` 和显式传入 `generate_mode` 针对同一底层字段，`hunyuan-3d-pro-*` 同时传两者时平台返回 400 参数冲突。\n",
+        "operationId": "create3DGeneration",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model"
+                ],
+                "description": "3D 任务提交请求。`model` 位于顶层，其余字段放入 `metadata`。",
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "description": "模型 ID",
+                    "descriptions": "模型 ID。\n\n| 模型 ID | 能力 |\n|---|---|\n| `doubao-seed3d-2-0-260328` | 图生 3D |\n| `hyper3d-gen2-260112` | 文生 / 图生 3D |\n| `hitem3d-2-0-251223` | 图生 3D |\n| `hunyuan-3d-rapid` | 文生 / 图生 3D（极速）|\n| `hunyuan-3d-pro-3.0` | 文生 / 图生 3D / LowPoly / Sketch |\n| `hunyuan-3d-pro-3.1` | 文生 / 图生 3D / 多视角增强 / Sketch |\n| `hunyuan-3d-reduce-face` | 智能拓扑 / 减面 |\n| `hunyuan-3d-texture-3.0` | 纹理生成 |\n| `hunyuan-3d-texture-3.1` | 纹理生成 / 多视角参考 |\n| `hunyuan-3d-profile` | 3D 人物生成 |\n| `hunyuan-3d-auto-rigging` | 绑骨蒙皮 |\n| `hunyuan-3d-motion` | 文生动作 |",
+                    "examples": [
+                      "doubao-seed3d-2-0-260328",
+                      "hunyuan-3d-pro-3.1",
+                      "hunyuan-3d-auto-rigging"
+                    ]
+                  },
+                  "metadata": {
+                    "type": "object",
+                    "description": "3D 模型参数。先根据 `model` 找到对应小节，再按该模型的输入组合传入 `metadata`。下面每个示例都是完整请求体，可以直接作为调试起点。\n\n### doubao-seed3d-2-0-260328\n\n图生 3D，只需要一张图片。\n\n| 字段 | 类型 | 说明 |\n|---|---|---|\n| `images` | array | 必填，传 1 张图片：`[{\"url\":\"https://example.com/object.png\"}]`。支持 HTTP URL 或 data URI Base64。图片要求：像素 < 4096×4096，大小 ≤ 10MB，宽高比在 (0.4, 2.5) 之间，格式 jpg/jpeg/png/webp/bmp。|\n| `file_format` | string | 输出格式：`glb` / `obj` / `usd` / `usdz`，默认 `glb`。|\n| `quality_level` | string | 质量档位：`high` / `medium` / `low`；对应 high=1M、medium=500k（默认）、low=100k。|\n\n最小请求：\n\n```json\n{\n  \"model\": \"doubao-seed3d-2-0-260328\",\n  \"metadata\": {\n    \"images\": [{\"url\": \"https://example.com/object.png\"}],\n    \"file_format\": \"glb\",\n    \"quality_level\": \"medium\"\n  }\n}\n```\n\n---\n\n### hyper3d-gen2-260112\n\n支持文生 3D 和图生 3D。文生只传 `prompt`；图生传 `images`，也可以同时加英文 `prompt` 描述图片。\n\n| 字段 | 类型 | 说明 |\n|---|---|---|\n| `prompt` | string | 文生必填，图生可选。仅英文，最长 400 字符。|\n| `images` | array | 图生必填，1-5 张图片：`[{\"url\":\"https://example.com/ref.png\"}]`。支持 HTTP URL 或 data URI Base64。图片格式 jpg/jpeg/png，像素 < 4096×4096，大小 ≤ 30MB。|\n| `file_format` | string | 输出格式：`glb` / `obj` / `usdz` / `fbx` / `stl`，默认 `glb`。|\n| `material` | string | 材质类型：`pbr` / `shaded` / `all` / `none`，默认 `pbr`。|\n| `mesh_mode` | string | 网格类型：`raw` / `quad`，默认 `quad`。|\n| `face_count` | integer | 精确面数。`raw`：[500,1000000]，默认 500000；`quad`：[1000,200000]，默认 18000。与 `quality_level` 同时传时，本字段优先。|\n| `quality_level` | string | 质量档位：`high` / `medium` / `low`。Raw：high=500k（默认）/medium=150k/low=20k；Quad：high=50k/medium=18k（默认）/low=8k。|\n| `seed` | integer | 随机种子，[0,65535]。|\n| `use_original_alpha` | boolean | 是否保留图片透明轮廓，默认 false。|\n| `hd_texture` | boolean | 是否启用 HD 纹理，默认 false。|\n| `addons` | string | `high_pack` 表示 4K 纹理；不传为 2K 纹理。|\n| `ta_pose` | boolean | 类人模型是否强制 T/A Pose，默认 false。|\n| `bbox_condition` | array | 模型边界框尺寸 `[宽,高,长]`。|\n\n文生请求：\n\n```json\n{\n  \"model\": \"hyper3d-gen2-260112\",\n  \"metadata\": {\n    \"prompt\": \"A stylized treasure chest with gold metal details\",\n    \"file_format\": \"glb\",\n    \"material\": \"pbr\",\n    \"mesh_mode\": \"quad\"\n  }\n}\n```\n\n图生请求：\n\n```json\n{\n  \"model\": \"hyper3d-gen2-260112\",\n  \"metadata\": {\n    \"images\": [{\"url\": \"https://example.com/object.png\"}],\n    \"prompt\": \"A clean hard-surface 3D asset\",\n    \"file_format\": \"glb\",\n    \"quality_level\": \"medium\"\n  }\n}\n```\n\n---\n\n### hitem3d-2-0-251223\n\n图生 3D，传 1-4 张图片。图片必须是 HTTP URL。多视角时给图片加 `view`。\n\n| 字段 | 类型 | 说明 |\n|---|---|---|\n| `images` | array | 必填，1-4 张图片。普通图生：`[{\"url\":\"https://example.com/object.jpg\"}]`。多视角：`[{\"url\":\"...front.jpg\",\"view\":\"front\"},{\"url\":\"...left.jpg\",\"view\":\"left\"}]`。格式 jpg/jpeg/png/webp，像素 < 4096×4096，大小 ≤ 10MB。|\n| `file_format` | string | 输出格式：`obj` / `glb` / `stl` / `fbx` / `usdz`，默认 `obj`。|\n| `face_count` | integer | 目标面数，[100000,2000000]，推荐 2000000。|\n| `geometry_only` | boolean | 是否只生成白模 / 纯几何；true 表示纯几何，false 表示几何+纹理。|\n| `resolution` | string | 分辨率：`1536` / `1536pro`，默认 `1536`。|\n\n多视角只使用 `front` / `back` / `left` / `right`。未传 `view` 时，图片按原数组顺序发送，不推断默认视角。\n\n请求示例：\n\n```json\n{\n  \"model\": \"hitem3d-2-0-251223\",\n  \"metadata\": {\n    \"images\": [\n      {\"url\": \"https://example.com/front.jpg\", \"view\": \"front\"},\n      {\"url\": \"https://example.com/left.jpg\", \"view\": \"left\"}\n    ],\n    \"file_format\": \"glb\",\n    \"face_count\": 2000000,\n    \"resolution\": \"1536\"\n  }\n}\n```\n\n---\n\n### hunyuan-3d-rapid\n\n文生 3D 和图生 3D 二选一：文生只传 `prompt`；图生只传 `images[0]`。不要同时传 `prompt` 和图片。\n\n| 字段 | 类型 | 说明 |\n|---|---|---|\n| `prompt` | string | 文生 3D 输入，最长 200 个 UTF-8 字符，支持中文。|\n| `images` | array | 图生 3D 输入，只读取第一张：`[{\"url\":\"https://example.com/object.png\"}]`。支持 HTTP URL 或 data URI Base64。图片单边 128-5000px，URL≤8MB，Base64 原始数据≤6MB，格式 jpg/png/jpeg/webp。|\n| `file_format` | string | 输出格式：`obj` / `glb` / `stl` / `usdz` / `fbx` / `mp4`，默认 `obj`。|\n| `enable_pbr` | boolean | 是否启用 PBR。|\n| `geometry_only` | boolean | 是否只生成白模 / 纯几何。开启后 PBR 不生效；若同时传入不兼容的 `file_format`，可能返回参数错误。|\n\n文生请求：\n\n```json\n{\n  \"model\": \"hunyuan-3d-rapid\",\n  \"metadata\": {\n    \"prompt\": \"一只卡通小猫\",\n    \"file_format\": \"glb\",\n    \"enable_pbr\": true\n  }\n}\n```\n\n图生请求：\n\n```json\n{\n  \"model\": \"hunyuan-3d-rapid\",\n  \"metadata\": {\n    \"images\": [{\"url\": \"https://example.com/object.png\"}],\n    \"file_format\": \"glb\",\n    \"enable_pbr\": true\n  }\n}\n```\n\n---\n\n### hunyuan-3d-pro-3.0 / hunyuan-3d-pro-3.1\n\n文生、图生、多视角都走同一个模型 ID。文生只传 `prompt`；普通图生传 1 张不带 `view` 的主图；多视角图生必须先传主图，再追加带 `view` 的视角图。\n\n| 字段 | 类型 | 说明 |\n|---|---|---|\n| `prompt` | string | 文本提示词，最长 1024 个 UTF-8 字符，支持中文。Normal / LowPoly / Geometry 模式下不能和主图同时传；Sketch 模式下可以和主图同时传。|\n| `images` | array | 图生 / 多视角输入。主图不要传 `view`：`[{\"url\":\"https://example.com/front.png\"}]`。多视角图追加在主图后，并必须传 `view`：`{\"url\":\"https://example.com/left.png\",\"view\":\"left\"}`。主图支持 jpg/jpeg/png/webp；多视角图支持 jpg/png。|\n| `file_format` | string | 显式输出格式。官方枚举为 STL/USDZ/FBX；不传时使用默认 obj+glb。显式传入其他值时可能返回参数错误。|\n| `enable_pbr` | boolean | 是否启用 PBR。`geometry_only=true` 时不生效。|\n| `face_count` | integer | 目标面数，[3000,1500000]，默认 500000。LowPoly / Geometry 模式下不生效，但用户显式传入时仍会发送。|\n| `generate_mode` | string | 生成模式：`normal` / `low_poly` / `sketch`，默认 `normal`。`low_poly` 仅 3.0 支持；3.1 不建议传 `low_poly`，如传入可能返回参数错误。|\n| `geometry_only` | boolean | 白模 / 纯几何模式。不要和显式 `generate_mode` 同时传。|\n| `polygon_type` | string | LowPoly 模式下使用，`triangle` / `quadrilateral`，默认 `triangle`；`quadrilateral` 表示四边形与三角形混合。|\n\n文生请求：\n\n```json\n{\n  \"model\": \"hunyuan-3d-pro-3.1\",\n  \"metadata\": {\n    \"prompt\": \"一只写实风格的小猫\",\n    \"generate_mode\": \"normal\",\n    \"enable_pbr\": true\n  }\n}\n```\n\n普通图生请求：\n\n```json\n{\n  \"model\": \"hunyuan-3d-pro-3.1\",\n  \"metadata\": {\n    \"images\": [{\"url\": \"https://example.com/front.png\"}],\n    \"generate_mode\": \"normal\",\n    \"enable_pbr\": true\n  }\n}\n```\n\n多视角图生请求：\n\n```json\n{\n  \"model\": \"hunyuan-3d-pro-3.1\",\n  \"metadata\": {\n    \"images\": [\n      {\"url\": \"https://example.com/front.png\"},\n      {\"url\": \"https://example.com/left.png\", \"view\": \"left\"},\n      {\"url\": \"https://example.com/right.png\", \"view\": \"right\"}\n    ],\n    \"generate_mode\": \"normal\",\n    \"enable_pbr\": true\n  }\n}\n```\n\n视角支持：3.0 支持 `left` / `right` / `back`；3.1 支持 `left` / `right` / `back` / `top` / `bottom` / `left_front` / `right_front`。不要给主图传 `view`，否则它会被当作多视角图处理。\n\n---\n\n### hunyuan-3d-reduce-face\n\n智能拓扑 / 减面。传一个 OBJ 或 GLB 文件，按需要指定拓扑类型和面数级别。\n\n| 字段 | 类型 | 说明 |\n|---|---|---|\n| `input_file` | object | 必填，输入 3D 文件：`{\"url\":\"https://example.com/model.glb\",\"type\":\"GLB\"}`。`type` 支持 `OBJ` / `GLB`。|\n| `polygon_type` | string | 多边形类型：`triangle` / `quadrilateral`，默认 `triangle`；`quadrilateral` 表示四边形面。|\n| `face_level` | string | 面数级别：`high` / `medium` / `low`。|\n\n请求示例：\n\n```json\n{\n  \"model\": \"hunyuan-3d-reduce-face\",\n  \"metadata\": {\n    \"input_file\": {\"url\": \"https://example.com/model.glb\", \"type\": \"GLB\"},\n    \"polygon_type\": \"quadrilateral\",\n    \"face_level\": \"medium\"\n  }\n}\n```\n\n---\n\n### hunyuan-3d-texture-3.0 / hunyuan-3d-texture-3.1\n\n纹理生成必须传源 3D 模型文件 `input_file`，并且还要在 `prompt` 和单张参考图之间二选一。3.1 可以再额外追加多视角参考图。\n\n| 字段 | 类型 | 说明 |\n|---|---|---|\n| `input_file` | object | 必填，源 3D 模型文件：`{\"url\":\"https://example.com/model.glb\",\"type\":\"GLB\"}`。`type` 支持 `OBJ` / `GLB`。|\n| `prompt` | string | 纹理提示词，最长 200 个 UTF-8 字符。和无 `view` 的单张参考图二选一，不能同时传。|\n| `images` | array | 参考图。单张参考图不要传 `view`：`[{\"url\":\"https://example.com/ref.png\"}]`。3.1 多视角参考图需要传 `view`，例如 `{\"url\":\"https://example.com/left.png\",\"view\":\"left\"}`。参考图支持 jpg/jpeg/png。|\n| `enable_pbr` | boolean | 是否启用 PBR，默认 false。|\n| `enable_keep_uv` | boolean | 是否保留 UV，默认 false。|\n| `texture_size` | integer | 正方形贴图边长，[720,4096]，默认 4096。|\n\nPrompt 纹理请求：\n\n```json\n{\n  \"model\": \"hunyuan-3d-texture-3.1\",\n  \"metadata\": {\n    \"input_file\": {\"url\": \"https://example.com/model.glb\", \"type\": \"GLB\"},\n    \"prompt\": \"蓝白陶瓷纹理\",\n    \"enable_pbr\": true,\n    \"texture_size\": 2048\n  }\n}\n```\n\n参考图纹理请求：\n\n```json\n{\n  \"model\": \"hunyuan-3d-texture-3.1\",\n  \"metadata\": {\n    \"input_file\": {\"url\": \"https://example.com/model.glb\", \"type\": \"GLB\"},\n    \"images\": [\n      {\"url\": \"https://example.com/ref.png\"},\n      {\"url\": \"https://example.com/left.png\", \"view\": \"left\"}\n    ],\n    \"enable_pbr\": true\n  }\n}\n```\n\n3.1 多视角支持 `left` / `right` / `back` / `top` / `bottom` / `left_front` / `right_front`，每个视角一张。多视角图是额外参考，不能替代必填的 `prompt` 或无 `view` 的单张参考图。\n\n---\n\n### hunyuan-3d-profile\n\n3D 人物生成。可传人物头像，也可传模板。官方将两者都标为可选，平台不额外增加必填校验。\n\n| 字段 | 类型 | 说明 |\n|---|---|---|\n| `images` | array | 人物头像，读取第一张：`[{\"url\":\"https://example.com/profile.png\"}]`。图片单边 >500 且 <4096，Base64 <10MB，支持 jpg/jpeg/png。|\n| `template` | string | 人物模板枚举：`basketball`（动感球手）、`badminton`（羽扬中华）、`pingpong`（国球荣耀）、`gymnastics`（勇攀巅峰）、`pilidance`（舞动青春）、`tennis`（网球甜心）、`athletics`（东方疾风）、`footballboykicking1`（激情逐风）、`footballboykicking2`（绿茵之星）、`guitar`（甜酷弦音）、`footballboy`（足球小将）、`skateboard`（滑跃青春）、`futuresoilder`（未来战士）、`explorer`（逐梦旷野）、`beardollgirl`（可爱女孩）、`bibpantsboy`（都市白领）、`womansitpose`（职业丽影）、`womanstandpose2`（悠闲时光）、`mysteriousprincess`（海洋公主）、`manstandpose2`（演讲之星）。|\n\n请求示例：\n\n```json\n{\n  \"model\": \"hunyuan-3d-profile\",\n  \"metadata\": {\n    \"images\": [{\"url\": \"https://example.com/profile.png\"}],\n    \"template\": \"basketball\"\n  }\n}\n```\n\n---\n\n### hunyuan-3d-auto-rigging\n\n绑骨蒙皮。传一个 FBX 或 GLB 文件，可选动作模板编号。\n\n| 字段 | 类型 | 说明 |\n|---|---|---|\n| `input_file` | object | 必填，输入 3D 文件：`{\"url\":\"https://example.com/character.glb\",\"type\":\"GLB\"}`。`type` 支持 `FBX` / `GLB`，文件不超过 60MB。|\n| `motion_type` | integer | 动作模板编号 [1,48]；非人形角色不支持动作模板。|\n\n请求示例：\n\n```json\n{\n  \"model\": \"hunyuan-3d-auto-rigging\",\n  \"metadata\": {\n    \"input_file\": {\"url\": \"https://example.com/character.glb\", \"type\": \"GLB\"},\n    \"motion_type\": 23\n  }\n}\n```\n\n---\n\n### hunyuan-3d-motion\n\n文生动作。必须传动作描述 `prompt`，可选传一个重定向 3D 文件。\n\n| 字段 | 类型 | 说明 |\n|---|---|---|\n| `prompt` | string | 必填，动作描述，最多 128 字符。|\n| `input_file` | object | 可选，重定向用 3D 文件：`{\"url\":\"https://example.com/character.glb\",\"type\":\"GLB\"}`。传入时 `url` / `type` 均必填；官方未给 `type` 枚举。|\n| `duration` | integer | 动作时长 [1,12] 秒，默认 5。|\n| `enable_mesh` | boolean | 是否返回带蒙皮 mesh 的 FBX，默认 true。|\n| `enable_rewrite` | boolean | 是否扩写提示词，默认 false。|\n| `enable_duration_est` | boolean | 是否自动匹配动作时长，默认 false。|\n\n请求示例：\n\n```json\n{\n  \"model\": \"hunyuan-3d-motion\",\n  \"metadata\": {\n    \"prompt\": \"角色向前慢跑并挥手\",\n    \"duration\": 5,\n    \"enable_mesh\": true,\n    \"enable_rewrite\": false,\n    \"enable_duration_est\": false\n  }\n}\n```\n\n---\n\n### images 与 input_file 结构\n\n`images` 是图片数组，每项至少包含 `url`。普通单图不要传 `view`；多视角图片才传 `view`。\n\n```json\n[{\"url\":\"https://example.com/front.png\"}]\n```\n\n```json\n[{\"url\":\"https://example.com/front.png\"},{\"url\":\"https://example.com/left.png\",\"view\":\"left\"}]\n```\n\n`input_file` 是 3D 文件对象：\n\n```json\n{\"url\":\"https://example.com/model.glb\",\"type\":\"GLB\"}\n```",
+                    "additionalProperties": true,
+                    "properties": {
+                      "prompt": {
+                        "type": "string",
+                        "description": "文本提示词。适用于 `hyper3d-gen2-260112`（仅英文 ≤400 字符）、`hunyuan-3d-rapid`（≤200 UTF-8 字符）、`hunyuan-3d-pro-*`（≤1024 UTF-8 字符）、`hunyuan-3d-texture-*`（≤200 UTF-8 字符）、`hunyuan-3d-motion`（必填，≤128 字符）。",
+                        "examples": [
+                          "A cute robot character with clean topology"
+                        ]
+                      },
+                      "images": {
+                        "type": "array",
+                        "description": "图片输入数组。`url` 接受 HTTP URL 或 `data:image/<格式>;base64,<数据>`；`view` 只用于多视角图片。\n\n主图写法：`[{\"url\":\"https://example.com/front.png\"}]`，不要传 `view`。\n\n多视角写法：在主图后追加带 `view` 的图片，例如 `{\"url\":\"https://example.com/left.png\",\"view\":\"left\"}`。\n\n| view | 说明 |\n|---|---|\n| `front` | 前视图 |\n| `back` | 后视图 |\n| `left` | 左视图 |\n| `right` | 右视图 |\n| `top` | 顶视图 |\n| `bottom` | 底视图 |\n| `left_front` | 左前 45° 视图 |\n| `right_front` | 右前 45° 视图 |\n\n`hitem3d-2-0-251223` 仅支持 HTTP URL，且只有 front/back/left/right 参与多视角位图。`hunyuan-3d-rapid` 只会使用 `images[0]`。`hunyuan-3d-pro-3.1` 和 `hunyuan-3d-texture-3.1` 会将带 `view` 的图片映射为多视角输入。",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "url"
+                          ],
+                          "properties": {
+                            "url": {
+                              "type": "string",
+                              "description": "图片 URL 或 data URI Base64。"
+                            },
+                            "view": {
+                              "type": "string",
+                              "enum": [
+                                "front",
+                                "back",
+                                "left",
+                                "right",
+                                "top",
+                                "bottom",
+                                "left_front",
+                                "right_front"
+                              ],
+                              "description": "图片视角，用于多视角输入场景。"
+                            }
+                          },
+                          "x-apifox-orders": [
+                            "url",
+                            "view"
+                          ]
+                        }
+                      },
+                      "input_file": {
+                        "type": "object",
+                        "description": "输入 3D 文件。`hunyuan-3d-reduce-face` / `hunyuan-3d-auto-rigging` 必填；`hunyuan-3d-texture-*` 必填，用作源 3D 模型文件；`hunyuan-3d-motion` 可选。",
+                        "properties": {
+                          "url": {
+                            "type": "string",
+                            "description": "3D 文件 URL。"
+                          },
+                          "type": {
+                            "type": "string",
+                            "description": "文件类型。`hunyuan-3d-reduce-face`：OBJ/GLB；`hunyuan-3d-texture-*`：OBJ/GLB；`hunyuan-3d-auto-rigging`：FBX/GLB；`hunyuan-3d-motion` 官方未给枚举。",
+                            "examples": [
+                              "GLB",
+                              "FBX",
+                              "OBJ"
+                            ]
+                          }
+                        },
+                        "x-apifox-orders": [
+                          "url",
+                          "type"
+                        ]
+                      },
+                      "file_format": {
+                        "type": "string",
+                        "description": "输出文件格式。`doubao-seed3d-2-0-260328`：glb/obj/usd/usdz，默认 glb；`hyper3d-gen2-260112`：glb/obj/usdz/fbx/stl，默认 glb；`hitem3d-2-0-251223`：obj/glb/stl/fbx/usdz，默认 obj；`hunyuan-3d-rapid`：obj/glb/stl/usdz/fbx/mp4，默认 obj；`hunyuan-3d-pro-*`：不传时默认返回 obj+glb。",
+                        "examples": [
+                          "glb",
+                          "fbx",
+                          "mp4"
+                        ]
+                      },
+                      "enable_pbr": {
+                        "type": "boolean",
+                        "description": "是否启用 PBR。支持 `hunyuan-3d-rapid` / `hunyuan-3d-pro-*` / `hunyuan-3d-texture-*`。"
+                      },
+                      "geometry_only": {
+                        "type": "boolean",
+                        "description": "是否只生成白模 / 纯几何。支持 `hitem3d-2-0-251223` / `hunyuan-3d-rapid` / `hunyuan-3d-pro-*`。`hunyuan-3d-pro-*` 下不可与显式 `generate_mode` 同时传入。"
+                      },
+                      "material": {
+                        "type": "string",
+                        "enum": [
+                          "pbr",
+                          "shaded",
+                          "all",
+                          "none"
+                        ],
+                        "description": "材质类型，仅 `hyper3d-gen2-260112` 支持。`pbr` / `shaded` / `all` / `none`，默认 `pbr`。"
+                      },
+                      "face_count": {
+                        "type": "integer",
+                        "description": "目标面数。`hyper3d-gen2-260112`：raw 模式 [500,1000000] 默认 500000，quad 模式 [1000,200000] 默认 18000；`hitem3d-2-0-251223`：[100000,2000000]；`hunyuan-3d-pro-*`：[3000,1500000] 默认 500000。"
+                      },
+                      "quality_level": {
+                        "type": "string",
+                        "enum": [
+                          "high",
+                          "medium",
+                          "low"
+                        ],
+                        "description": "质量档位，支持 `doubao-seed3d-2-0-260328` / `hyper3d-gen2-260112`。`face_count` 存在时以 `face_count` 为准。"
+                      },
+                      "resolution": {
+                        "type": "string",
+                        "enum": [
+                          "1536",
+                          "1536pro"
+                        ],
+                        "description": "图像分辨率，仅 `hitem3d-2-0-251223` 支持，默认 `1536`。"
+                      },
+                      "mesh_mode": {
+                        "type": "string",
+                        "enum": [
+                          "raw",
+                          "quad"
+                        ],
+                        "description": "网格类型，仅 `hyper3d-gen2-260112` 支持。`raw` 为三角面，`quad` 为四边面，默认 `quad`。"
+                      },
+                      "seed": {
+                        "type": "integer",
+                        "description": "随机种子，仅 `hyper3d-gen2-260112` 支持，[0,65535]。"
+                      },
+                      "generate_mode": {
+                        "type": "string",
+                        "enum": [
+                          "normal",
+                          "low_poly",
+                          "sketch"
+                        ],
+                        "description": "生成模式，仅 `hunyuan-3d-pro-*` 支持，默认 `normal`。`low_poly` 仅 `hunyuan-3d-pro-3.0` 支持；`hunyuan-3d-pro-3.1` 不建议传 `low_poly`，如传入可能返回参数错误。白模请使用 `geometry_only`，不可同时传入。"
+                      },
+                      "polygon_type": {
+                        "type": "string",
+                        "enum": [
+                          "triangle",
+                          "quadrilateral"
+                        ],
+                        "description": "多边形类型，默认 `triangle`。`hunyuan-3d-pro-*` LowPoly 模式下 `quadrilateral` 表示四边形与三角形混合；`hunyuan-3d-reduce-face` 下 `quadrilateral` 表示纯四边形面。"
+                      },
+                      "face_level": {
+                        "type": "string",
+                        "enum": [
+                          "high",
+                          "medium",
+                          "low"
+                        ],
+                        "description": "面数级别，仅 `hunyuan-3d-reduce-face` 支持。"
+                      },
+                      "template": {
+                        "type": "string",
+                        "enum": [
+                          "basketball",
+                          "badminton",
+                          "pingpong",
+                          "gymnastics",
+                          "pilidance",
+                          "tennis",
+                          "athletics",
+                          "footballboykicking1",
+                          "footballboykicking2",
+                          "guitar",
+                          "footballboy",
+                          "skateboard",
+                          "futuresoilder",
+                          "explorer",
+                          "beardollgirl",
+                          "bibpantsboy",
+                          "womansitpose",
+                          "womanstandpose2",
+                          "mysteriousprincess",
+                          "manstandpose2"
+                        ],
+                        "description": "3D 人物模板，仅 `hunyuan-3d-profile` 支持，可选。\n\n| 值 | 模板 |\n|---|---|\n| `basketball` | 动感球手 |\n| `badminton` | 羽扬中华 |\n| `pingpong` | 国球荣耀 |\n| `gymnastics` | 勇攀巅峰 |\n| `pilidance` | 舞动青春 |\n| `tennis` | 网球甜心 |\n| `athletics` | 东方疾风 |\n| `footballboykicking1` | 激情逐风 |\n| `footballboykicking2` | 绿茵之星 |\n| `guitar` | 甜酷弦音 |\n| `footballboy` | 足球小将 |\n| `skateboard` | 滑跃青春 |\n| `futuresoilder` | 未来战士 |\n| `explorer` | 逐梦旷野 |\n| `beardollgirl` | 可爱女孩 |\n| `bibpantsboy` | 都市白领 |\n| `womansitpose` | 职业丽影 |\n| `womanstandpose2` | 悠闲时光 |\n| `mysteriousprincess` | 海洋公主 |\n| `manstandpose2` | 演讲之星 |"
+                      },
+                      "motion_type": {
+                        "type": "integer",
+                        "description": "绑骨蒙皮动作模板编号，仅 `hunyuan-3d-auto-rigging` 支持，[1,48]。非人形角色不支持动作模板。"
+                      },
+                      "texture_size": {
+                        "type": "integer",
+                        "description": "贴图边长，仅 `hunyuan-3d-texture-*` 支持，[720,4096]，默认 4096。"
+                      },
+                      "enable_keep_uv": {
+                        "type": "boolean",
+                        "description": "是否保留 UV，仅 `hunyuan-3d-texture-*` 支持，默认 false。"
+                      },
+                      "duration": {
+                        "type": "integer",
+                        "description": "动作时长，仅 `hunyuan-3d-motion` 支持，[1,12] 秒，默认 5。"
+                      },
+                      "enable_mesh": {
+                        "type": "boolean",
+                        "description": "是否返回带蒙皮 mesh 的 FBX，仅 `hunyuan-3d-motion` 支持，默认 true。"
+                      },
+                      "enable_rewrite": {
+                        "type": "boolean",
+                        "description": "是否扩写提示词，仅 `hunyuan-3d-motion` 支持，默认 false。"
+                      },
+                      "enable_duration_est": {
+                        "type": "boolean",
+                        "description": "是否自动匹配动作时长，仅 `hunyuan-3d-motion` 支持，默认 false。"
+                      },
+                      "use_original_alpha": {
+                        "type": "boolean",
+                        "description": "是否保留图片透明轮廓，仅 `hyper3d-gen2-260112` 支持，默认 false。"
+                      },
+                      "hd_texture": {
+                        "type": "boolean",
+                        "description": "是否启用 HD 纹理，仅 `hyper3d-gen2-260112` 支持，默认 false。"
+                      },
+                      "addons": {
+                        "type": "string",
+                        "enum": [
+                          "high_pack"
+                        ],
+                        "description": "附加能力，仅 `hyper3d-gen2-260112` 支持。`high_pack` 表示 4K 纹理；不传为 2K 纹理。"
+                      },
+                      "ta_pose": {
+                        "type": "boolean",
+                        "description": "类人模型是否强制 T/A Pose，仅 `hyper3d-gen2-260112` 支持，默认 false。"
+                      },
+                      "bbox_condition": {
+                        "type": "array",
+                        "description": "模型边界框尺寸 `[宽,高,长]`，仅 `hyper3d-gen2-260112` 支持。",
+                        "items": {
+                          "type": "integer"
+                        },
+                        "minItems": 3,
+                        "maxItems": 3
+                      }
+                    },
+                    "x-apifox-orders": [
+                      "prompt",
+                      "images",
+                      "input_file",
+                      "file_format",
+                      "enable_pbr",
+                      "geometry_only",
+                      "material",
+                      "face_count",
+                      "quality_level",
+                      "resolution",
+                      "mesh_mode",
+                      "seed",
+                      "generate_mode",
+                      "polygon_type",
+                      "face_level",
+                      "template",
+                      "motion_type",
+                      "texture_size",
+                      "enable_keep_uv",
+                      "duration",
+                      "enable_mesh",
+                      "enable_rewrite",
+                      "enable_duration_est",
+                      "use_original_alpha",
+                      "hd_texture",
+                      "addons",
+                      "ta_pose",
+                      "bbox_condition"
+                    ]
+                  }
+                },
+                "x-apifox-orders": [
+                  "model",
+                  "metadata"
+                ]
+              },
+              "examples": {
+                "doubao-seed3d-image": {
+                  "summary": "Seed3D 2.0 图生 3D",
+                  "value": {
+                    "model": "doubao-seed3d-2-0-260328",
+                    "metadata": {
+                      "images": [
+                        {
+                          "url": "https://example.com/object.png"
+                        }
+                      ],
+                      "file_format": "glb",
+                      "quality_level": "medium"
+                    }
+                  }
+                },
+                "hyper3d-text": {
+                  "summary": "Hyper3D Gen2 文生 3D",
+                  "value": {
+                    "model": "hyper3d-gen2-260112",
+                    "metadata": {
+                      "prompt": "A stylized treasure chest with gold metal details",
+                      "file_format": "glb",
+                      "material": "pbr",
+                      "mesh_mode": "quad",
+                      "quality_level": "medium"
+                    }
+                  }
+                },
+                "hitem3d-image": {
+                  "summary": "Hitem3D 2.0 图生 3D",
+                  "value": {
+                    "model": "hitem3d-2-0-251223",
+                    "metadata": {
+                      "images": [
+                        {
+                          "url": "https://example.com/object.jpg"
+                        }
+                      ],
+                      "file_format": "glb"
+                    }
+                  }
+                },
+                "hunyuan-rapid-image": {
+                  "summary": "hunyuan-3d-rapid 图生 3D",
+                  "value": {
+                    "model": "hunyuan-3d-rapid",
+                    "metadata": {
+                      "images": [
+                        {
+                          "url": "https://example.com/object.png"
+                        }
+                      ],
+                      "file_format": "glb",
+                      "enable_pbr": true
+                    }
+                  }
+                },
+                "hunyuan-pro-multiview": {
+                  "summary": "hunyuan-3d-pro-3.1 多视角图生 3D",
+                  "value": {
+                    "model": "hunyuan-3d-pro-3.1",
+                    "metadata": {
+                      "images": [
+                        {
+                          "url": "https://example.com/front.png"
+                        },
+                        {
+                          "url": "https://example.com/left.png",
+                          "view": "left"
+                        },
+                        {
+                          "url": "https://example.com/right.png",
+                          "view": "right"
+                        }
+                      ],
+                      "generate_mode": "normal",
+                      "enable_pbr": true,
+                      "file_format": "glb"
+                    }
+                  }
+                },
+                "hunyuan-auto-rigging": {
+                  "summary": "hunyuan-3d-auto-rigging 绑骨蒙皮",
+                  "value": {
+                    "model": "hunyuan-3d-auto-rigging",
+                    "metadata": {
+                      "input_file": {
+                        "url": "https://example.com/character.glb",
+                        "type": "GLB"
+                      },
+                      "motion_type": 23
+                    }
+                  }
+                },
+                "hunyuan-motion": {
+                  "summary": "hunyuan-3d-motion 文生动作",
+                  "value": {
+                    "model": "hunyuan-3d-motion",
+                    "metadata": {
+                      "prompt": "角色向前慢跑并挥手",
+                      "duration": 5,
+                      "enable_mesh": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "任务提交成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "3D 任务提交响应",
+                  "properties": {
+                    "task_id": {
+                      "type": "string",
+                      "description": "任务 ID，用于后续通过 `GET /v1/3d/generations/{task_id}` 查询状态。",
+                      "examples": [
+                        "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "QUEUED"
+                      ],
+                      "description": "任务初始状态，提交成功后进入队列。",
+                      "examples": [
+                        "QUEUED"
+                      ]
+                    },
+                    "object": {
+                      "type": "string",
+                      "enum": [
+                        "3d.generation"
+                      ],
+                      "description": "对象类型。",
+                      "examples": [
+                        "3d.generation"
+                      ]
+                    },
+                    "model": {
+                      "type": "string",
+                      "description": "提交时使用的模型 ID。",
+                      "examples": [
+                        "hunyuan-3d-pro-3.1"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "task_id",
+                    "status",
+                    "object",
+                    "model"
+                  ],
+                  "x-apifox-orders": [
+                    "task_id",
+                    "status",
+                    "object",
+                    "model"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "错误信息"
+                        },
+                        "type": {
+                          "type": "string",
+                          "description": "错误类型"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "description": "相关参数"
+                        },
+                        "code": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "description": "错误代码"
+                        }
+                      },
+                      "x-apifox-orders": [
+                        "message",
+                        "type",
+                        "param",
+                        "code"
+                      ]
+                    }
+                  },
+                  "x-apifox-orders": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

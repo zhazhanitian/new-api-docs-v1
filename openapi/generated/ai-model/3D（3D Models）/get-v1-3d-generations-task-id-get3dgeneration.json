@@ -1,0 +1,377 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "查询 3D 生成任务",
+    "version": "1.0.0",
+    "description": "通过任务 ID 查询 3D 任务状态、结果文件、用量和最终扣费。\n\n任务 ID 来自 `POST /v1/3d/generations` 返回的 `task_id`。任务完成后，结果文件位于 `files` 数组；任务失败时，失败原因位于 `fail_reason`。\n"
+  },
+  "tags": [
+    {
+      "name": "3D（3D Models）"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "使用 Bearer Token 认证。\n格式: `Authorization: Bearer sk-xxxxxx`\n"
+      }
+    }
+  },
+  "paths": {
+    "/v1/3d/generations/{task_id}": {
+      "get": {
+        "tags": [
+          "3D（3D Models）"
+        ],
+        "summary": "查询 3D 生成任务",
+        "description": "查询 3D 任务的当前状态、结果文件、用量和最终扣费。\n\n任务状态：\n- `QUEUED`: 排队中\n- `IN_PROGRESS`: 生成中\n- `SUCCESS`: 已完成\n- `FAILURE`: 失败\n- `UNKNOWN`: 未知\n",
+        "operationId": "get3DGeneration",
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "description": "任务 ID，由 `POST /v1/3d/generations` 返回。",
+            "schema": {
+              "type": "string"
+            },
+            "examples": {
+              "example": {
+                "value": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+              }
+            }
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "任务详情",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "3D 任务查询响应",
+                  "properties": {
+                    "task_id": {
+                      "type": "string",
+                      "description": "任务 ID。",
+                      "examples": [
+                        "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                      ]
+                    },
+                    "object": {
+                      "type": "string",
+                      "enum": [
+                        "3d.generation"
+                      ],
+                      "description": "对象类型。",
+                      "examples": [
+                        "3d.generation"
+                      ]
+                    },
+                    "model": {
+                      "type": "string",
+                      "description": "实际使用的模型 ID。",
+                      "examples": [
+                        "doubao-seed3d-2-0-260328",
+                        "hunyuan-3d-pro-3.1"
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "QUEUED",
+                        "IN_PROGRESS",
+                        "SUCCESS",
+                        "FAILURE",
+                        "UNKNOWN"
+                      ],
+                      "description": "任务状态。",
+                      "examples": [
+                        "SUCCESS"
+                      ]
+                    },
+                    "progress": {
+                      "type": "string",
+                      "description": "任务进度，成功时通常为 `100%`。未返回时可能为空。",
+                      "examples": [
+                        "100%"
+                      ]
+                    },
+                    "files": {
+                      "type": "array",
+                      "description": "3D 结果文件列表。任务未完成时为空数组。常见格式：`obj`、`glb`、`fbx`、`stl`、`usdz`、`mp4`、`zip`。",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string",
+                            "description": "结果文件下载 URL，可能带有效期签名。",
+                            "examples": [
+                              "https://example.com/result.glb"
+                            ]
+                          },
+                          "format": {
+                            "type": "string",
+                            "description": "结果文件格式。",
+                            "examples": [
+                              "glb",
+                              "fbx",
+                              "zip"
+                            ]
+                          },
+                          "preview_url": {
+                            "type": "string",
+                            "description": "预览图 URL，部分模型返回，不返回时不出现。",
+                            "examples": [
+                              "https://example.com/preview.png"
+                            ]
+                          }
+                        },
+                        "x-apifox-orders": [
+                          "url",
+                          "format",
+                          "preview_url"
+                        ]
+                      }
+                    },
+                    "fail_reason": {
+                      "type": "string",
+                      "description": "失败原因，仅 `status=FAILURE` 时有值。"
+                    },
+                    "usage": {
+                      "type": "object",
+                      "description": "任务用量。",
+                      "properties": {
+                        "input_tokens": {
+                          "type": "integer",
+                          "description": "输入 token 数。",
+                          "examples": [
+                            0
+                          ]
+                        },
+                        "output_tokens": {
+                          "type": "integer",
+                          "description": "输出 token 数。",
+                          "examples": [
+                            30000
+                          ]
+                        },
+                        "total_tokens": {
+                          "type": "integer",
+                          "description": "总 token 数，按此计费。",
+                          "examples": [
+                            30000
+                          ]
+                        },
+                        "credits": {
+                          "type": "number",
+                          "description": "积分用量，仅 `hunyuan-3d-*` 系列模型返回。",
+                          "examples": [
+                            25
+                          ]
+                        }
+                      },
+                      "required": [
+                        "input_tokens",
+                        "output_tokens",
+                        "total_tokens"
+                      ],
+                      "x-apifox-orders": [
+                        "input_tokens",
+                        "output_tokens",
+                        "total_tokens",
+                        "credits"
+                      ]
+                    },
+                    "amount": {
+                      "type": "string",
+                      "description": "本次任务最终扣费金额，单位人民币，保留 6 位小数。",
+                      "examples": [
+                        "2.399992"
+                      ]
+                    },
+                    "created_at": {
+                      "type": "integer",
+                      "description": "任务创建时间戳（Unix 秒）。",
+                      "examples": [
+                        1786091988
+                      ]
+                    },
+                    "submit_time": {
+                      "type": "integer",
+                      "description": "任务提交时间戳（Unix 秒）。",
+                      "examples": [
+                        1786091988
+                      ]
+                    },
+                    "finish_time": {
+                      "type": "integer",
+                      "description": "任务完成时间戳（Unix 秒）。任务未完成时可能为 0 或不出现。",
+                      "examples": [
+                        1786092351
+                      ]
+                    }
+                  },
+                  "required": [
+                    "task_id",
+                    "object",
+                    "model",
+                    "status",
+                    "files",
+                    "amount",
+                    "created_at",
+                    "submit_time"
+                  ],
+                  "x-apifox-orders": [
+                    "task_id",
+                    "object",
+                    "model",
+                    "status",
+                    "progress",
+                    "files",
+                    "fail_reason",
+                    "usage",
+                    "amount",
+                    "created_at",
+                    "submit_time",
+                    "finish_time"
+                  ]
+                },
+                "examples": {
+                  "success-seed3d": {
+                    "summary": "doubao-seed3d-2-0-260328 成功响应",
+                    "value": {
+                      "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw",
+                      "object": "3d.generation",
+                      "model": "doubao-seed3d-2-0-260328",
+                      "status": "SUCCESS",
+                      "progress": "100%",
+                      "files": [
+                        {
+                          "url": "https://example.com/result.zip",
+                          "format": "glb"
+                        }
+                      ],
+                      "usage": {
+                        "input_tokens": 0,
+                        "output_tokens": 30000,
+                        "total_tokens": 30000
+                      },
+                      "amount": "2.399992",
+                      "created_at": 1786091988,
+                      "submit_time": 1786091988,
+                      "finish_time": 1786092351
+                    }
+                  },
+                  "success-hunyuan-3d-pro": {
+                    "summary": "hunyuan-3d-pro-3.1 成功响应",
+                    "value": {
+                      "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw",
+                      "object": "3d.generation",
+                      "model": "hunyuan-3d-pro-3.1",
+                      "status": "SUCCESS",
+                      "progress": "100%",
+                      "files": [
+                        {
+                          "url": "https://example.com/result.glb",
+                          "format": "glb",
+                          "preview_url": "https://example.com/preview.png"
+                        }
+                      ],
+                      "usage": {
+                        "input_tokens": 0,
+                        "output_tokens": 0,
+                        "total_tokens": 0,
+                        "credits": 25
+                      },
+                      "amount": "3.000000",
+                      "created_at": 0,
+                      "submit_time": 1786091988,
+                      "finish_time": 1786092351
+                    }
+                  },
+                  "failure": {
+                    "summary": "失败响应",
+                    "value": {
+                      "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw",
+                      "object": "3d.generation",
+                      "model": "hunyuan-3d-rapid",
+                      "status": "FAILURE",
+                      "progress": "100%",
+                      "files": [],
+                      "fail_reason": "InvalidParameter: image format is invalid",
+                      "usage": {
+                        "input_tokens": 0,
+                        "output_tokens": 0,
+                        "total_tokens": 0
+                      },
+                      "amount": "0.000000",
+                      "created_at": 0,
+                      "submit_time": 1786091988,
+                      "finish_time": 1786092351
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "任务不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "错误信息"
+                        },
+                        "type": {
+                          "type": "string",
+                          "description": "错误类型"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "description": "相关参数"
+                        },
+                        "code": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "description": "错误代码"
+                        }
+                      },
+                      "x-apifox-orders": [
+                        "message",
+                        "type",
+                        "param",
+                        "code"
+                      ]
+                    }
+                  },
+                  "x-apifox-orders": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
