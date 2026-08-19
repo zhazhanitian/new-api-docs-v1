@@ -1,0 +1,15 @@
+---
+title: Add Instrumental
+full: true
+---
+
+Add an instrumental backing track to an existing vocal audio, suitable for producing a full arrangement from a vocal recording.
+
+> **Important**: The source audio must be uploaded via `suno-upload`; using an AI-generated track as source will fail.
+
+The `custom` flag controls which fields take effect; fields in the wrong mode are **silently ignored**. When `custom=true`: `prompt` (lyrics), `title`, `tags`, `negative_tags`, `style_weight`, `weirdness_constraint`, `audio_weight` are active; `gpt_description` is ignored. When `custom=false`: only `gpt_description` is read (**required**; missing it returns 400). `vocal_gender` works in both modes. When `custom` is omitted, the backend infers: has `prompt` → `true`; no `prompt` but has `gpt_description` → `false`; otherwise has `tags`/`title` → `true`.
+
+- `version` only supports `v5` and `v5.5`; defaults to `v5.5`. Invalid values return `400`.
+- Once complete, read `audio_url` from `result.music[]`; generation typically takes 30–120 s; poll every 3–5 s.
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-add-instrumental.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

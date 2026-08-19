@@ -1,0 +1,17 @@
+---
+title: Generate Music
+full: true
+---
+
+Generate a complete song from a text prompt or custom lyrics, suitable for songwriting, instrumental music, and style-directed generation.
+
+The `custom` flag controls which fields take effect; fields in the wrong mode are **silently ignored**. When `custom=true` (custom mode): `prompt` (lyrics), `title`, `style`, `negative_tags`, `auto_lyrics`, `persona_id`, `style_weight`, `weirdness_constraint`, `audio_weight` are active. When `custom=false` (inspiration mode): `prompt` acts as an inspiration description; `title`, `style`, and custom-only fields are ignored. `vocal_gender` works in both modes.
+
+> **Note**: `suno-music` uses `style` for style tags, not `tags` as used by other models.
+
+- `version` is **required** and validated at submission time; missing it returns 400 immediately.
+- In inspiration mode (`custom=false` or omitted): `prompt` is required as an inspiration description. In custom mode (`custom=true`): `prompt` is required as lyrics unless `instrumental=true`.
+- Fields that don't match the current mode are silently ignored by the upstream.
+- Generation typically takes 30–120 s; poll every 3–5 s.
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-music.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

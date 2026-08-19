@@ -1,0 +1,16 @@
+---
+title: 裁剪音频
+full: true
+---
+
+- 按时间范围裁剪已有音轨，适用于截取片段和素材整理。
+
+- 本模型无版本维度，不要传 `version`；即使传入也会被 MAPI 丢弃，不影响计费。
+- `start_s` 和 `end_s` 均为必填，表示需要保留的时间区间。
+- 任务完成后，从结果 `music[]` 中读取裁剪后音频的 `audio_url`。
+- 通常需要 30–120 秒，建议每 3–5 秒查询一次公共任务接口。
+
+- **提交接口**：统一通过 `POST /v1/music/generations` 提交，使用 `model: "suno-crop"` 选择此能力。
+- **任务查询**：提交返回 `task_id`，通过 `GET /v1/music/generations/{task_id}` 获取任务状态和结果。
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-crop.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

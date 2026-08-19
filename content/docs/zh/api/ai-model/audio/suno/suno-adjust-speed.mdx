@@ -1,0 +1,17 @@
+---
+title: 调整速度
+full: true
+---
+
+- 调整已有音轨的播放速度，并可选择是否保持原音高。
+
+- 本模型无版本维度，不要传 `version`；即使传入也会被 MAPI 丢弃，不影响计费。
+- `speed` 必填，允许范围为 0.25–4；缺失或越界会被拒绝。
+- `keep_pitch` 默认 `true`，用于在变速时保持原音高；`title` 默认 `Untitled`。
+- 任务完成后，从结果 `music[]` 中读取处理后音频的 `audio_url`。
+- 通常需要 30–120 秒，建议每 3–5 秒查询一次公共任务接口。
+
+- **提交接口**：统一通过 `POST /v1/music/generations` 提交，使用 `model: "suno-adjust-speed"` 选择此能力。
+- **任务查询**：提交返回 `task_id`，通过 `GET /v1/music/generations/{task_id}` 获取任务状态和结果。
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-adjust-speed.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

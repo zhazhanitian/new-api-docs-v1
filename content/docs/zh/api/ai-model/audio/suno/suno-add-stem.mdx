@@ -1,0 +1,16 @@
+---
+title: 添加音轨
+full: true
+---
+
+- 向已有歌曲添加新的音轨或乐器层，适用于丰富现有编曲。
+
+- `version` 仅支持 `v5.5`，省略时也使用 `v5.5`；不要传其他版本，否则会报错或导致任务超时。
+- `custom=true` 时使用 `prompt`；`custom=false` 时 `gpt_description` 必填。模式不匹配的字段会被静默忽略。
+- 省略 `custom` 时依次根据 `prompt`、`gpt_description`、`tags`/`title` 推断模式。
+- 任务完成后，从结果 `music[]` 中读取 `audio_url`；通常需要 30–120 秒，建议每 3–5 秒查询。
+
+- **提交接口**：统一通过 `POST /v1/music/generations` 提交，使用 `model: "suno-add-stem"` 选择此能力。
+- **任务查询**：提交返回 `task_id`，通过 `GET /v1/music/generations/{task_id}` 获取任务状态和结果。
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-add-stem.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

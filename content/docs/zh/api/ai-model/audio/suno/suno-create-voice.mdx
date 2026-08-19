@@ -1,0 +1,17 @@
+---
+title: 创建语音
+full: true
+---
+
+- 根据公开可访问的 MP3 或 WAV 音频创建语音资产。
+
+- 本模型无版本维度，不要传 `version`；即使传入也会被 MAPI 丢弃，不影响计费。
+- 本模型不使用 `task_id` 和 `audio_index`，必须直接提供公网可访问的 `audio_url`。
+- **源音频仅支持 MP3 或 WAV 格式。**
+- 任务完成后，结果中包含创建的可复用音色信息。
+- 通常需要 30–120 秒，建议每 3–5 秒查询一次公共任务接口。
+
+- **提交接口**：统一通过 `POST /v1/music/generations` 提交，使用 `model: "suno-create-voice"` 选择此能力。
+- **任务查询**：提交返回 `task_id`，通过 `GET /v1/music/generations/{task_id}` 获取任务状态和结果。
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-create-voice.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

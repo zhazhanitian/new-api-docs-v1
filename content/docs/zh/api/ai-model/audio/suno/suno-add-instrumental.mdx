@@ -1,0 +1,17 @@
+---
+title: 添加伴奏
+full: true
+---
+
+为已有音轨添加伴奏，适用于基于人声素材生成完整编曲。
+
+> **重要**：源音轨必须是通过 `suno-upload` 上传的自有音频；使用 AI 生成任务的音轨作为源会失败，仅能引用自己上传的音轨。
+
+`custom` 决定哪些字段生效：写在错误模式下的字段会被**静默忽略**（不报错）。`custom=true` 时 `prompt`（歌词）、`title`、`tags`、`negative_tags`、`style_weight`、`weirdness_constraint`、`audio_weight` 生效，`gpt_description` 被忽略；`custom=false` 时只读 `gpt_description`（此时**必填**，缺了提交期直接返回 400）。`vocal_gender` 两种模式都生效。不传 `custom` 时后端按此顺序推断：有 `prompt` → `true`；无 `prompt` 但有 `gpt_description` → `false`；否则有 `tags`/`title` → `true`。
+
+- `version` 仅支持 `v5`、`v5.5`，省略时上游默认使用 `v5.5`，非法值提交期直接返回 `400`。
+- 任务完成后，从结果 `music[]` 中读取 `audio_url`；通常需要 30–120 秒，建议每 3–5 秒查询。
+- **提交接口**：统一通过 `POST /v1/music/generations` 提交，使用 `model: "suno-add-instrumental"` 选择此能力。
+- **任务查询**：提交返回 `task_id`，通过 `GET /v1/music/generations/{task_id}` 获取任务状态和结果。
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-add-instrumental.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

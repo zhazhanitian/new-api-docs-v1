@@ -1,0 +1,278 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "续写延长",
+    "version": "1.0.0",
+    "description": "从指定时间点继续生成已有歌曲，适用于续写、扩展段落和补全结尾。\n\n- 所有 Suno 能力均通过 MAPI 公共提交接口调用；模型由请求体中的 `model` 字段区分。\n- 提交成功后立即返回 MAPI 公开任务 ID。请通过 `GET /v1/music/generations/{task_id}` 轮询任务状态。\n- `continue_at` 必填，表示从源音轨的第几秒开始续写。\n- `version` 支持全部七个 Suno 版本，省略时上游默认使用 `v5.5`。\n- `custom` 不强制且不会自动推断：`true` 时按 `prompt` 歌词续写；`false` 或省略时可用 `gpt_description` 引导方向。\n- 任务完成后，从结果 `music[]` 中读取延长后的 `audio_url`；通常需要 30–120 秒，建议每 3–5 秒查询。"
+  },
+  "tags": [
+    {
+      "name": "音频（Audio）/Suno"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "使用 MAPI Bearer Token 认证。格式：`Authorization: Bearer sk-xxxxxx`。"
+      }
+    }
+  },
+  "paths": {
+    "/v1/music/generations": {
+      "post": {
+        "tags": [
+          "音频（Audio）/Suno"
+        ],
+        "summary": "续写延长",
+        "description": "从指定时间点继续生成已有歌曲，适用于续写、扩展段落和补全结尾。\n\n- 所有 Suno 能力均通过 MAPI 公共提交接口调用；模型由请求体中的 `model` 字段区分。\n- 提交成功后立即返回 MAPI 公开任务 ID。请通过 `GET /v1/music/generations/{task_id}` 轮询任务状态。\n- `continue_at` 必填，表示从源音轨的第几秒开始续写。\n- `version` 支持全部七个 Suno 版本，省略时上游默认使用 `v5.5`。\n- `custom` 不强制且不会自动推断：`true` 时按 `prompt` 歌词续写；`false` 或省略时可用 `gpt_description` 引导方向。\n- 任务完成后，从结果 `music[]` 中读取延长后的 `audio_url`；通常需要 30–120 秒，建议每 3–5 秒查询。",
+        "operationId": "suno-extend",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "const": "suno-extend",
+                    "description": "固定填写 `suno-extend`。",
+                    "examples": [
+                      "suno-extend"
+                    ]
+                  },
+                  "version": {
+                    "type": "string",
+                    "description": "生成版本，默认 `v5.5`。",
+                    "examples": [
+                      "v5"
+                    ],
+                    "enum": [
+                      "v3.5",
+                      "v4",
+                      "v4.5",
+                      "v4.5+",
+                      "v4.5-all",
+                      "v5",
+                      "v5.5"
+                    ],
+                    "default": "v5.5"
+                  },
+                  "task_id": {
+                    "type": "string",
+                    "description": "产出源音轨的任务 ID，必填。",
+                    "examples": [
+                      "task_source123"
+                    ]
+                  },
+                  "audio_index": {
+                    "type": "integer",
+                    "description": "源任务音轨序号，1-based，默认 `1`。",
+                    "examples": [
+                      1
+                    ],
+                    "default": 1,
+                    "minimum": 1
+                  },
+                  "continue_at": {
+                    "type": "integer",
+                    "description": "从源音轨的第几秒开始续写，必填。",
+                    "minimum": 0
+                  },
+                  "custom": {
+                    "type": "boolean",
+                    "description": "`true` 按歌词续写；`false` 为灵感续写；省略时不做模式推断。"
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "description": "续写歌词，仅 `custom=true` 时生效。"
+                  },
+                  "gpt_description": {
+                    "type": "string",
+                    "description": "灵感提示词，在 `custom=false` 或省略时生效。"
+                  },
+                  "title": {
+                    "type": "string",
+                    "description": "标题，仅 `custom=true` 时生效。"
+                  },
+                  "tags": {
+                    "type": "string",
+                    "description": "风格标签，仅 `custom=true` 时生效。"
+                  },
+                  "negative_tags": {
+                    "type": "string",
+                    "description": "排除的风格标签，仅 `custom=true` 时生效。"
+                  },
+                  "vocal_gender": {
+                    "type": "string",
+                    "description": "人声性别，两种模式均生效。",
+                    "examples": [
+                      "Female"
+                    ],
+                    "enum": [
+                      "Male",
+                      "Female"
+                    ]
+                  },
+                  "style_weight": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "风格权重 0–1，仅自定义模式生效。"
+                  },
+                  "weirdness_constraint": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "创意度权重 0–1，仅自定义模式生效。"
+                  },
+                  "audio_weight": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "音频权重 0–1，仅自定义模式生效。"
+                  },
+                  "auto_lyrics": {
+                    "type": "boolean",
+                    "description": "是否对输入歌词二次创作，仅 `custom=true` 时生效。"
+                  },
+                  "persona_id": {
+                    "type": "string",
+                    "description": "Persona 风格 ID，仅 `custom=true` 时生效。"
+                  }
+                },
+                "required": [
+                  "model",
+                  "task_id",
+                  "continue_at"
+                ]
+              },
+              "examples": {
+                "suno-extend": {
+                  "summary": "续写延长",
+                  "value": {
+                    "model": "suno-extend",
+                    "version": "v5",
+                    "task_id": "task_source123",
+                    "audio_index": 1,
+                    "continue_at": 90,
+                    "custom": true,
+                    "prompt": "[Chorus]\nWe will find our way home",
+                    "tags": "uplifting pop rock"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "任务提交成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "examples": [
+                        200
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "success"
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "submitted"
+                            ]
+                          },
+                          "task_id": {
+                            "type": "string",
+                            "description": "MAPI 公开任务 ID，用于公共查询接口。",
+                            "examples": [
+                              "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "status",
+                          "task_id"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "code": 200,
+                  "message": "success",
+                  "data": [
+                    {
+                      "status": "submitted",
+                      "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误、模型版本不支持或源任务无效",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "description": "错误代码",
+                      "examples": [
+                        "invalid_request"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "错误说明"
+                    },
+                    "data": {
+                      "description": "错误附加数据，可为空"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                },
+                "example": {
+                  "code": "invalid_request",
+                  "message": "task_id is required",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

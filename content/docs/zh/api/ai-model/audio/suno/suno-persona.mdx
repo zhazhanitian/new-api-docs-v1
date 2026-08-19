@@ -1,0 +1,17 @@
+---
+title: Persona
+full: true
+---
+
+- 从已有音轨创建可复用的 Persona 风格，适用于保持后续歌曲的声音或风格一致性。
+
+- 本模型无版本维度，不要传 `version`；即使传入也会被 MAPI 丢弃，不影响计费。
+- 使用产出源音轨的 `task_id` 和 `audio_index` 引用歌曲；`name` 为必填字段。
+- 可以绑定 `suno-vox` 提取结果；绑定时，人声开始和结束时间必须与提取 Vox 时的区间一致。
+- 任务完成后，结果中包含创建的 Persona 信息。
+- 通常需要 30–120 秒，建议每 3–5 秒查询一次公共任务接口。
+
+- **提交接口**：统一通过 `POST /v1/music/generations` 提交，使用 `model: "suno-persona"` 选择此能力。
+- **任务查询**：提交返回 `task_id`，通过 `GET /v1/music/generations/{task_id}` 获取任务状态和结果。
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-persona.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

@@ -1,0 +1,16 @@
+---
+title: 段落替换
+full: true
+---
+
+- 重新生成并替换已有音轨的指定时间段。
+
+- `start_s` 和 `end_s` 均为必填，表示需要重新生成并替换的时间区间。
+- `version` 仅支持 `v4`、`v4.5+`、`v5`、`v5.5`，默认 `v5.5`。
+- `infill_lyrics` 是替换段歌词，`prompt` 是上下文歌词，两者含义不同。
+- 任务完成后，从结果 `music[]` 中读取替换后音频的 `audio_url`；通常需要 30–120 秒，建议每 3–5 秒查询。
+
+- **提交接口**：统一通过 `POST /v1/music/generations` 提交，使用 `model: "suno-replace-section"` 选择此能力。
+- **任务查询**：提交返回 `task_id`，通过 `GET /v1/music/generations/{task_id}` 获取任务状态和结果。
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-replace-section.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

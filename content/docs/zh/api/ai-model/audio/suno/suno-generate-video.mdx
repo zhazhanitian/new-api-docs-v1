@@ -1,0 +1,16 @@
+---
+title: 生成音乐视频
+full: true
+---
+
+- 为已有音轨生成音乐视频，适用于歌曲分享和视频化展示。
+
+- 本模型无版本维度，不要传 `version`；即使传入也会被 MAPI 丢弃，不影响计费。
+- 使用产出源音轨的 `task_id` 和 `audio_index` 引用歌曲，无需记录额外音频 ID。
+- 任务完成后，从任务结果 `music[]` 中读取生成的 `video_url`。
+- 通常需要 30–120 秒，建议每 3–5 秒查询一次公共任务接口。
+
+- **提交接口**：统一通过 `POST /v1/music/generations` 提交，使用 `model: "suno-generate-video"` 选择此能力。
+- **任务查询**：提交返回 `task_id`，通过 `GET /v1/music/generations/{task_id}` 获取任务状态和结果。
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-generate-video.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

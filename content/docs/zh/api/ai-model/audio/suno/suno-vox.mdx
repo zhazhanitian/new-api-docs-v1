@@ -1,0 +1,16 @@
+---
+title: 提取 Vox
+full: true
+---
+
+- 从已有音轨中提取人声片段，适用于人声复用和 Persona 创建。
+
+- 本模型无版本维度，不要传 `version`；即使传入也会被 MAPI 丢弃，不影响计费。
+- 使用产出源音轨的 `task_id` 和 `audio_index` 引用歌曲。
+- 任务结果中的 Vox ID 可作为 `suno-persona` 的 `vox_audio_id` 使用；创建 Persona 时应沿用相同截取区间。
+- 通常需要 30–120 秒，建议每 3–5 秒查询一次公共任务接口。
+
+- **提交接口**：统一通过 `POST /v1/music/generations` 提交，使用 `model: "suno-vox"` 选择此能力。
+- **任务查询**：提交返回 `task_id`，通过 `GET /v1/music/generations/{task_id}` 获取任务状态和结果。
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-vox.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

@@ -1,0 +1,297 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "查询 Suno 任务",
+    "version": "1.0.0",
+    "description": "查询 Suno 异步任务的状态、进度、计费信息和结果。建议每 3–5 秒轮询一次，直到状态变为 `SUCCESS` 或 `FAILURE`。"
+  },
+  "tags": [
+    {
+      "name": "音频（Audio）/Suno"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "使用 MAPI Bearer Token 认证。格式：`Authorization: Bearer sk-xxxxxx`。"
+      }
+    }
+  },
+  "paths": {
+    "/v1/music/generations/{task_id}": {
+      "get": {
+        "tags": [
+          "音频（Audio）/Suno"
+        ],
+        "summary": "查询 Suno 任务",
+        "description": "查询 Suno 异步任务的状态、进度、计费信息和结果。建议每 3–5 秒轮询一次，直到状态变为 `SUCCESS` 或 `FAILURE`。",
+        "operationId": "get-suno-task",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "description": "提交接口返回的 MAPI 公开任务 ID",
+            "schema": {
+              "type": "string"
+            },
+            "example": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功获取任务",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["success"]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "task_id": {
+                          "type": "string",
+                          "description": "MAPI 公开任务 ID"
+                        },
+                        "action": {
+                          "type": "string",
+                          "description": "提交时使用的 `suno-*` 模型 ID"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "NOT_START",
+                            "SUBMITTED",
+                            "QUEUED",
+                            "IN_PROGRESS",
+                            "SUCCESS",
+                            "FAILURE",
+                            "UNKNOWN"
+                          ],
+                          "description": "`SUBMITTED`：已提交上游；`QUEUED`：上游排队中；`IN_PROGRESS`：处理中；`SUCCESS`：完成；`FAILURE`：失败。"
+                        },
+                        "fail_reason": {
+                          "type": "string",
+                          "description": "失败原因；非失败任务为空字符串"
+                        },
+                        "progress": {
+                          "type": "string",
+                          "description": "任务进度百分比字符串",
+                          "examples": ["10%", "50%", "100%"]
+                        },
+                        "amount": {
+                          "type": "string",
+                          "description": "人民币计费金额，保留 6 位小数"
+                        },
+                        "submit_time": {
+                          "type": "integer",
+                          "description": "提交时间，Unix 秒"
+                        },
+                        "start_time": {
+                          "type": "integer",
+                          "description": "开始处理时间，Unix 秒"
+                        },
+                        "finish_time": {
+                          "type": "integer",
+                          "description": "完成时间，Unix 秒；未完成时为 0"
+                        },
+                        "result": {
+                          "type": "object",
+                          "description": "任务结果，仅在任务完成后存在。字段结构因 `action` 不同而不同，直接透传上游返回内容。常见示例：音乐类工具返回 `music[]`，标签增强返回 `upsampled_tags`，其他工具返回对应结构。",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": ["task_id", "action", "status", "fail_reason", "progress", "amount", "submit_time", "start_time", "finish_time"]
+                    }
+                  },
+                  "required": ["code", "data"]
+                },
+                "examples": {
+                  "submitted": {
+                    "summary": "已提交",
+                    "value": {
+                      "code": "success",
+                      "message": "",
+                      "data": {
+                        "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw",
+                        "action": "suno-music",
+                        "status": "SUBMITTED",
+                        "fail_reason": "",
+                        "progress": "10%",
+                        "amount": "0.730000",
+                        "submit_time": 1787018400,
+                        "start_time": 1787018410,
+                        "finish_time": 0
+                      }
+                    }
+                  },
+                  "queued": {
+                    "summary": "排队中",
+                    "value": {
+                      "code": "success",
+                      "message": "",
+                      "data": {
+                        "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw",
+                        "action": "suno-music",
+                        "status": "QUEUED",
+                        "fail_reason": "",
+                        "progress": "50%",
+                        "amount": "0.730000",
+                        "submit_time": 1787018400,
+                        "start_time": 1787018410,
+                        "finish_time": 0
+                      }
+                    }
+                  },
+                  "processing": {
+                    "summary": "处理中",
+                    "value": {
+                      "code": "success",
+                      "message": "",
+                      "data": {
+                        "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw",
+                        "action": "suno-music",
+                        "status": "IN_PROGRESS",
+                        "fail_reason": "",
+                        "progress": "70%",
+                        "amount": "0.730000",
+                        "submit_time": 1787018400,
+                        "start_time": 1787018410,
+                        "finish_time": 0
+                      }
+                    }
+                  },
+                  "successMusic": {
+                    "summary": "音乐任务成功",
+                    "value": {
+                      "code": "success",
+                      "message": "",
+                      "data": {
+                        "task_id": "task_nNfDw9zQVVrDiL70FM8xgHyKcwBrVKBY",
+                        "action": "suno-music",
+                        "status": "SUCCESS",
+                        "fail_reason": "",
+                        "progress": "100%",
+                        "amount": "0.365000",
+                        "submit_time": 1787044643,
+                        "start_time": 1787044673,
+                        "finish_time": 1787044787,
+                        "result": {
+                          "music": [
+                            {
+                              "audio_id": "8daa79e6-e61f-4f46-83fb-b88383682bfe",
+                              "audio_url": "https://getapib.org/audio/9998212955231777-f80f5cd1-8f7f-4546-9e8f-46cfde476f4f-8daa79e6-e61f-4f46-83fb-b88383682bfe.mp3",
+                              "duration": 194,
+                              "image_url": "https://cdn.ttapi.io/suno/20260818/8682aad03347433eaf424024e497732b.jpg",
+                              "image_large_url": "https://cdn.ttapi.io/suno/20260818/8682aad03347433eaf424024e497732b.jpg",
+                              "lyrics": "[Verse 1]\n我把灯关小一点\n让雨落进窗边\n...",
+                              "tags": "Lo-fi piano ballad with a loose trip-hop sway, soft brushed drums, and rain texture under the keys",
+                              "title": "雨窗慢拍",
+                              "status": "complete"
+                            },
+                            {
+                              "audio_id": "d6efab32-86f9-4042-8bd2-0bd01f531a6d",
+                              "audio_url": "https://getapib.org/audio/9998212955230086-083fcb9d-7c98-4148-9ea9-c3ed25e57a15-d6efab32-86f9-4042-8bd2-0bd01f531a6d.mp3",
+                              "duration": 185.72,
+                              "image_url": "https://cdn.ttapi.io/suno/20260818/17bfa4e4938c4c55a4ff9c725b096f2d.jpg",
+                              "image_large_url": "https://cdn.ttapi.io/suno/20260818/17bfa4e4938c4c55a4ff9c725b096f2d.jpg",
+                              "lyrics": "[Verse 1]\n我把灯关小一点\n让雨落进窗边\n...",
+                              "tags": "Lo-fi piano ballad with a loose trip-hop sway, soft brushed drums, and rain texture under the keys",
+                              "title": "雨窗慢拍",
+                              "status": "complete"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  "successTags": {
+                    "summary": "标签增强任务成功",
+                    "value": {
+                      "code": "success",
+                      "message": "",
+                      "data": {
+                        "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw",
+                        "action": "suno-upsample-tags",
+                        "status": "SUCCESS",
+                        "fail_reason": "",
+                        "progress": "100%",
+                        "amount": "0.050000",
+                        "submit_time": 1787018400,
+                        "start_time": 1787018410,
+                        "finish_time": 1787018450,
+                        "result": {
+                          "upsampled_tags": "lo-fi hip hop, warm vinyl, rainy night, mellow piano, dusty keys, slow tempo, chill beats, late night vibes"
+                        }
+                      }
+                    }
+                  },
+                  "failed": {
+                    "summary": "任务失败",
+                    "value": {
+                      "code": "success",
+                      "message": "",
+                      "data": {
+                        "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw",
+                        "action": "suno-extend",
+                        "status": "FAILURE",
+                        "fail_reason": "source task is not ready",
+                        "progress": "100%",
+                        "amount": "0.000000",
+                        "submit_time": 1787018400,
+                        "start_time": 1787018410,
+                        "finish_time": 1787018450
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "任务不存在或不属于当前用户",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "examples": ["task_not_exist"]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "description": "错误附加数据，可为空"
+                    }
+                  },
+                  "required": ["code", "message"]
+                },
+                "example": {
+                  "code": "task_not_exist",
+                  "message": "task_not_exist",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

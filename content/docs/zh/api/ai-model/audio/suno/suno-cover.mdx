@@ -1,0 +1,48 @@
+---
+title: 风格翻唱
+full: true
+---
+
+以新的风格重新演绎已有歌曲，适用于曲风转换和翻唱创作。
+
+`custom` 决定字段是否生效：写了但模式不对的字段会被**静默忽略**（不报错）。`custom=true` 时 `prompt`（歌词）、`title`、`tags`、`negative_tags`、`style_weight`、`weirdness_constraint`、`audio_weight`、`persona_id` 生效，`gpt_description` 被忽略；`custom=false` 时只认 `gpt_description`（此时**必填**，缺了提交期直接 400）。`vocal_gender` 两种模式都生效。不传 `custom` 时后端按此顺序推断：有 `prompt` → `true`；无 `prompt` 但有 `gpt_description` → `false`；否则有 `tags`/`title` → `true`。
+
+**用法 A —— 指定风格翻唱（最常用，推荐）**
+
+给源歌曲 + 目标风格 `tags`，不用管 `custom`（系统看到 `tags` 会自动按 `custom=true` 处理）：
+
+```json
+{
+  "model": "suno-cover",
+  "task_id": "task_xxx",
+  "audio_index": 1,
+  "version": "v5",
+  "tags": "jazz, slow"
+}
+```
+
+想更精确可以再加 `prompt`（歌词）/ `title`。
+
+**用法 B —— 灵感模式（`custom=false`）**
+
+不指定具体风格，让模型自己发挥，但必须给 `gpt_description` 描述你想要的效果：
+
+```json
+{
+  "model": "suno-cover",
+  "task_id": "task_xxx",
+  "audio_index": 1,
+  "version": "v5",
+  "custom": false,
+  "gpt_description": "把这首歌翻唱成慢速爵士风格"
+}
+```
+
+两种用法二选一，别只传 `custom=false` 却不给 `gpt_description`（会提交期直接 400）。
+
+- `version` 支持 `v3.5`、`v4`、`v4.5`、`v4.5+`、`v4.5-all`、`v5`、`v5.5`，默认 `v5.5`，非法值提交期直接返回 `400`。
+- 任务完成后，从结果 `music[]` 中读取 `audio_url`；通常需要 30–120 秒，建议每 3–5 秒查询。
+- **提交接口**：统一通过 `POST /v1/music/generations` 提交，使用 `model: "suno-cover"` 选择此能力。
+- **任务查询**：提交返回 `task_id`，通过 `GET /v1/music/generations/{task_id}` 获取任务状态和结果。
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-cover.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

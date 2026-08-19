@@ -1,0 +1,16 @@
+---
+title: 音效生成
+full: true
+---
+
+- 根据文本描述生成短音效或循环音效，适用于视频、游戏和音乐制作。
+
+- `version` 仅支持 `v5` 和 `v5.5`，省略时上游默认使用 `v5.5`。
+- 官方建议尽量使用英文音效描述，以获得更好的生成效果。
+- 任务完成后，从结果 `music[]` 中读取生成音效的 `audio_url`。
+- 建议每 3–5 秒查询一次公共任务接口，直到任务成功或失败。
+
+- **提交接口**：统一通过 `POST /v1/music/generations` 提交，使用 `model: "suno-sounds"` 选择此能力。
+- **任务查询**：提交返回 `task_id`，通过 `GET /v1/music/generations/{task_id}` 获取任务状态和结果。
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-sounds.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

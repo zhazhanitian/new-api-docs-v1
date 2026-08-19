@@ -1,0 +1,176 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "标签增强",
+    "version": "1.0.0",
+    "description": "扩展和优化音乐风格标签，适用于生成前完善风格描述。\n\n- 所有 Suno 能力均通过 MAPI 公共提交接口调用；模型由请求体中的 `model` 字段区分。\n- 提交成功后立即返回 MAPI 公开任务 ID。请通过 `GET /v1/music/generations/{task_id}` 轮询任务状态。\n- 本模型无版本维度，不要传 `version`；即使传入也会被 MAPI 丢弃，不影响计费。\n- **同步端点**：上游提交后立即出结果、无需轮询等待；MAPI 仍统一返回任务 ID，可通过公共任务接口立即查询完成结果。\n- 结果在任务结果字段 `result.upsampled_tags` 中返回优化后的标签。\n- 失败时 `data.error.message` 为原因，平台自动退回预扣额度。"
+  },
+  "tags": [
+    {
+      "name": "音频（Audio）/Suno"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "使用 MAPI Bearer Token 认证。格式：`Authorization: Bearer sk-xxxxxx`。"
+      }
+    }
+  },
+  "paths": {
+    "/v1/music/generations": {
+      "post": {
+        "tags": [
+          "音频（Audio）/Suno"
+        ],
+        "summary": "标签增强",
+        "description": "扩展和优化音乐风格标签，适用于生成前完善风格描述。\n\n- 所有 Suno 能力均通过 MAPI 公共提交接口调用；模型由请求体中的 `model` 字段区分。\n- 提交成功后立即返回 MAPI 公开任务 ID。请通过 `GET /v1/music/generations/{task_id}` 轮询任务状态。\n- 本模型无版本维度，不要传 `version`；即使传入也会被 MAPI 丢弃，不影响计费。\n- **同步端点**：上游提交后立即出结果、无需轮询等待；MAPI 仍统一返回任务 ID，可通过公共任务接口立即查询完成结果。\n- 结果在任务结果字段 `result.upsampled_tags` 中返回优化后的标签。\n- 失败时 `data.error.message` 为原因，平台自动退回预扣额度。",
+        "operationId": "suno-upsample-tags",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "const": "suno-upsample-tags",
+                    "description": "固定填写 `suno-upsample-tags`。",
+                    "examples": [
+                      "suno-upsample-tags"
+                    ]
+                  },
+                  "tags": {
+                    "type": "string",
+                    "description": "待增强的风格标签，**必填**；缺失时提交期直接返回 400（不扣费）。"
+                  }
+                },
+                "required": [
+                  "model",
+                  "tags"
+                ]
+              },
+              "examples": {
+                "suno-upsample-tags": {
+                  "summary": "标签增强",
+                  "value": {
+                    "model": "suno-upsample-tags",
+                    "tags": "lo-fi, piano, rainy night"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "任务提交成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "examples": [
+                        200
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "success"
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "submitted"
+                            ]
+                          },
+                          "task_id": {
+                            "type": "string",
+                            "description": "MAPI 公开任务 ID，用于公共查询接口。",
+                            "examples": [
+                              "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "status",
+                          "task_id"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "code": 200,
+                  "message": "success",
+                  "data": [
+                    {
+                      "status": "submitted",
+                      "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误、模型版本不支持或源任务无效",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "description": "错误代码",
+                      "examples": [
+                        "invalid_request"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "错误说明"
+                    },
+                    "data": {
+                      "description": "错误附加数据，可为空"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                },
+                "example": {
+                  "code": "invalid_request",
+                  "message": "task_id is required",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

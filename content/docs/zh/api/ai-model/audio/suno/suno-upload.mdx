@@ -1,0 +1,17 @@
+---
+title: 上传音频
+full: true
+---
+
+- 把一段公网音频导入，得到可供后续翻唱、续写等操作引用的音轨；任务完成后，本任务 `task_id` 即可作为源任务，并使用 `audio_index=1` 引用音轨。
+
+- 本模型无版本维度，不要传 `version`；即使传入也会被 MAPI 丢弃，不影响计费。
+- 请提供公网可直接访问的音频链接；MAPI 对外字段名为 `audio_file_path`。
+- **不要上传纯器乐（无人声）音频**，官方说明此类音频可能解析失败。
+- 任务完成后，可使用本任务 `task_id` 和 `audio_index=1` 作为翻唱、续写等后续操作的源音轨。
+- 建议每 3–5 秒查询一次公共任务接口，直到任务成功或失败。
+
+- **提交接口**：统一通过 `POST /v1/music/generations` 提交，使用 `model: "suno-upload"` 选择此能力。
+- **任务查询**：提交返回 `task_id`，通过 `GET /v1/music/generations/{task_id}` 获取任务状态和结果。
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-upload.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

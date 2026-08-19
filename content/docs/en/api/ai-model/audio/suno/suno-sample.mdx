@@ -1,0 +1,14 @@
+---
+title: Sample to Song
+full: true
+---
+
+Extract a time range from an existing audio track as a sample and generate a new song based on it.
+
+The `custom` flag controls which fields take effect; fields in the wrong mode are **silently ignored**. When `custom=true`: `prompt` (lyrics), `title`, `tags`, `negative_tags`, `auto_lyrics`, `style_weight`, `weirdness_constraint`, `audio_weight` are active; `gpt_description` is ignored. When `custom=false`: only `gpt_description` is read (**required**; missing it returns 400). `vocal_gender` works in both modes. When `custom` is omitted, the backend infers: has `prompt` → `true`; no `prompt` but has `gpt_description` → `false`; otherwise has `tags`/`title` → `true`.
+
+- `start_s` and `end_s` are required, defining the sample time range (seconds).
+- `instrumental` defaults to `false`; `version` supports all seven values (`v3.5`/`v4`/`v4.5`/`v4.5+`/`v4.5-all`/`v5`/`v5.5`), defaults to `v5.5`. Invalid values return `400`.
+- Once complete, read `audio_url` from `result.music[]`; generation typically takes 30–120 s; poll every 3–5 s.
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-sample.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

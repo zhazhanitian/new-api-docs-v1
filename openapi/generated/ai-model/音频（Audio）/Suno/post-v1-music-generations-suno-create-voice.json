@@ -1,0 +1,177 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "创建语音",
+    "version": "1.0.0",
+    "description": "根据公开可访问的 MP3 或 WAV 音频创建可复用音色资产。\n\n- 所有 Suno 能力均通过 MAPI 公共提交接口调用；模型由请求体中的 `model` 字段区分。\n- 提交成功后立即返回 MAPI 公开任务 ID。请通过 `GET /v1/music/generations/{task_id}` 轮询任务状态。\n- 本模型无版本维度，不要传 `version`；即使传入也会被 MAPI 丢弃，不影响计费。\n- **本模型不使用 `task_id` + `audio_index` 方式**，需直接提供公网可访问的 `audio_url`（系统据此提取音色）；缺失会返回 400（`audio_url cannot be empty`）。\n- **源音频仅支持 MP3 或 WAV 格式。**\n- 任务完成后，结果中包含创建的可复用音色信息。\n- 通常需要 30–120 秒，建议每 3–5 秒查询一次公共任务接口；生成中状态为 `pending`，`progress` 值排队约 10、就绪约 50、完成为 100。\n- 失败时 `data.error.message` 为原因，平台自动退回预扣额度。"
+  },
+  "tags": [
+    {
+      "name": "音频（Audio）/Suno"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "使用 MAPI Bearer Token 认证。格式：`Authorization: Bearer sk-xxxxxx`。"
+      }
+    }
+  },
+  "paths": {
+    "/v1/music/generations": {
+      "post": {
+        "tags": [
+          "音频（Audio）/Suno"
+        ],
+        "summary": "创建语音",
+        "description": "根据公开可访问的 MP3 或 WAV 音频创建可复用音色资产。\n\n- 所有 Suno 能力均通过 MAPI 公共提交接口调用；模型由请求体中的 `model` 字段区分。\n- 提交成功后立即返回 MAPI 公开任务 ID。请通过 `GET /v1/music/generations/{task_id}` 轮询任务状态。\n- 本模型无版本维度，不要传 `version`；即使传入也会被 MAPI 丢弃，不影响计费。\n- **本模型不使用 `task_id` + `audio_index` 方式**，需直接提供公网可访问的 `audio_url`（系统据此提取音色）；缺失会返回 400（`audio_url cannot be empty`）。\n- **源音频仅支持 MP3 或 WAV 格式。**\n- 任务完成后，结果中包含创建的可复用音色信息。\n- 通常需要 30–120 秒，建议每 3–5 秒查询一次公共任务接口；生成中状态为 `pending`，`progress` 值排队约 10、就绪约 50、完成为 100。\n- 失败时 `data.error.message` 为原因，平台自动退回预扣额度。",
+        "operationId": "suno-create-voice",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "const": "suno-create-voice",
+                    "description": "固定填写 `suno-create-voice`。",
+                    "examples": [
+                      "suno-create-voice"
+                    ]
+                  },
+                  "audio_url": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "源音轨的公网可访问 URL，必填，仅支持 MP3 或 WAV；省略时会返回 `audio_url cannot be empty`。"
+                  }
+                },
+                "required": [
+                  "model",
+                  "audio_url"
+                ]
+              },
+              "examples": {
+                "suno-create-voice": {
+                  "summary": "创建语音",
+                  "value": {
+                    "model": "suno-create-voice",
+                    "audio_url": "https://example.com/voice.wav"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "任务提交成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "examples": [
+                        200
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "success"
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "submitted"
+                            ]
+                          },
+                          "task_id": {
+                            "type": "string",
+                            "description": "MAPI 公开任务 ID，用于公共查询接口。",
+                            "examples": [
+                              "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "status",
+                          "task_id"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "code": 200,
+                  "message": "success",
+                  "data": [
+                    {
+                      "status": "submitted",
+                      "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误、模型版本不支持或源任务无效",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "description": "错误代码",
+                      "examples": [
+                        "invalid_request"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "错误说明"
+                    },
+                    "data": {
+                      "description": "错误附加数据，可为空"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                },
+                "example": {
+                  "code": "invalid_request",
+                  "message": "task_id is required",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

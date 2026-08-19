@@ -1,0 +1,202 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "淡入",
+    "version": "1.0.0",
+    "description": "为已有音轨添加淡入效果。\n\n- 所有 Suno 能力均通过 MAPI 公共提交接口调用；模型由请求体中的 `model` 字段区分。\n- 提交成功后立即返回 MAPI 公开任务 ID。请通过 `GET /v1/music/generations/{task_id}` 轮询任务状态。\n- 本模型无版本维度，不要传 `version`；即使传入也会被 MAPI 丢弃，不影响计费。\n- `duration_s` 为必填，表示音频开头的淡入时长。\n- `title` 省略时，上游默认使用 `Untitled`。\n- 任务完成后，从结果 `music[]` 中读取处理后音频的 `audio_url`。\n- 通常需要 30–120 秒，建议每 3–5 秒查询一次公共任务接口。\n- 通常需要 30–120 秒，建议每 3–5 秒查询一次公共任务接口；生成中状态为 `pending`，`progress` 值排队约 10、就绪约 50、完成为 100。\n- 失败时 `data.error.message` 为原因，平台自动退回预扣额度。"
+  },
+  "tags": [
+    {
+      "name": "音频（Audio）/Suno"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "使用 MAPI Bearer Token 认证。格式：`Authorization: Bearer sk-xxxxxx`。"
+      }
+    }
+  },
+  "paths": {
+    "/v1/music/generations": {
+      "post": {
+        "tags": [
+          "音频（Audio）/Suno"
+        ],
+        "summary": "淡入",
+        "description": "为已有音轨添加淡入效果。\n\n- 所有 Suno 能力均通过 MAPI 公共提交接口调用；模型由请求体中的 `model` 字段区分。\n- 提交成功后立即返回 MAPI 公开任务 ID。请通过 `GET /v1/music/generations/{task_id}` 轮询任务状态。\n- 本模型无版本维度，不要传 `version`；即使传入也会被 MAPI 丢弃，不影响计费。\n- `duration_s` 为必填，表示音频开头的淡入时长。\n- `title` 省略时，上游默认使用 `Untitled`。\n- 任务完成后，从结果 `music[]` 中读取处理后音频的 `audio_url`。\n- 通常需要 30–120 秒，建议每 3–5 秒查询一次公共任务接口。\n- 通常需要 30–120 秒，建议每 3–5 秒查询一次公共任务接口；生成中状态为 `pending`，`progress` 值排队约 10、就绪约 50、完成为 100。\n- 失败时 `data.error.message` 为原因，平台自动退回预扣额度。",
+        "operationId": "suno-fade-in",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "const": "suno-fade-in",
+                    "description": "固定填写 `suno-fade-in`。",
+                    "examples": [
+                      "suno-fade-in"
+                    ]
+                  },
+                  "task_id": {
+                    "type": "string",
+                    "description": "产出源音轨那次任务的 `task_id`。缺失或上游无法解析源音轨时，提交期直接返回 400（不扣费）。",
+                    "examples": [
+                      "task_source123"
+                    ]
+                  },
+                  "audio_index": {
+                    "type": "integer",
+                    "description": "源任务结果 `music[]` 中的音轨序号，1-based，默认 `1`。",
+                    "examples": [
+                      1
+                    ],
+                    "default": 1,
+                    "minimum": 1
+                  },
+                  "duration_s": {
+                    "type": "number",
+                    "description": "淡入时长（秒），**必填**；缺失时提交期直接返回 400（不扣费）。",
+                    "minimum": 0
+                  },
+                  "title": {
+                    "type": "string",
+                    "description": "结果标题，默认 `Untitled`。",
+                    "default": "Untitled"
+                  }
+                },
+                "required": [
+                  "model",
+                  "task_id",
+                  "duration_s"
+                ]
+              },
+              "examples": {
+                "suno-fade-in": {
+                  "summary": "淡入",
+                  "value": {
+                    "model": "suno-fade-in",
+                    "task_id": "task_source123",
+                    "audio_index": 1,
+                    "duration_s": 4,
+                    "title": "Fade In Version"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "任务提交成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "examples": [
+                        200
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "success"
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "submitted"
+                            ]
+                          },
+                          "task_id": {
+                            "type": "string",
+                            "description": "MAPI 公开任务 ID，用于公共查询接口。",
+                            "examples": [
+                              "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "status",
+                          "task_id"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "code": 200,
+                  "message": "success",
+                  "data": [
+                    {
+                      "status": "submitted",
+                      "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误、模型版本不支持或源任务无效",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "description": "错误代码",
+                      "examples": [
+                        "invalid_request"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "错误说明"
+                    },
+                    "data": {
+                      "description": "错误附加数据，可为空"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                },
+                "example": {
+                  "code": "invalid_request",
+                  "message": "task_id is required",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

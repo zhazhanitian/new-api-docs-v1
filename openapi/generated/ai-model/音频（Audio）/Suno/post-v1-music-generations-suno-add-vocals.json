@@ -1,0 +1,259 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "添加人声",
+    "version": "1.0.0",
+    "description": "为已有伴奏音轨添加人声，适用于从纯音乐制作完整歌曲。\n\n**重要**：源音轨必须是通过  上传的自有音频；使用 AI 生成任务的音轨作为源会失败，仅能引用自己上传的音轨。\n\n`custom` 决定字段是否生效：写了但模式不对的字段会被**静默忽略**（不报错）。`custom=true` 时 `prompt`（歌词）、`title`、`tags`、`negative_tags`、`style_weight`、`weirdness_constraint`、`audio_weight` 生效，`gpt_description` 被忽略；`custom=false` 时只认 `gpt_description`（此时**必填**，缺了提交期直接 400）。`vocal_gender` 两种模式都生效。不传 `custom` 时后端按此顺序推断：有 `prompt` → `true`；无 `prompt` 但有 `gpt_description` → `false`；否则有 `tags`/`title` → `true`。\n\n- 所有 Suno 能力均通过 MAPI 公共提交接口调用；模型由请求体中的 `model` 字段区分。\n- 提交成功后立即返回 MAPI 公开任务 ID。请通过 `GET /v1/music/generations/{task_id}` 轮询任务状态。\n- `version` 仅支持 `v5`、`v5.5`，省略时上游默认使用 `v5.5`，非法值提交期直接返回 `400`。\n- 任务完成后，从结果 `music[]` 中读取 `audio_url`；通常需要 30–120 秒，建议每 3–5 秒查询。"
+  },
+  "tags": [
+    {
+      "name": "音频（Audio）/Suno"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "使用 MAPI Bearer Token 认证。格式：`Authorization: Bearer sk-xxxxxx`。"
+      }
+    }
+  },
+  "paths": {
+    "/v1/music/generations": {
+      "post": {
+        "tags": [
+          "音频（Audio）/Suno"
+        ],
+        "summary": "添加人声",
+        "description": "为已有伴奏音轨添加人声，适用于从纯音乐制作完整歌曲。\n\n**重要**：源音轨必须是通过  上传的自有音频；使用 AI 生成任务的音轨作为源会失败，仅能引用自己上传的音轨。\n\n`custom` 决定字段是否生效：写了但模式不对的字段会被**静默忽略**（不报错）。`custom=true` 时 `prompt`（歌词）、`title`、`tags`、`negative_tags`、`style_weight`、`weirdness_constraint`、`audio_weight` 生效，`gpt_description` 被忽略；`custom=false` 时只认 `gpt_description`（此时**必填**，缺了提交期直接 400）。`vocal_gender` 两种模式都生效。不传 `custom` 时后端按此顺序推断：有 `prompt` → `true`；无 `prompt` 但有 `gpt_description` → `false`；否则有 `tags`/`title` → `true`。\n\n- 所有 Suno 能力均通过 MAPI 公共提交接口调用；模型由请求体中的 `model` 字段区分。\n- 提交成功后立即返回 MAPI 公开任务 ID。请通过 `GET /v1/music/generations/{task_id}` 轮询任务状态。\n- `version` 仅支持 `v5`、`v5.5`，省略时上游默认使用 `v5.5`，非法值提交期直接返回 `400`。\n- 任务完成后，从结果 `music[]` 中读取 `audio_url`；通常需要 30–120 秒，建议每 3–5 秒查询。",
+        "operationId": "suno-add-vocals",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "const": "suno-add-vocals",
+                    "description": "固定填写 `suno-add-vocals`。",
+                    "examples": [
+                      "suno-add-vocals"
+                    ]
+                  },
+                  "version": {
+                    "type": "string",
+                    "description": "仅支持 `v5`、`v5.5`，默认 `v5.5`。",
+                    "examples": [
+                      "v5"
+                    ],
+                    "enum": [
+                      "v5",
+                      "v5.5"
+                    ],
+                    "default": "v5.5"
+                  },
+                  "task_id": {
+                    "type": "string",
+                    "description": "源音轨所在 `suno-upload` 上传任务的 ID，必填。",
+                    "examples": [
+                      "task_source123"
+                    ]
+                  },
+                  "audio_index": {
+                    "type": "integer",
+                    "description": "上传任务音轨序号，1-based，默认 `1`。",
+                    "examples": [
+                      1
+                    ],
+                    "default": 1,
+                    "minimum": 1
+                  },
+                  "custom": {
+                    "type": "boolean",
+                    "description": "`true` 为自定义模式，`false` 为灵感模式；省略时自动推断。"
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "description": "歌词，仅 `custom=true` 时生效。"
+                  },
+                  "gpt_description": {
+                    "type": "string",
+                    "description": "灵感提示词，`custom=false` 时必填。"
+                  },
+                  "title": {
+                    "type": "string",
+                    "description": "标题，仅 `custom=true` 时生效。"
+                  },
+                  "tags": {
+                    "type": "string",
+                    "description": "风格标签，仅 `custom=true` 时生效。"
+                  },
+                  "negative_tags": {
+                    "type": "string",
+                    "description": "排除的风格标签，仅 `custom=true` 时生效。"
+                  },
+                  "style_weight": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "风格权重 0–1，仅自定义模式生效。"
+                  },
+                  "weirdness_constraint": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "创意度权重 0–1，仅自定义模式生效。"
+                  },
+                  "audio_weight": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "音频权重 0–1，仅自定义模式生效。"
+                  },
+                  "vocal_gender": {
+                    "type": "string",
+                    "description": "人声性别，两种模式均生效。",
+                    "examples": [
+                      "Female"
+                    ],
+                    "enum": [
+                      "Male",
+                      "Female"
+                    ]
+                  }
+                },
+                "required": [
+                  "model",
+                  "task_id"
+                ]
+              },
+              "examples": {
+                "suno-add-vocals": {
+                  "summary": "添加人声",
+                  "value": {
+                    "model": "suno-add-vocals",
+                    "version": "v5",
+                    "task_id": "task_source123",
+                    "audio_index": 1,
+                    "custom": true,
+                    "prompt": "[Verse]\nWalking through the city lights",
+                    "tags": "female vocal, synth pop",
+                    "vocal_gender": "Female"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "任务提交成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "examples": [
+                        200
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "success"
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "submitted"
+                            ]
+                          },
+                          "task_id": {
+                            "type": "string",
+                            "description": "MAPI 公开任务 ID，用于公共查询接口。",
+                            "examples": [
+                              "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "status",
+                          "task_id"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "code": 200,
+                  "message": "success",
+                  "data": [
+                    {
+                      "status": "submitted",
+                      "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误、模型版本不支持或源任务无效",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "description": "错误代码",
+                      "examples": [
+                        "invalid_request"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "错误说明"
+                    },
+                    "data": {
+                      "description": "错误附加数据，可为空"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                },
+                "example": {
+                  "code": "invalid_request",
+                  "message": "task_id is required",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

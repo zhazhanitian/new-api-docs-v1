@@ -1,0 +1,14 @@
+---
+title: ボーカル追加
+full: true
+---
+
+既存のインストゥルメンタル音源にボーカルを追加します。
+
+> **重要**: ソース音源は `suno-upload` でアップロードした音源のみ使用可能です。AI生成タスクの音源をソースとして使用するとエラーになります。
+
+`custom` フラグにより有効なフィールドが決まります。`custom=true` 時: `prompt`（歌詞）、`title`、`tags`、`negative_tags`、`style_weight`、`weirdness_constraint`、`audio_weight` が有効、`gpt_description` は無視。`custom=false` 時: `gpt_description` のみ有効（**必須**、未指定は 400）。`vocal_gender` は両モードで有効。`custom` 未指定時は `prompt` → `gpt_description` → `tags`/`title` の順で推定します。
+
+- `version` は `v5`/`v5.5` のみ対応、デフォルト `v5.5`、無効値は 400。完了後は `result.music[]` の `audio_url` を参照。
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-add-vocals.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

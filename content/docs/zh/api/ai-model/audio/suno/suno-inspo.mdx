@@ -1,0 +1,16 @@
+---
+title: 灵感生成
+full: true
+---
+
+- 根据 1 至 4 个公开音频 URL 提取灵感并生成新歌曲。
+
+- 本模型直接接收 1–4 个公网音频 URL，不使用 `task_id` 或 `audio_index`。
+- `version` 支持 `v4`、`v4.5`、`v4.5+`、`v4.5-all`、`v5`、`v5.5`，默认 `v5.5`。
+- 本模型没有 `custom` 模式参数；歌词、标题、标签和权重字段直接生效。
+- 任务完成后，从结果 `music[]` 中读取生成歌曲的 `audio_url`；通常需要 30–120 秒，建议每 3–5 秒查询。
+
+- **提交接口**：统一通过 `POST /v1/music/generations` 提交，使用 `model: "suno-inspo"` 选择此能力。
+- **任务查询**：提交返回 `task_id`，通过 `GET /v1/music/generations/{task_id}` 获取任务状态和结果。
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-inspo.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

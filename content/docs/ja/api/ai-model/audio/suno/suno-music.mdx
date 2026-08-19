@@ -1,0 +1,15 @@
+---
+title: 音楽生成
+full: true
+---
+
+テキストプロンプトまたはカスタム歌詞から完全な楽曲を生成します。
+
+`custom` フラグにより有効なフィールドが決まります。`custom=true`（カスタムモード）時: `prompt`（歌詞）、`title`、`style`、`negative_tags`、`auto_lyrics`、`persona_id`、`style_weight`、`weirdness_constraint`、`audio_weight` が有効。`custom=false`（インスピレーションモード）時: `prompt` はインスピレーションの説明として使用、`title`/`style` 等は無視。`vocal_gender` は両モードで有効。
+
+> **注意**: `suno-music` はスタイルタグに他モデルの `tags` ではなく `style` を使用します。
+
+- `version` は**必須**（未指定は 400）。インスピレーションモードでは `prompt` 必須。カスタムモードでは `instrumental=false` の場合 `prompt` 必須。
+- 生成には通常 30〜120 秒かかります。3〜5 秒ごとにポーリングしてください。
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-music.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

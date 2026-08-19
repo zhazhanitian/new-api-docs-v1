@@ -1,0 +1,15 @@
+---
+title: 标签增强
+full: true
+---
+
+- 扩展和优化音乐风格标签，适用于生成前完善风格描述。
+
+- 本模型无版本维度，不要传 `version`；即使传入也会被 MAPI 丢弃，不影响计费。
+- 这是上游同步能力，通常在提交后即可完成；MAPI 仍统一返回任务 ID，并允许通过公共任务接口查询完成结果。
+- 增强后的标签由任务结果中的 `upsampled_tags` 数据提供。
+
+- **提交接口**：统一通过 `POST /v1/music/generations` 提交，使用 `model: "suno-upsample-tags"` 选择此能力。
+- **任务查询**：提交返回 `task_id`，通过 `GET /v1/music/generations/{task_id}` 获取任务状态和结果。
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-upsample-tags.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

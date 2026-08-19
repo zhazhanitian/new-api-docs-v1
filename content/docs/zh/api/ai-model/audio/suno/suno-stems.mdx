@@ -1,0 +1,16 @@
+---
+title: 分轨提取
+full: true
+---
+
+- 从已有歌曲中提取指定类型的分轨。
+
+- 本模型无版本维度，不要传 `version`；即使传入也会被 MAPI 丢弃，不影响计费。
+- `stem_type` 省略时默认提取 `lead_vocal`（主人声）。
+- 官方支持 100 多种分轨类型，常用值包括 `lead_vocal`、`backing_vocals`、`drum_kit`、`bass`、`piano`、`electric_guitar`。
+- 任务完成后，结果中包含分离出的音轨 URL；建议每 3–5 秒查询一次公共任务接口。
+
+- **提交接口**：统一通过 `POST /v1/music/generations` 提交，使用 `model: "suno-stems"` 选择此能力。
+- **任务查询**：提交返回 `task_id`，通过 `GET /v1/music/generations/{task_id}` 获取任务状态和结果。
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-stems.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

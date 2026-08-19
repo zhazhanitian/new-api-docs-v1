@@ -1,0 +1,46 @@
+---
+title: Cover Song
+full: true
+---
+
+Re-interpret an existing song in a new style, suitable for genre conversion and cover creation.
+
+The `custom` flag controls which fields take effect; fields that don't match the current mode are **silently ignored**. When `custom=true`: `prompt` (lyrics), `title`, `tags`, `negative_tags`, `style_weight`, `weirdness_constraint`, `audio_weight`, and `persona_id` are active; `gpt_description` is ignored. When `custom=false`: only `gpt_description` is read (**required** in this mode; missing it returns 400 at submission). `vocal_gender` works in both modes. When `custom` is omitted, the backend infers: has `prompt` → `true`; no `prompt` but has `gpt_description` → `false`; otherwise has `tags`/`title` → `true`.
+
+**Usage A — Style-directed cover (most common, recommended)**
+
+Provide source song + target style `tags` without setting `custom` (the system auto-applies `custom=true` when `tags` is present):
+
+```json
+{
+  "model": "suno-cover",
+  "task_id": "task_xxx",
+  "audio_index": 1,
+  "version": "v5",
+  "tags": "jazz, slow"
+}
+```
+
+Add `prompt` (lyrics) / `title` for more precision.
+
+**Usage B — Inspiration mode (`custom=false`)**
+
+Let the model decide the style, but you must provide `gpt_description` to describe the desired effect:
+
+```json
+{
+  "model": "suno-cover",
+  "task_id": "task_xxx",
+  "audio_index": 1,
+  "version": "v5",
+  "custom": false,
+  "gpt_description": "Re-arrange this song as a slow jazz version"
+}
+```
+
+Choose one of the two usages; do not pass only `custom=false` without `gpt_description` (returns 400 at submission).
+
+- `version` supports `v3.5`, `v4`, `v4.5`, `v4.5+`, `v4.5-all`, `v5`, `v5.5`; defaults to `v5.5`. Invalid values return `400`.
+- Once complete, read `audio_url` from `result.music[]`; generation typically takes 30–120 s; poll every 3–5 s.
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-cover.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

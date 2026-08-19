@@ -1,0 +1,16 @@
+---
+title: 母带优化
+full: true
+---
+
+- 对已有音轨进行母带优化，适用于改善整体听感和输出质量。
+
+- `version` 仅支持 `v4.5+`、`v5`、`v5.5`，省略时上游默认使用 `v5.5`。
+- `variation_category` 可控制改编强度：`subtle`、`normal` 或 `high`。
+- 任务完成后，从结果 `music[]` 中读取优化后音频的 `audio_url`。
+- 通常需要 30–120 秒，建议每 3–5 秒查询一次公共任务接口。
+
+- **提交接口**：统一通过 `POST /v1/music/generations` 提交，使用 `model: "suno-remaster"` 选择此能力。
+- **任务查询**：提交返回 `task_id`，通过 `GET /v1/music/generations/{task_id}` 获取任务状态和结果。
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-remaster.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

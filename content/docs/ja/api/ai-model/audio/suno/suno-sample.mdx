@@ -1,0 +1,13 @@
+---
+title: サンプルから楽曲生成
+full: true
+---
+
+既存の音源から指定した時間範囲をサンプルとして切り出し、そのサンプルを基に新しい楽曲を生成します。
+
+`custom` フラグにより有効なフィールドが決まります。誤ったモードのフィールドは**無視されます**（エラーなし）。`custom=true` 時: `prompt`（歌詞）、`title`、`tags`、`negative_tags`、`auto_lyrics`、`style_weight`、`weirdness_constraint`、`audio_weight` が有効、`gpt_description` は無視。`custom=false` 時: `gpt_description` のみ有効（**必須**、未指定は 400）。`vocal_gender` は両モードで有効。`custom` 未指定時は `prompt` あり → `true`、`gpt_description` あり → `false`、`tags`/`title` あり → `true` の順で推定します。
+
+- `start_s` と `end_s` は必須（秒単位）。`version` は全7種対応、デフォルト `v5.5`、無効値は 400。
+- 完了後は `result.music[]` の `audio_url` を参照。通常 30〜120 秒、3〜5 秒ごとにポーリングしてください。
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-sample.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

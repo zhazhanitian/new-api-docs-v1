@@ -1,0 +1,17 @@
+---
+title: 完整歌曲合成、拼接
+full: true
+---
+
+- 将已有歌曲任务中的片段合成为完整歌曲，适用于续写结果的拼接。
+
+- 本模型无版本维度，不要传 `version`；即使传入也会被 MAPI 丢弃，不影响计费。
+- **源任务必须是 `suno-extend` 续写产生的分段结果**；普通一次性生成的完整歌曲不能用于拼接，上游会返回参数错误。
+- 使用续写任务的 `task_id` 和 `audio_index` 引用待拼接分段，无需记录额外音频 ID。
+- 完成后从任务结果 `music[]` 中读取完整歌曲的 `audio_url`。
+- 通常需要 30–120 秒，建议每 3–5 秒查询一次公共任务接口。
+
+- **提交接口**：统一通过 `POST /v1/music/generations` 提交，使用 `model: "suno-concat"` 选择此能力。
+- **任务查询**：提交返回 `task_id`，通过 `GET /v1/music/generations/{task_id}` 获取任务状态和结果。
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-concat.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

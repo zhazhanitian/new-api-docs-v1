@@ -1,0 +1,17 @@
+---
+title: 生成混搭
+full: true
+---
+
+将两个已有任务中的音轨混合为新的歌曲。
+
+`task_ids` 必须**恰好 2 个**源任务 ID；`audio_indexes` 与之一一对应（1-based，默认都取第 1 首）。
+
+`custom` 决定哪些字段生效：写在错误模式下的字段会被**静默忽略**（不报错）。`custom=true` 时 `prompt`（歌词）、`title`、`tags`、`negative_tags`、`auto_lyrics`、`style_weight`、`weirdness_constraint`、`audio_weight`、`persona_id` 生效，`gpt_description` 被忽略；`custom=false` 时只读 `gpt_description`（此时**必填**，缺了提交期直接返回 400）。`vocal_gender` 两种模式都生效。不传 `custom` 时后端按此顺序推断：有 `prompt` → `true`；无 `prompt` 但有 `gpt_description` → `false`；否则有 `tags`/`title` → `true`。
+
+- `instrumental` 默认 `false`；`version` 支持全部七个版本（`v3.5`/`v4`/`v4.5`/`v4.5+`/`v4.5-all`/`v5`/`v5.5`），默认 `v5.5`，非法值提交期直接返回 `400`。
+- 任务完成后，从结果 `music[]` 中读取混搭歌曲的 `audio_url`；通常需要 30–120 秒，建议每 3–5 秒查询。
+- **提交接口**：统一通过 `POST /v1/music/generations` 提交，使用 `model: "suno-mashup"` 选择此能力。
+- **任务查询**：提交返回 `task_id`，通过 `GET /v1/music/generations/{task_id}` 获取任务状态和结果。
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-mashup.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

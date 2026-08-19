@@ -1,0 +1,42 @@
+---
+title: カバー生成
+full: true
+---
+
+既存の楽曲を新しいスタイルで再解釈します。
+
+`custom` フラグにより有効なフィールドが決まります。`custom=true` 時: `prompt`（歌詞）、`title`、`tags`、`negative_tags`、`style_weight`、`weirdness_constraint`、`audio_weight`、`persona_id` が有効、`gpt_description` は無視。`custom=false` 時: `gpt_description` のみ有効（**必須**、未指定は 400）。`vocal_gender` は両モードで有効。`custom` 未指定時は `prompt` あり → `true`、`gpt_description` あり → `false`、`tags`/`title` あり → `true` の順で推定します。
+
+**使い方 A — スタイル指定カバー（最も一般的、推奨）**
+
+ソース楽曲 + 目標スタイル `tags` を指定します（`tags` があれば自動で `custom=true` として処理）：
+
+```json
+{
+  "model": "suno-cover",
+  "task_id": "task_xxx",
+  "audio_index": 1,
+  "version": "v5",
+  "tags": "jazz, slow"
+}
+```
+
+**使い方 B — インスピレーションモード（`custom=false`）**
+
+スタイルはモデルに任せ、`gpt_description` で希望の効果を記述します（必須）：
+
+```json
+{
+  "model": "suno-cover",
+  "task_id": "task_xxx",
+  "audio_index": 1,
+  "version": "v5",
+  "custom": false,
+  "gpt_description": "この曲をスローなジャズ風にカバーして"
+}
+```
+
+- `version` は `v3.5`/`v4`/`v4.5`/`v4.5+`/`v4.5-all`/`v5`/`v5.5` に対応、デフォルト `v5.5`、無効値は 400。
+- 完了後は `result.music[]` の `audio_url` を参照。通常 30〜120 秒。
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-cover.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

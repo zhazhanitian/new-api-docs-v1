@@ -1,0 +1,213 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "母带优化",
+    "version": "1.0.0",
+    "description": "对已有音轨进行母带优化，适用于改善整体听感和输出质量。\n\n- 所有 Suno 能力均通过 MAPI 公共提交接口调用；模型由请求体中的 `model` 字段区分。\n- 提交成功后立即返回 MAPI 公开任务 ID。请通过 `GET /v1/music/generations/{task_id}` 轮询任务状态。\n- `version` 仅支持 `v4.5+`、`v5`、`v5.5`，省略时上游默认使用 `v5.5`。\n- `variation_category` 可控制改编强度：`subtle`、`normal` 或 `high`。\n- 任务完成后，从结果 `music[]` 中读取优化后音频的 `audio_url`。\n- 通常需要 30–120 秒，建议每 3–5 秒查询一次公共任务接口。"
+  },
+  "tags": [
+    {
+      "name": "音频（Audio）/Suno"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "使用 MAPI Bearer Token 认证。格式：`Authorization: Bearer sk-xxxxxx`。"
+      }
+    }
+  },
+  "paths": {
+    "/v1/music/generations": {
+      "post": {
+        "tags": [
+          "音频（Audio）/Suno"
+        ],
+        "summary": "母带优化",
+        "description": "对已有音轨进行母带优化，适用于改善整体听感和输出质量。\n\n- 所有 Suno 能力均通过 MAPI 公共提交接口调用；模型由请求体中的 `model` 字段区分。\n- 提交成功后立即返回 MAPI 公开任务 ID。请通过 `GET /v1/music/generations/{task_id}` 轮询任务状态。\n- `version` 仅支持 `v4.5+`、`v5`、`v5.5`，省略时上游默认使用 `v5.5`。\n- `variation_category` 可控制改编强度：`subtle`、`normal` 或 `high`。\n- 任务完成后，从结果 `music[]` 中读取优化后音频的 `audio_url`。\n- 通常需要 30–120 秒，建议每 3–5 秒查询一次公共任务接口。",
+        "operationId": "suno-remaster",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "const": "suno-remaster",
+                    "description": "固定填写 `suno-remaster`。",
+                    "examples": [
+                      "suno-remaster"
+                    ]
+                  },
+                  "version": {
+                    "type": "string",
+                    "description": "仅支持 `v4.5+`、`v5`、`v5.5`，默认 `v5.5`。",
+                    "examples": [
+                      "v5"
+                    ],
+                    "enum": [
+                      "v4.5+",
+                      "v5",
+                      "v5.5"
+                    ],
+                    "default": "v5.5"
+                  },
+                  "task_id": {
+                    "type": "string",
+                    "description": "产出源音轨的任务 ID，必填。",
+                    "examples": [
+                      "task_source123"
+                    ]
+                  },
+                  "audio_index": {
+                    "type": "integer",
+                    "description": "源任务音轨序号，1-based，默认 `1`。",
+                    "examples": [
+                      1
+                    ],
+                    "default": 1,
+                    "minimum": 1
+                  },
+                  "variation_category": {
+                    "type": "string",
+                    "enum": [
+                      "subtle",
+                      "normal",
+                      "high"
+                    ],
+                    "description": "改编强度，可选 `subtle`、`normal`、`high`。"
+                  }
+                },
+                "required": [
+                  "model",
+                  "task_id"
+                ]
+              },
+              "examples": {
+                "suno-remaster": {
+                  "summary": "母带优化",
+                  "value": {
+                    "model": "suno-remaster",
+                    "version": "v5",
+                    "task_id": "task_source123",
+                    "audio_index": 1,
+                    "variation_category": "normal"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "任务提交成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "examples": [
+                        200
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "success"
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "submitted"
+                            ]
+                          },
+                          "task_id": {
+                            "type": "string",
+                            "description": "MAPI 公开任务 ID，用于公共查询接口。",
+                            "examples": [
+                              "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "status",
+                          "task_id"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "code": 200,
+                  "message": "success",
+                  "data": [
+                    {
+                      "status": "submitted",
+                      "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误、模型版本不支持或源任务无效",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "description": "错误代码",
+                      "examples": [
+                        "invalid_request"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "错误说明"
+                    },
+                    "data": {
+                      "description": "错误附加数据，可为空"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                },
+                "example": {
+                  "code": "invalid_request",
+                  "message": "task_id is required",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,252 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "灵感生成",
+    "version": "1.0.0",
+    "description": "根据 1 至 4 个公开音频 URL 提取灵感并生成新歌曲。\n\n- 所有 Suno 能力均通过 MAPI 公共提交接口调用；模型由请求体中的 `model` 字段区分。\n- 提交成功后立即返回 MAPI 公开任务 ID。请通过 `GET /v1/music/generations/{task_id}` 轮询任务状态。\n- 本模型直接接收 1–4 个公网音频 URL，不使用 `task_id` 或 `audio_index`。\n- `version` 支持 `v4`、`v4.5`、`v4.5+`、`v4.5-all`、`v5`、`v5.5`，默认 `v5.5`。\n- 本模型没有 `custom` 模式参数；歌词、标题、标签和权重字段直接生效。\n- 任务完成后，从结果 `music[]` 中读取生成歌曲的 `audio_url`；通常需要 30–120 秒，建议每 3–5 秒查询。"
+  },
+  "tags": [
+    {
+      "name": "音频（Audio）/Suno"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "使用 MAPI Bearer Token 认证。格式：`Authorization: Bearer sk-xxxxxx`。"
+      }
+    }
+  },
+  "paths": {
+    "/v1/music/generations": {
+      "post": {
+        "tags": [
+          "音频（Audio）/Suno"
+        ],
+        "summary": "灵感生成",
+        "description": "根据 1 至 4 个公开音频 URL 提取灵感并生成新歌曲。\n\n- 所有 Suno 能力均通过 MAPI 公共提交接口调用；模型由请求体中的 `model` 字段区分。\n- 提交成功后立即返回 MAPI 公开任务 ID。请通过 `GET /v1/music/generations/{task_id}` 轮询任务状态。\n- 本模型直接接收 1–4 个公网音频 URL，不使用 `task_id` 或 `audio_index`。\n- `version` 支持 `v4`、`v4.5`、`v4.5+`、`v4.5-all`、`v5`、`v5.5`，默认 `v5.5`。\n- 本模型没有 `custom` 模式参数；歌词、标题、标签和权重字段直接生效。\n- 任务完成后，从结果 `music[]` 中读取生成歌曲的 `audio_url`；通常需要 30–120 秒，建议每 3–5 秒查询。",
+        "operationId": "suno-inspo",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "const": "suno-inspo",
+                    "description": "固定填写 `suno-inspo`。",
+                    "examples": [
+                      "suno-inspo"
+                    ]
+                  },
+                  "version": {
+                    "type": "string",
+                    "description": "生成版本，默认 `v5.5`。",
+                    "examples": [
+                      "v5"
+                    ],
+                    "enum": [
+                      "v4",
+                      "v4.5",
+                      "v4.5+",
+                      "v4.5-all",
+                      "v5",
+                      "v5.5"
+                    ],
+                    "default": "v5.5"
+                  },
+                  "audio_urls": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 4,
+                    "items": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "description": "1–4 个公网可访问的参考音频 URL。"
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "description": "歌词或内容。"
+                  },
+                  "title": {
+                    "type": "string",
+                    "description": "歌曲标题。"
+                  },
+                  "tags": {
+                    "type": "string",
+                    "description": "风格标签。"
+                  },
+                  "negative_tags": {
+                    "type": "string",
+                    "description": "需要排除的风格标签。"
+                  },
+                  "style_weight": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "风格权重，范围 0–1。"
+                  },
+                  "weirdness_constraint": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "创意度权重，范围 0–1。"
+                  },
+                  "audio_weight": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "音频权重，范围 0–1。"
+                  },
+                  "vocal_gender": {
+                    "type": "string",
+                    "description": "人声性别。",
+                    "examples": [
+                      "Female"
+                    ],
+                    "enum": [
+                      "Male",
+                      "Female"
+                    ]
+                  },
+                  "auto_lyrics": {
+                    "type": "boolean",
+                    "description": "是否对输入歌词进行二次创作。"
+                  }
+                },
+                "required": [
+                  "model",
+                  "audio_urls"
+                ]
+              },
+              "examples": {
+                "suno-inspo": {
+                  "summary": "灵感生成",
+                  "value": {
+                    "model": "suno-inspo",
+                    "version": "v5",
+                    "audio_urls": [
+                      "https://example.com/reference-1.mp3",
+                      "https://example.com/reference-2.wav"
+                    ],
+                    "tags": "upbeat retro synth pop"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "任务提交成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "examples": [
+                        200
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "success"
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "submitted"
+                            ]
+                          },
+                          "task_id": {
+                            "type": "string",
+                            "description": "MAPI 公开任务 ID，用于公共查询接口。",
+                            "examples": [
+                              "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "status",
+                          "task_id"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "code": 200,
+                  "message": "success",
+                  "data": [
+                    {
+                      "status": "submitted",
+                      "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误、模型版本不支持或源任务无效",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "description": "错误代码",
+                      "examples": [
+                        "invalid_request"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "错误说明"
+                    },
+                    "data": {
+                      "description": "错误附加数据，可为空"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                },
+                "example": {
+                  "code": "invalid_request",
+                  "message": "task_id is required",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
