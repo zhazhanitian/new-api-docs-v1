@@ -1,0 +1,16 @@
+---
+title: 上传音频并延伸
+full: true
+---
+
+- 直接用公网音频 URL 延伸歌曲，无需先调用 `suno-upload`。
+
+- 必填 `audio_url`（公网 HTTP(S) 直链，建议不超过 8 分钟）和 `continue_at`（≥1 秒且严格小于源时长）。不要传本地路径或 `blob:` URL。
+- 固定自定义模式：不要发送 `custom`、`instrumental` 或 `gpt_description`。
+- `version` 仅支持 `v6` / `v6-wild` / `v6-mini`，省略默认 `v6`；与 `custom_model_id`、`persona_id` 互斥。
+- `duration_s` 目标时长 10–360 秒。`max_mode=true` 按 2 倍计费。新请求用 `weirdness`。
+
+- **提交接口**：统一通过 `POST /v1/music/generations` 提交，使用 `model: "suno-upload-extend"` 选择此能力。
+- **任务查询**：提交返回 `task_id`，通过 `GET /v1/music/generations/{task_id}` 获取任务状态和结果。
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-upload-extend.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

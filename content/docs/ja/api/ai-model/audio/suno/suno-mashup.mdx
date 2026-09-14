@@ -3,12 +3,11 @@ title: マッシュアップ生成
 full: true
 ---
 
-2つの既存タスクの音源をミックスして新しい楽曲を生成します。
+2 つの既存楽曲をミックスします。`task_ids` はちょうど 2 件。任意の `audio_indexes` は同順（デフォルト 1）。
 
-`task_ids` は**ちょうど2つ**のタスク ID が必要です。`audio_indexes` は対応する順（1始まり、デフォルト1）で指定します。
+送信したフィールドは使われなくても検証されます。`custom=false` のとき `gpt_description` は必須。`custom=true` かつ `instrumental=false` のとき `prompt` は必須です。
 
-`custom` フラグにより有効なフィールドが決まります。誤ったモードのフィールドは**無視されます**（エラーなし）。`custom=true` 時: `prompt`（歌詞）、`title`、`tags`、`negative_tags`、`auto_lyrics`、`style_weight`、`weirdness_constraint`、`audio_weight`、`persona_id` が有効、`gpt_description` は無視。`custom=false` 時: `gpt_description` のみ有効（**必須**、未指定は 400）。`vocal_gender` は両モードで有効。`custom` 未指定時は `prompt` あり → `true`、`gpt_description` あり → `false`、`tags`/`title` あり → `true` の順で推定します。
-
-- `version` は全7種対応、デフォルト `v5.5`、無効値は 400。完了後は `result.music[]` の `audio_url` を参照。通常 30〜120 秒。
+- `version`: `v6` / `v6-wild` / `v6-mini`、デフォルト `v6`。`custom_model_id` は `version`・`persona_id` と互斥。
+- 目標尺は非対応。`max_mode` はカスタムモード必須、通常価格の 2 倍。
 
 <APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-mashup.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

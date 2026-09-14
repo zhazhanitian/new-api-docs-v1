@@ -3,7 +3,7 @@
   "info": {
     "title": "查询 Suno 任务",
     "version": "1.0.0",
-    "description": "查询 Suno 异步任务的状态、进度、计费信息和结果。建议每 3–5 秒轮询一次，直到状态变为 `SUCCESS` 或 `FAILURE`。"
+    "description": "查询 Suno V6 异步任务的状态、进度、计费信息和结果。建议首次等待约 3 秒，之后每 5–10 秒轮询一次，直到状态变为 `SUCCESS` 或 `FAILURE`。不要因网络超时自动重发收费的 POST 请求。`UNKNOWN` 时保留任务 ID 手动刷新，不要自动新建任务。"
   },
   "tags": [
     {
@@ -26,7 +26,7 @@
           "音频（Audio）/Suno"
         ],
         "summary": "查询 Suno 任务",
-        "description": "查询 Suno 异步任务的状态、进度、计费信息和结果。建议每 3–5 秒轮询一次，直到状态变为 `SUCCESS` 或 `FAILURE`。",
+        "description": "查询 Suno V6 异步任务的状态、进度、计费信息和结果。\n\n- 建议首次等待约 3 秒，之后每 5–10 秒查询一次，直到 `status` 为 `SUCCESS` 或 `FAILURE`。\n- 页面刷新后可继续使用同一个任务 ID；不要因网络超时自动重发收费的 POST 请求。\n- 上游查询状态会映射为平台状态：`pending`→`QUEUED`，`processing`→`IN_PROGRESS`，`completed`→`SUCCESS`，`failed`→`FAILURE`，`unknown`→`UNKNOWN`。\n- `progress` 通常为 0–100，是否完成以 `status` 为准，不再保证 10→50→100 固定节点。\n- 音乐类结果通常在 `result.music[]`；下载、歌词、MIDI、Persona、自定义模型等有各自结构。\n- `result.music[]` 可能含 `status`、`display_tags`、`negative_tags`、`style_weight`、`weirdness_constraint`、`audio_weight`。返回多少首按实际数组展示，不要固定为 2。\n- `UNKNOWN` 时保留任务 ID 并允许手动刷新，不要自动创建新任务。当前没有取消已提交任务的端点。",
         "operationId": "get-suno-task",
         "security": [
           {
@@ -82,7 +82,7 @@
                             "FAILURE",
                             "UNKNOWN"
                           ],
-                          "description": "`SUBMITTED`：已提交上游；`QUEUED`：上游排队中；`IN_PROGRESS`：处理中；`SUCCESS`：完成；`FAILURE`：失败。"
+                          "description": "`SUBMITTED`：已提交上游（提交响应可能仍为此状态）；`QUEUED`：上游排队（pending）；`IN_PROGRESS`：处理中（processing）；`SUCCESS`：完成（completed）；`FAILURE`：失败（failed）；`UNKNOWN`：状态未知，保留任务 ID 手动刷新，不要自动新建任务。"
                         },
                         "fail_reason": {
                           "type": "string",
@@ -90,8 +90,8 @@
                         },
                         "progress": {
                           "type": "string",
-                          "description": "任务进度百分比字符串",
-                          "examples": ["10%", "50%", "100%"]
+                          "description": "任务进度百分比字符串。V6 进度通常为 0–100，不再保证 10 / 50 / 100 固定节点；是否完成以 `status` 为准。",
+                          "examples": ["0%", "37%", "100%"]
                         },
                         "amount": {
                           "type": "string",
@@ -111,7 +111,7 @@
                         },
                         "result": {
                           "type": "object",
-                          "description": "任务结果，仅在任务完成后存在。字段结构因 `action` 不同而不同，直接透传上游返回内容。常见示例：音乐类工具返回 `music[]`，标签增强返回 `upsampled_tags`，其他工具返回对应结构。",
+                          "description": "任务结果，仅在任务完成后存在。字段结构因 `action` 不同而不同，直接透传上游返回内容。音乐类通常为 `music[]`（含 `audio_url`、`status`、`display_tags`、`negative_tags`、权重等，数量不要固定为 2）；标签增强为 `upsampled_tags`；下载为 `files[]`；歌词优先 `lyrics[]`；MIDI 为 `state`/`instruments[]`；Persona 为 `persona_id`；自定义模型为 `model_id`；MV 优先 `videoUrl`。",
                           "additionalProperties": true
                         }
                       },
@@ -200,6 +200,11 @@
                               "image_large_url": "https://cdn.ttapi.io/suno/20260818/8682aad03347433eaf424024e497732b.jpg",
                               "lyrics": "[Verse 1]\n我把灯关小一点\n让雨落进窗边\n...",
                               "tags": "Lo-fi piano ballad with a loose trip-hop sway, soft brushed drums, and rain texture under the keys",
+                              "display_tags": "lo-fi, piano, ambient",
+                              "negative_tags": "",
+                              "style_weight": 0.7,
+                              "weirdness_constraint": 0,
+                              "audio_weight": 0.4,
                               "title": "雨窗慢拍",
                               "status": "complete"
                             },
@@ -211,6 +216,11 @@
                               "image_large_url": "https://cdn.ttapi.io/suno/20260818/17bfa4e4938c4c55a4ff9c725b096f2d.jpg",
                               "lyrics": "[Verse 1]\n我把灯关小一点\n让雨落进窗边\n...",
                               "tags": "Lo-fi piano ballad with a loose trip-hop sway, soft brushed drums, and rain texture under the keys",
+                              "display_tags": "lo-fi, piano, ambient",
+                              "negative_tags": "",
+                              "style_weight": 0.7,
+                              "weirdness_constraint": 0,
+                              "audio_weight": 0.4,
                               "title": "雨窗慢拍",
                               "status": "complete"
                             }

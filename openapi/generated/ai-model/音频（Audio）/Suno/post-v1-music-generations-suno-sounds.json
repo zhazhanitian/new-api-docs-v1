@@ -3,7 +3,7 @@
   "info": {
     "title": "音效生成",
     "version": "1.0.0",
-    "description": "根据文本描述生成短音效或循环音效，适用于视频、游戏和音乐制作。\n\n- 所有 Suno 能力均通过 MAPI 公共提交接口调用；模型由请求体中的 `model` 字段区分。\n- 提交成功后立即返回 MAPI 公开任务 ID。请通过 `GET /v1/music/generations/{task_id}` 轮询任务状态。\n- `version` 仅支持 `v5` 和 `v5.5`，省略时上游默认使用 `v5.5`。\n- **官方建议尽量使用英文音效描述**，以获得更好的生成效果。\n- 任务完成后，从结果 `data.result.music[]` 中读取生成音效的 `audio_url`。\n- 建议每 3–5 秒查询一次公共任务接口；生成中状态为 `pending`，`progress` 值排队约 10、就绪约 50、完成为 100。\n- 失败时 `data.error.message` 为原因，平台自动退回预扣额度。"
+    "description": "根据描述生成音效。版本 `v6` / `v6-wild` / `v6-mini`，默认 `v6`。不支持自定义模型、Max、`variety` 或目标时长。完成后从 `result.music[]` 取 `audio_url`。"
   },
   "tags": [
     {
@@ -26,7 +26,7 @@
           "音频（Audio）/Suno"
         ],
         "summary": "音效生成",
-        "description": "根据文本描述生成短音效或循环音效，适用于视频、游戏和音乐制作。\n\n- 所有 Suno 能力均通过 MAPI 公共提交接口调用；模型由请求体中的 `model` 字段区分。\n- 提交成功后立即返回 MAPI 公开任务 ID。请通过 `GET /v1/music/generations/{task_id}` 轮询任务状态。\n- `version` 仅支持 `v5` 和 `v5.5`，省略时上游默认使用 `v5.5`。\n- **官方建议尽量使用英文音效描述**，以获得更好的生成效果。\n- 任务完成后，从结果 `data.result.music[]` 中读取生成音效的 `audio_url`。\n- 建议每 3–5 秒查询一次公共任务接口；生成中状态为 `pending`，`progress` 值排队约 10、就绪约 50、完成为 100。\n- 失败时 `data.error.message` 为原因，平台自动退回预扣额度。",
+        "description": "根据描述生成音效。\n\n- 提交后通过 `GET /v1/music/generations/{task_id}` 轮询。\n- `version`：`v6` / `v6-wild` / `v6-mini`，省略默认 `v6`。\n- 不支持自定义模型、Max、`variety` 或目标时长字段，不要发送。\n- `prompt` 必填，建议尽量使用英文。完成后从 `result.music[]` 取 `audio_url`。进度 0–100，不保证固定节点。",
         "operationId": "suno-sounds",
         "security": [
           {
@@ -50,15 +50,10 @@
                   },
                   "version": {
                     "type": "string",
-                    "description": "生成版本，仅支持 `v5`、`v5.5`，默认 `v5.5`。",
-                    "examples": [
-                      "v5"
-                    ],
-                    "enum": [
-                      "v5",
-                      "v5.5"
-                    ],
-                    "default": "v5.5"
+                    "description": "公共版本：`v6` / `v6-wild` / `v6-mini`；省略时默认 `v6`。",
+                    "examples": ["v6"],
+                    "enum": ["v6", "v6-wild", "v6-mini"],
+                    "default": "v6"
                   },
                   "prompt": {
                     "type": "string",
@@ -111,6 +106,11 @@
                       "A#m",
                       "Bm"
                     ]
+                  },
+                  "audio_format": {
+                    "type": "string",
+                    "description": "输出音频格式：`mp3` / `m4a` / `wav`。",
+                    "enum": ["mp3", "m4a", "wav"]
                   }
                 },
                 "required": [
@@ -123,7 +123,7 @@
                   "summary": "音效生成",
                   "value": {
                     "model": "suno-sounds",
-                    "version": "v5.5",
+                    "version": "v6",
                     "prompt": "森林中由远及近的雷声和雨声",
                     "type": "one-shot",
                     "bpm": 90,

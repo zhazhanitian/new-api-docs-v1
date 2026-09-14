@@ -3,7 +3,7 @@
   "info": {
     "title": "全量分轨",
     "version": "1.0.0",
-    "description": "从已有歌曲中提取全部可用分轨，适用于混音和后期制作。\n\n- 所有 Suno 能力均通过 MAPI 公共提交接口调用；模型由请求体中的 `model` 字段区分。\n- 提交成功后立即返回 MAPI 公开任务 ID。请通过 `GET /v1/music/generations/{task_id}` 轮询任务状态。\n- 本模型无版本维度，不要传 `version`；即使传入也会被 MAPI 丢弃，不影响计费。\n- 使用产出源音轨的 `task_id` 和 `audio_index` 引用歌曲。\n- 任务完成后，结果中包含分离出的各个音轨 URL。\n- 建议每 3–5 秒查询一次公共任务接口，直到任务成功或失败。"
+    "description": "多轨全分离。无版本维度。不要发送 `stem_type`、`version` 或 Max 字段。"
   },
   "tags": [
     {
@@ -26,7 +26,7 @@
           "音频（Audio）/Suno"
         ],
         "summary": "全量分轨",
-        "description": "从已有歌曲中提取全部可用分轨，适用于混音和后期制作。\n\n- 所有 Suno 能力均通过 MAPI 公共提交接口调用；模型由请求体中的 `model` 字段区分。\n- 提交成功后立即返回 MAPI 公开任务 ID。请通过 `GET /v1/music/generations/{task_id}` 轮询任务状态。\n- 本模型无版本维度，不要传 `version`；即使传入也会被 MAPI 丢弃，不影响计费。\n- 使用产出源音轨的 `task_id` 和 `audio_index` 引用歌曲。\n- 任务完成后，结果中包含分离出的各个音轨 URL。\n- 建议每 3–5 秒查询一次公共任务接口，直到任务成功或失败。",
+        "description": "多轨全分离。\n\n- 源：`task_id` 必填 + `audio_index`（默认 1）。无版本维度。\n- 不要发送 `stem_type`、`version` 或 Max 字段。\n- `audio_format` 可选 `mp3` / `m4a` / `wav`。完成后结果含各分轨 URL。",
         "operationId": "suno-stems-all",
         "security": [
           {
@@ -63,6 +63,11 @@
                     ],
                     "default": 1,
                     "minimum": 1
+                  },
+                  "audio_format": {
+                    "type": "string",
+                    "enum": ["mp3", "m4a", "wav"],
+                    "description": "输出音频格式。本接口不发送 `stem_type`、`version` 或 Max 字段。"
                   }
                 },
                 "required": [

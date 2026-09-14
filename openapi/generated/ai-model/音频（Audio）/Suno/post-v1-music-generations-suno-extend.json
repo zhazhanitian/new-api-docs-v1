@@ -3,12 +3,10 @@
   "info": {
     "title": "续写延长",
     "version": "1.0.0",
-    "description": "从指定时间点继续生成已有歌曲，适用于续写、扩展段落和补全结尾。\n\n- 所有 Suno 能力均通过 MAPI 公共提交接口调用；模型由请求体中的 `model` 字段区分。\n- 提交成功后立即返回 MAPI 公开任务 ID。请通过 `GET /v1/music/generations/{task_id}` 轮询任务状态。\n- `continue_at` 必填，表示从源音轨的第几秒开始续写。\n- `version` 支持全部七个 Suno 版本，省略时上游默认使用 `v5.5`。\n- `custom` 不强制且不会自动推断：`true` 时按 `prompt` 歌词续写；`false` 或省略时可用 `gpt_description` 引导方向。\n- 任务完成后，从结果 `music[]` 中读取延长后的 `audio_url`；通常需要 30–120 秒，建议每 3–5 秒查询。"
+    "description": "在已有歌曲的某个时间点之后续写延长。必填 `task_id` + `continue_at`（≥1 秒，支持小数）。`custom` 省略默认 `true`；仅显式 `custom=false` 时用 `gpt_description`。版本 `v6` / `v6-wild` / `v6-mini`。"
   },
   "tags": [
-    {
-      "name": "音频（Audio）/Suno"
-    }
+    { "name": "音频（Audio）/Suno" }
   ],
   "components": {
     "securitySchemes": {
@@ -22,17 +20,11 @@
   "paths": {
     "/v1/music/generations": {
       "post": {
-        "tags": [
-          "音频（Audio）/Suno"
-        ],
+        "tags": ["音频（Audio）/Suno"],
         "summary": "续写延长",
-        "description": "从指定时间点继续生成已有歌曲，适用于续写、扩展段落和补全结尾。\n\n- 所有 Suno 能力均通过 MAPI 公共提交接口调用；模型由请求体中的 `model` 字段区分。\n- 提交成功后立即返回 MAPI 公开任务 ID。请通过 `GET /v1/music/generations/{task_id}` 轮询任务状态。\n- `continue_at` 必填，表示从源音轨的第几秒开始续写。\n- `version` 支持全部七个 Suno 版本，省略时上游默认使用 `v5.5`。\n- `custom` 不强制且不会自动推断：`true` 时按 `prompt` 歌词续写；`false` 或省略时可用 `gpt_description` 引导方向。\n- 任务完成后，从结果 `music[]` 中读取延长后的 `audio_url`；通常需要 30–120 秒，建议每 3–5 秒查询。",
+        "description": "在已有歌曲的某个时间点之后续写延长。源音轨用 `task_id` + `audio_index`（1-based，默认 1）。\n\n- `continue_at` 必填 number，必须 ≥1 且小于源音轨实际时长，支持小数秒。\n- `custom` 可选，省略默认 `true`（按 `prompt` 歌词续写）；只有显式 `custom=false` 时才用 `gpt_description`。\n- `version`：`v6` / `v6-wild` / `v6-mini`，省略默认 `v6`；与 `custom_model_id` 互斥。\n- `max_mode` 启用时要求 `custom=true`，2 倍计费。`duration_s` 仅 `custom=true`。新请求用 `weirdness`。\n- 完成后在 `result.music[]` 取延长后的 `audio_url`。",
         "operationId": "suno-extend",
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
+        "security": [{ "BearerAuth": [] }],
         "requestBody": {
           "required": true,
           "content": {
@@ -44,128 +36,76 @@
                     "type": "string",
                     "const": "suno-extend",
                     "description": "固定填写 `suno-extend`。",
-                    "examples": [
-                      "suno-extend"
-                    ]
-                  },
-                  "version": {
-                    "type": "string",
-                    "description": "生成版本，默认 `v5.5`。",
-                    "examples": [
-                      "v5"
-                    ],
-                    "enum": [
-                      "v3.5",
-                      "v4",
-                      "v4.5",
-                      "v4.5+",
-                      "v4.5-all",
-                      "v5",
-                      "v5.5"
-                    ],
-                    "default": "v5.5"
+                    "examples": ["suno-extend"]
                   },
                   "task_id": {
                     "type": "string",
-                    "description": "产出源音轨的任务 ID，必填。",
-                    "examples": [
-                      "task_source123"
-                    ]
+                    "description": "产出源音轨那次任务的 MAPI 公开 `task_id`，必填。"
                   },
                   "audio_index": {
                     "type": "integer",
-                    "description": "源任务音轨序号，1-based，默认 `1`。",
-                    "examples": [
-                      1
-                    ],
                     "default": 1,
-                    "minimum": 1
+                    "description": "源任务 `result.music[]` 中的第几首（1-based，默认 1）。"
                   },
                   "continue_at": {
-                    "type": "integer",
-                    "description": "从源音轨的第几秒开始续写，必填。",
-                    "minimum": 0
+                    "type": "number",
+                    "description": "从第几秒开始续写，必须 ≥1 且小于源音轨实际时长。支持小数秒。"
+                  },
+                  "version": {
+                    "type": "string",
+                    "enum": ["v6", "v6-wild", "v6-mini"],
+                    "default": "v6",
+                    "description": "公共版本，省略默认 `v6`。使用 `custom_model_id` 时省略。"
+                  },
+                  "custom_model_id": {
+                    "type": "string",
+                    "description": "自定义模型 UUID。与 `version`、`persona_id` 互斥。"
                   },
                   "custom": {
                     "type": "boolean",
-                    "description": "`true` 按歌词续写；`false` 为灵感续写；省略时不做模式推断。"
+                    "default": true,
+                    "description": "`true` 按 `prompt` 歌词续写；`false` 为灵感续写。省略默认 `true`。"
                   },
                   "prompt": {
                     "type": "string",
-                    "description": "续写歌词，仅 `custom=true` 时生效。"
+                    "description": "续写歌词，`custom=true` 时生效。"
                   },
                   "gpt_description": {
                     "type": "string",
-                    "description": "灵感提示词，在 `custom=false` 或省略时生效。"
+                    "description": "灵感提示词，仅显式 `custom=false` 时生效。"
                   },
-                  "title": {
-                    "type": "string",
-                    "description": "标题，仅 `custom=true` 时生效。"
-                  },
-                  "tags": {
-                    "type": "string",
-                    "description": "风格标签，仅 `custom=true` 时生效。"
-                  },
-                  "negative_tags": {
-                    "type": "string",
-                    "description": "排除的风格标签，仅 `custom=true` 时生效。"
-                  },
+                  "title": { "type": "string", "description": "标题。仅 `custom=true` 时生效。" },
+                  "tags": { "type": "string", "description": "风格标签。仅 `custom=true` 时生效。" },
+                  "negative_tags": { "type": "string", "description": "排除的风格标签。仅 `custom=true` 时生效。" },
                   "vocal_gender": {
                     "type": "string",
-                    "description": "人声性别，两种模式均生效。",
-                    "examples": [
-                      "Female"
-                    ],
-                    "enum": [
-                      "Male",
-                      "Female"
-                    ]
+                    "enum": ["Male", "Female"],
+                    "description": "人声性别。两种模式均生效。"
                   },
-                  "style_weight": {
-                    "type": "number",
-                    "minimum": 0,
-                    "maximum": 1,
-                    "description": "风格权重 0–1，仅自定义模式生效。"
-                  },
-                  "weirdness_constraint": {
-                    "type": "number",
-                    "minimum": 0,
-                    "maximum": 1,
-                    "description": "创意度权重 0–1，仅自定义模式生效。"
-                  },
-                  "audio_weight": {
-                    "type": "number",
-                    "minimum": 0,
-                    "maximum": 1,
-                    "description": "音频权重 0–1，仅自定义模式生效。"
-                  },
-                  "auto_lyrics": {
-                    "type": "boolean",
-                    "description": "是否对输入歌词二次创作，仅 `custom=true` 时生效。"
-                  },
-                  "persona_id": {
-                    "type": "string",
-                    "description": "Persona 风格 ID，仅 `custom=true` 时生效。"
-                  }
+                  "style_weight": { "type": "number", "minimum": 0, "maximum": 1, "description": "风格权重 0.00–1.00。仅 `custom=true` 时生效。" },
+                  "weirdness": { "type": "number", "minimum": 0, "maximum": 1, "description": "创意度。新请求用本字段；兼容 `weirdness_constraint`。" },
+                  "weirdness_constraint": { "type": "number", "minimum": 0, "maximum": 1, "description": "`weirdness` 的兼容旧名。" },
+                  "audio_weight": { "type": "number", "minimum": 0, "maximum": 1, "description": "音频权重。仅 `custom=true` 时生效。" },
+                  "auto_lyrics": { "type": "boolean", "description": "对输入歌词二次创作。仅 `custom=true` 时生效。" },
+                  "persona_id": { "type": "string", "description": "Persona ID。仅 `custom=true`，与 `custom_model_id` 互斥。" },
+                  "duration_s": { "type": "number", "minimum": 10, "maximum": 360, "description": "目标时长 10–360 秒，仅 `custom=true`。" },
+                  "variety": { "type": "string", "enum": ["off", "normal", "high", "extra", "max"], "description": "风格变化程度，可省略。" },
+                  "max_mode": { "type": "boolean", "default": false, "description": "Max 模式。启用要求 `custom=true`，按 2 倍计费。" },
+                  "audio_format": { "type": "string", "enum": ["mp3", "m4a", "wav"], "description": "输出音频格式。" }
                 },
-                "required": [
-                  "model",
-                  "task_id",
-                  "continue_at"
-                ]
+                "required": ["model", "task_id", "continue_at"]
               },
               "examples": {
                 "suno-extend": {
                   "summary": "续写延长",
                   "value": {
                     "model": "suno-extend",
-                    "version": "v5",
-                    "task_id": "task_source123",
+                    "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw",
                     "audio_index": 1,
-                    "continue_at": 90,
+                    "continue_at": 120,
+                    "version": "v6",
                     "custom": true,
-                    "prompt": "[Chorus]\nWe will find our way home",
-                    "tags": "uplifting pop rock"
+                    "prompt": "[Outro]\n我们一起走向远方"
                   }
                 }
               }
@@ -180,94 +120,44 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "code": {
-                      "type": "integer",
-                      "examples": [
-                        200
-                      ]
-                    },
-                    "message": {
-                      "type": "string",
-                      "examples": [
-                        "success"
-                      ]
-                    },
+                    "code": { "type": "integer", "examples": [200] },
+                    "message": { "type": "string", "examples": ["success"] },
                     "data": {
                       "type": "array",
                       "items": {
                         "type": "object",
                         "properties": {
-                          "status": {
-                            "type": "string",
-                            "enum": [
-                              "submitted"
-                            ]
-                          },
-                          "task_id": {
-                            "type": "string",
-                            "description": "MAPI 公开任务 ID，用于公共查询接口。",
-                            "examples": [
-                              "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
-                            ]
-                          }
+                          "status": { "type": "string", "enum": ["submitted"] },
+                          "task_id": { "type": "string", "description": "MAPI 公开任务 ID。" }
                         },
-                        "required": [
-                          "status",
-                          "task_id"
-                        ]
+                        "required": ["status", "task_id"]
                       }
                     }
                   },
-                  "required": [
-                    "code",
-                    "data"
-                  ]
+                  "required": ["code", "data"]
                 },
                 "example": {
                   "code": 200,
                   "message": "success",
-                  "data": [
-                    {
-                      "status": "submitted",
-                      "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
-                    }
-                  ]
+                  "data": [{ "status": "submitted", "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw" }]
                 }
               }
             }
           },
           "400": {
-            "description": "请求参数错误、模型版本不支持或源任务无效",
+            "description": "请求参数错误",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "code": {
-                      "type": "string",
-                      "description": "错误代码",
-                      "examples": [
-                        "invalid_request"
-                      ]
-                    },
-                    "message": {
-                      "type": "string",
-                      "description": "错误说明"
-                    },
-                    "data": {
-                      "description": "错误附加数据，可为空"
-                    }
+                    "code": { "type": "string", "examples": ["invalid_request"] },
+                    "message": { "type": "string" },
+                    "data": { "description": "错误附加数据，可为空" }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 },
-                "example": {
-                  "code": "invalid_request",
-                  "message": "task_id is required",
-                  "data": null
-                }
+                "example": { "code": "invalid_request", "message": "continue_at is required", "data": null }
               }
             }
           }

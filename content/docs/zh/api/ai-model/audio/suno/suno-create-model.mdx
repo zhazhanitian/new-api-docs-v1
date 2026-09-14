@@ -1,0 +1,16 @@
+---
+title: 创建自定义模型
+full: true
+---
+
+- 使用 6–24 条参考音频创建可用于 Suno V6 生成的自定义模型。
+
+- 本模型无版本维度，不要传 `version` 或 `task_id`。
+- 必填：`name`（去空白后不能为空）+ `audio_urls`（6–24 条公网 HTTP(S) 音频直链，建议 MP3 / WAV / M4A）。不要传本地路径或 `blob:` URL。
+- 完成后读取 `result.model_id`，后续在支持自定义模型的操作中作为 `custom_model_id`，并省略 `version` 与 `persona_id`。Persona ID 不能当 `custom_model_id` 用。
+- 训练可能需要数分钟，最长约 20 分钟。创建模型与后续每次生成分别计费。
+
+- **提交接口**：统一通过 `POST /v1/music/generations` 提交，使用 `model: "suno-create-model"` 选择此能力。
+- **任务查询**：提交返回 `task_id`，通过 `GET /v1/music/generations/{task_id}` 获取任务状态和结果。
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-create-model.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

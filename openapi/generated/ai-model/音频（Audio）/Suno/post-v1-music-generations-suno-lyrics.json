@@ -3,7 +3,7 @@
   "info": {
     "title": "生成歌词",
     "version": "1.0.0",
-    "description": "根据主题或创作要求生成歌词，适用于歌曲创作前的歌词草拟。\n\n- 所有 Suno 能力均通过 MAPI 公共提交接口调用；模型由请求体中的 `model` 字段区分。\n- 提交成功后立即返回 MAPI 公开任务 ID。请通过 `GET /v1/music/generations/{task_id}` 轮询任务状态。\n- 本模型无版本维度，不要传 `version`；即使传入也会被 MAPI 丢弃，不影响计费。\n- 任务完成后，结果数据中包含生成的歌词文本。\n- 建议每 3–5 秒查询一次公共任务接口；生成中状态为 `pending`，`progress` 值排队约 10、就绪约 50、完成为 100。\n- 失败时 `data.error.message` 为原因，平台自动退回预扣额度。"
+    "description": "根据主题生成歌词文本。本端点无版本维度，不要传 `version`。`prompt` 必填。完成后优先读 `result.lyrics[]` 的 `text` / `title` / `tags`。"
   },
   "tags": [
     {
@@ -26,7 +26,7 @@
           "音频（Audio）/Suno"
         ],
         "summary": "生成歌词",
-        "description": "根据主题或创作要求生成歌词，适用于歌曲创作前的歌词草拟。\n\n- 所有 Suno 能力均通过 MAPI 公共提交接口调用；模型由请求体中的 `model` 字段区分。\n- 提交成功后立即返回 MAPI 公开任务 ID。请通过 `GET /v1/music/generations/{task_id}` 轮询任务状态。\n- 本模型无版本维度，不要传 `version`；即使传入也会被 MAPI 丢弃，不影响计费。\n- 任务完成后，结果数据中包含生成的歌词文本。\n- 建议每 3–5 秒查询一次公共任务接口；生成中状态为 `pending`，`progress` 值排队约 10、就绪约 50、完成为 100。\n- 失败时 `data.error.message` 为原因，平台自动退回预扣额度。",
+        "description": "根据主题生成歌词文本。\n\n- 提交成功后返回 MAPI 公开任务 ID，通过 `GET /v1/music/generations/{task_id}` 轮询。\n- 本模型无版本维度，不要传 `version`；传入会被丢弃，不影响计费。\n- `prompt` 必填，去掉首尾空白后不能为空。\n- `lyrics_model` 可选 `classic` / `remi`，不传使用服务默认。\n- 完成后优先读取 `result.lyrics[]` 的 `text`、`title`、`tags`；同时兼容 `result.text`、字符串 `result.lyrics` 以及历史数组结构。\n- 进度 0–100，不保证固定节点。失败时平台自动退回预扣额度。",
         "operationId": "suno-lyrics",
         "security": [
           {
@@ -50,7 +50,7 @@
                   },
                   "prompt": {
                     "type": "string",
-                    "description": "歌词主题、内容或创作要求。"
+                    "description": "想生成什么歌词的描述，去掉首尾空白后不能为空。"
                   },
                   "lyrics_model": {
                     "type": "string",
@@ -58,11 +58,12 @@
                       "classic",
                       "remi"
                     ],
-                    "description": "歌词模型，可选 `classic` 或 `remi`。该字段会被透传；省略时使用上游默认模型。"
+                    "description": "歌词模型：`classic` / `remi`。不传时使用服务默认设置。"
                   }
                 },
                 "required": [
-                  "model"
+                  "model",
+                  "prompt"
                 ]
               },
               "examples": {
@@ -171,7 +172,7 @@
                 },
                 "example": {
                   "code": "invalid_request",
-                  "message": "task_id is required",
+                  "message": "prompt is required",
                   "data": null
                 }
               }

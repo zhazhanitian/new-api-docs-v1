@@ -1,0 +1,16 @@
+---
+title: 下载音频文件
+full: true
+---
+
+- 将已有歌曲下载为 MP3、M4A 或 WAV。替代已下架的 `suno-wav`。
+
+- 本模型无版本维度，不要传 `version`。
+- 用源任务 `task_id` + `audio_index`（默认 1）指定要下载的歌曲。源须已完成且含可下载音轨；歌词、BPM 等纯文本任务无法下载。
+- `formats`（数组）与 `format`（单数）二选一；两者都空则 400。支持 `mp3` / `m4a` / `wav`，可一次请求多种格式。
+- 提交返回的是**下载任务** `task_id`，与源歌曲 `task_id` 不同。完成后读取 `result.files[]`（`format` + `url`）。`result.wavUrl` 仅兼容旧接口，新代码不要用。
+
+- **提交接口**：统一通过 `POST /v1/music/generations` 提交，使用 `model: "suno-download"` 选择此能力。
+- **任务查询**：提交返回 `task_id`，通过 `GET /v1/music/generations/{task_id}` 获取任务状态和结果。
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-download.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

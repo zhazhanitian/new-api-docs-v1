@@ -1,0 +1,8 @@
+---
+title: カスタムモデル作成
+full: true
+---
+
+`POST /v1/music/generations` に `model: "suno-create-model"` を指定して送信します。`audio_urls` は 6–24 件の公開 URL が必要です。完了後の `result.model_id` を `custom_model_id` として使います。
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-create-model.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

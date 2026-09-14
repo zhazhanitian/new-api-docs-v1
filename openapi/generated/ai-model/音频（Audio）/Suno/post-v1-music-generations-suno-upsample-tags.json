@@ -3,7 +3,7 @@
   "info": {
     "title": "标签增强",
     "version": "1.0.0",
-    "description": "扩展和优化音乐风格标签，适用于生成前完善风格描述。\n\n- 所有 Suno 能力均通过 MAPI 公共提交接口调用；模型由请求体中的 `model` 字段区分。\n- 提交成功后立即返回 MAPI 公开任务 ID。请通过 `GET /v1/music/generations/{task_id}` 轮询任务状态。\n- 本模型无版本维度，不要传 `version`；即使传入也会被 MAPI 丢弃，不影响计费。\n- **同步端点**：上游提交后立即出结果、无需轮询等待；MAPI 仍统一返回任务 ID，可通过公共任务接口立即查询完成结果。\n- 结果在任务结果字段 `result.upsampled_tags` 中返回优化后的标签。\n- 失败时 `data.error.message` 为原因，平台自动退回预扣额度。"
+    "description": "优化 / 扩写风格标签。本端点无版本维度。必须通过任务查询读取 `result.upsampled_tags`，无论任务多快完成都不要把提交响应当最终结果。"
   },
   "tags": [
     {
@@ -26,7 +26,7 @@
           "音频（Audio）/Suno"
         ],
         "summary": "标签增强",
-        "description": "扩展和优化音乐风格标签，适用于生成前完善风格描述。\n\n- 所有 Suno 能力均通过 MAPI 公共提交接口调用；模型由请求体中的 `model` 字段区分。\n- 提交成功后立即返回 MAPI 公开任务 ID。请通过 `GET /v1/music/generations/{task_id}` 轮询任务状态。\n- 本模型无版本维度，不要传 `version`；即使传入也会被 MAPI 丢弃，不影响计费。\n- **同步端点**：上游提交后立即出结果、无需轮询等待；MAPI 仍统一返回任务 ID，可通过公共任务接口立即查询完成结果。\n- 结果在任务结果字段 `result.upsampled_tags` 中返回优化后的标签。\n- 失败时 `data.error.message` 为原因，平台自动退回预扣额度。",
+        "description": "优化 / 扩写风格标签，提升 prompt 质量。\n\n- 提交成功后返回 MAPI 公开任务 ID，必须通过 `GET /v1/music/generations/{task_id}` 取结果。\n- 本模型无版本维度，不要传 `version`。\n- `tags` 必填，缺失时提交期直接 400（不扣费）。\n- 无论任务多快完成，都需要通过任务查询接口获取结果；完成后读 `result.upsampled_tags`。",
         "operationId": "suno-upsample-tags",
         "security": [
           {

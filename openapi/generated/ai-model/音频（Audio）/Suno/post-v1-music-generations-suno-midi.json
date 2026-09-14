@@ -3,13 +3,9 @@
   "info": {
     "title": "生成 MIDI",
     "version": "1.0.0",
-    "description": "从已有音轨生成 MIDI 数据，适用于编曲分析和 DAW 二次制作。\n\n- 所有 Suno 能力均通过 MAPI 公共提交接口调用；模型由请求体中的 `model` 字段区分。\n- 提交成功后立即返回 MAPI 公开任务 ID。请通过 `GET /v1/music/generations/{task_id}` 轮询任务状态。\n- 本模型无版本维度，不要传 `version`；即使传入也会被 MAPI 丢弃，不影响计费。\n- 使用产出源音轨的 `task_id` 和 `audio_index` 引用歌曲。\n- 任务完成后，结果中包含生成的 MIDI 产物 URL。\n- 通常需要 30–120 秒，建议每 3–5 秒查询一次公共任务接口。"
+    "description": "从歌曲生成 MIDI。无版本维度。完成后结果通常含 `result.state` 与 `result.instruments[]`，当前不保证直接返回 `.mid` 文件 URL。"
   },
-  "tags": [
-    {
-      "name": "音频（Audio）/Suno"
-    }
-  ],
+  "tags": [{ "name": "音频（Audio）/Suno" }],
   "components": {
     "securitySchemes": {
       "BearerAuth": {
@@ -22,17 +18,11 @@
   "paths": {
     "/v1/music/generations": {
       "post": {
-        "tags": [
-          "音频（Audio）/Suno"
-        ],
+        "tags": ["音频（Audio）/Suno"],
         "summary": "生成 MIDI",
-        "description": "从已有音轨生成 MIDI 数据，适用于编曲分析和 DAW 二次制作。\n\n- 所有 Suno 能力均通过 MAPI 公共提交接口调用；模型由请求体中的 `model` 字段区分。\n- 提交成功后立即返回 MAPI 公开任务 ID。请通过 `GET /v1/music/generations/{task_id}` 轮询任务状态。\n- 本模型无版本维度，不要传 `version`；即使传入也会被 MAPI 丢弃，不影响计费。\n- 使用产出源音轨的 `task_id` 和 `audio_index` 引用歌曲。\n- 任务完成后，结果中包含生成的 MIDI 产物 URL。\n- 通常需要 30–120 秒，建议每 3–5 秒查询一次公共任务接口。",
+        "description": "从歌曲生成 MIDI。\n\n- 用 `task_id` + `audio_index`（默认 1）引用源音轨。\n- **无版本维度**：不要传 `version`。\n- 完成后结果通常包含 `result.state` 和 `result.instruments[]`，每个乐器的 `notes[]` 提供音符数据。当前不保证直接返回 `.mid` 文件 URL。\n- 通过 `GET /v1/music/generations/{task_id}` 轮询。",
         "operationId": "suno-midi",
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
+        "security": [{ "BearerAuth": [] }],
         "requestBody": {
           "required": true,
           "content": {
@@ -40,35 +30,11 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "model": {
-                    "type": "string",
-                    "const": "suno-midi",
-                    "description": "固定填写 `suno-midi`。",
-                    "examples": [
-                      "suno-midi"
-                    ]
-                  },
-                  "task_id": {
-                    "type": "string",
-                    "description": "产出源音轨的任务 ID，必填。",
-                    "examples": [
-                      "task_source123"
-                    ]
-                  },
-                  "audio_index": {
-                    "type": "integer",
-                    "description": "源任务结果 `music[]` 中的音轨序号，1-based，默认 `1`。",
-                    "examples": [
-                      1
-                    ],
-                    "default": 1,
-                    "minimum": 1
-                  }
+                  "model": { "type": "string", "const": "suno-midi", "description": "固定填写 `suno-midi`。", "examples": ["suno-midi"] },
+                  "task_id": { "type": "string", "description": "产出源音轨的任务 ID，必填。" },
+                  "audio_index": { "type": "integer", "default": 1, "minimum": 1 }
                 },
-                "required": [
-                  "model",
-                  "task_id"
-                ]
+                "required": ["model", "task_id"]
               },
               "examples": {
                 "suno-midi": {
@@ -91,94 +57,40 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "code": {
-                      "type": "integer",
-                      "examples": [
-                        200
-                      ]
-                    },
-                    "message": {
-                      "type": "string",
-                      "examples": [
-                        "success"
-                      ]
-                    },
+                    "code": { "type": "integer", "examples": [200] },
+                    "message": { "type": "string", "examples": ["success"] },
                     "data": {
                       "type": "array",
                       "items": {
                         "type": "object",
                         "properties": {
-                          "status": {
-                            "type": "string",
-                            "enum": [
-                              "submitted"
-                            ]
-                          },
-                          "task_id": {
-                            "type": "string",
-                            "description": "MAPI 公开任务 ID，用于公共查询接口。",
-                            "examples": [
-                              "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
-                            ]
-                          }
+                          "status": { "type": "string", "enum": ["submitted"] },
+                          "task_id": { "type": "string" }
                         },
-                        "required": [
-                          "status",
-                          "task_id"
-                        ]
+                        "required": ["status", "task_id"]
                       }
                     }
                   },
-                  "required": [
-                    "code",
-                    "data"
-                  ]
+                  "required": ["code", "data"]
                 },
-                "example": {
-                  "code": 200,
-                  "message": "success",
-                  "data": [
-                    {
-                      "status": "submitted",
-                      "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
-                    }
-                  ]
-                }
+                "example": { "code": 200, "message": "success", "data": [{ "status": "submitted", "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw" }] }
               }
             }
           },
           "400": {
-            "description": "请求参数错误、模型版本不支持或源任务无效",
+            "description": "请求参数错误或源任务无效",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "code": {
-                      "type": "string",
-                      "description": "错误代码",
-                      "examples": [
-                        "invalid_request"
-                      ]
-                    },
-                    "message": {
-                      "type": "string",
-                      "description": "错误说明"
-                    },
-                    "data": {
-                      "description": "错误附加数据，可为空"
-                    }
+                    "code": { "type": "string", "examples": ["invalid_request"] },
+                    "message": { "type": "string" },
+                    "data": { "description": "错误附加数据，可为空" }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 },
-                "example": {
-                  "code": "invalid_request",
-                  "message": "task_id is required",
-                  "data": null
-                }
+                "example": { "code": "invalid_request", "message": "task_id is required", "data": null }
               }
             }
           }

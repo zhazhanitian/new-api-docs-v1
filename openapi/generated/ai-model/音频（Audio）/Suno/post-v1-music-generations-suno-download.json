@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "删除片段",
+    "title": "下载音频文件",
     "version": "1.0.0",
-    "description": "删除歌曲的某个时间区间。无版本维度。`start_s`、`end_s` 必填，支持小数秒。"
+    "description": "将已有歌曲下载为 MP3、M4A 或 WAV。替代已下架的 `suno-wav`。`formats` 与 `format` 二选一。完成后读取 `result.files[]`。"
   },
   "tags": [{ "name": "音频（Audio）/Suno" }],
   "components": {
@@ -19,9 +19,9 @@
     "/v1/music/generations": {
       "post": {
         "tags": ["音频（Audio）/Suno"],
-        "summary": "删除片段",
-        "description": "删除歌曲的某个时间区间。\n\n- 用 `task_id` + `audio_index`（默认 1）引用源音轨。\n- **无版本维度**：不要传 `version`。\n- `start_s`、`end_s` 必填。起点须 ≥0；终点须大于起点且不能超过已知源时长；支持小数秒。\n- 完成后从 `result.music[]` 取处理后的 `audio_url`。通过 `GET /v1/music/generations/{task_id}` 轮询。",
-        "operationId": "suno-remove-section",
+        "summary": "下载音频文件",
+        "description": "将 Suno 歌曲下载为 MP3、M4A 或 WAV。\n\n- 用源任务 `task_id` + `audio_index`（默认 1）指定要下载的歌曲。源须已完成且含可下载音轨；歌词、BPM 等纯文本任务无法下载。\n- **无版本维度**：不要传 `version`。\n- `formats`（数组）与 `format`（单数）二选一；两者都空则 400。支持 `mp3` / `m4a` / `wav`，可一次请求多种格式。\n- 旧 `suno-wav` 已下架，请改用本模型。\n- 提交返回的是**下载任务** `task_id`，与源歌曲 `task_id` 不同。完成后读取 `result.files[]`（`format` + `url`）。`result.wavUrl` 仅兼容旧接口，新代码不要用。\n- 通过 `GET /v1/music/generations/{task_id}` 轮询。",
+        "operationId": "suno-download",
         "security": [{ "BearerAuth": [] }],
         "requestBody": {
           "required": true,
@@ -30,23 +30,27 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "model": { "type": "string", "const": "suno-remove-section", "description": "固定填写 `suno-remove-section`。", "examples": ["suno-remove-section"] },
-                  "task_id": { "type": "string", "description": "产出源音轨的任务 ID，必填。" },
-                  "audio_index": { "type": "integer", "default": 1, "minimum": 1 },
-                  "start_s": { "type": "number", "minimum": 0, "description": "删除起点（秒），必填，须 ≥0，支持小数秒。" },
-                  "end_s": { "type": "number", "description": "删除终点（秒），必填，须大于 `start_s` 且不超过源时长。" }
+                  "model": { "type": "string", "const": "suno-download", "description": "固定填写 `suno-download`。", "examples": ["suno-download"] },
+                  "task_id": { "type": "string", "description": "源歌曲任务 ID，必填。须已完成且含可下载音轨。" },
+                  "audio_index": { "type": "integer", "default": 1, "minimum": 1, "description": "源任务 `music[]` 第几首，1-based，默认 1。" },
+                  "formats": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": { "type": "string", "enum": ["mp3", "m4a", "wav"] },
+                    "description": "要下载的格式数组，至少一项。可与 `format` 二选一。"
+                  },
+                  "format": { "type": "string", "enum": ["mp3", "m4a", "wav"], "description": "只下载一种格式时可用本字段代替 `formats`。" }
                 },
-                "required": ["model", "task_id", "start_s", "end_s"]
+                "required": ["model", "task_id"]
               },
               "examples": {
-                "suno-remove-section": {
-                  "summary": "删除片段",
+                "suno-download": {
+                  "summary": "下载多种格式",
                   "value": {
-                    "model": "suno-remove-section",
+                    "model": "suno-download",
                     "task_id": "task_source123",
                     "audio_index": 1,
-                    "start_s": 12.5,
-                    "end_s": 18
+                    "formats": ["mp3", "wav"]
                   }
                 }
               }
@@ -69,7 +73,7 @@
                         "type": "object",
                         "properties": {
                           "status": { "type": "string", "enum": ["submitted"] },
-                          "task_id": { "type": "string" }
+                          "task_id": { "type": "string", "description": "下载任务 ID，用于查询；与源歌曲 task_id 不同。" }
                         },
                         "required": ["status", "task_id"]
                       }
@@ -82,7 +86,7 @@
             }
           },
           "400": {
-            "description": "请求参数错误或源任务无效",
+            "description": "请求参数错误、未指定格式或源任务无法下载",
             "content": {
               "application/json": {
                 "schema": {
@@ -94,7 +98,7 @@
                   },
                   "required": ["code", "message"]
                 },
-                "example": { "code": "invalid_request", "message": "task_id is required", "data": null }
+                "example": { "code": "invalid_request", "message": "suno-download requires at least one format (use 'formats' or 'format')", "data": null }
               }
             }
           }

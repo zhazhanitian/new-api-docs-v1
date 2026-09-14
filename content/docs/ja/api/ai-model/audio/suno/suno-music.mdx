@@ -3,13 +3,18 @@ title: 音楽生成
 full: true
 ---
 
-テキストプロンプトまたはカスタム歌詞から完全な楽曲を生成します。
+インスピレーション説明またはカスタム歌詞から完全な楽曲を生成します。
 
-`custom` フラグにより有効なフィールドが決まります。`custom=true`（カスタムモード）時: `prompt`（歌詞）、`title`、`style`、`negative_tags`、`auto_lyrics`、`persona_id`、`style_weight`、`weirdness_constraint`、`audio_weight` が有効。`custom=false`（インスピレーションモード）時: `prompt` はインスピレーションの説明として使用、`title`/`style` 等は無視。`vocal_gender` は両モードで有効。
+`custom` が決めるのは**テキストフィールド**だけです。モード不一致のテキストは無視されますが、重みフィールドは検証されます。
 
-> **注意**: `suno-music` はスタイルタグに他モデルの `tags` ではなく `style` を使用します。
+- `custom=false`（デフォルト、インスピレーション）: `prompt` は説明文。`title`、`style`、`negative_tags`、`auto_lyrics`、`persona_id` は無効。
+- `custom=true`（カスタム）: `prompt` は歌詞。上記テキストフィールドが有効。
+- `style_weight`、`weirdness_constraint`、`audio_weight`、`vocal_gender` は**両モードで検証・適用**。範囲外は 400 で、黙って捨てられません。
 
-- `version` は**必須**（未指定は 400）。インスピレーションモードでは `prompt` 必須。カスタムモードでは `instrumental=false` の場合 `prompt` 必須。
-- 生成には通常 30〜120 秒かかります。3〜5 秒ごとにポーリングしてください。
+スタイルタグは他モデルの `tags` ではなく `style`。創意度は `weirdness` ではなく `weirdness_constraint`。
+
+- `version`（`v6` / `v6-wild` / `v6-mini`）と `custom_model_id` はどちらか一方必須、同時指定不可。
+- `custom=false` では `prompt` 必須（≤3000）。`custom=true` かつ非インストゥルメンタルでは歌詞 `prompt` 必須（≤5000）。
+- `max_mode=true` は `custom=true` が必要で、通常価格の **2 倍**。`variety: "max"` では Max 課金になりません。
 
 <APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-music.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

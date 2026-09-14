@@ -3,7 +3,7 @@
   "info": {
     "title": "分轨提取",
     "version": "1.0.0",
-    "description": "从已有歌曲中提取指定类型的分轨。\n\n- 所有 Suno 能力均通过 MAPI 公共提交接口调用；模型由请求体中的 `model` 字段区分。\n- 提交成功后立即返回 MAPI 公开任务 ID。请通过 `GET /v1/music/generations/{task_id}` 轮询任务状态。\n- 本模型无版本维度，不要传 `version`；即使传入也会被 MAPI 丢弃，不影响计费。\n- `stem_type` 省略时默认提取 `lead_vocal`（主人声）。\n- 官方支持 100 多种分轨类型，常用值包括 `lead_vocal`、`backing_vocals`、`drum_kit`、`bass`、`piano`、`electric_guitar`。\n- 任务完成后，结果中包含分离出的音轨 URL；建议每 3–5 秒查询一次公共任务接口。"
+    "description": "从歌曲分离出指定轨（如人声）。无版本维度。`stem_type` 默认 `lead_vocal`；`808` 必须作为字符串发送。"
   },
   "tags": [
     {
@@ -26,7 +26,7 @@
           "音频（Audio）/Suno"
         ],
         "summary": "分轨提取",
-        "description": "从已有歌曲中提取指定类型的分轨。\n\n- 所有 Suno 能力均通过 MAPI 公共提交接口调用；模型由请求体中的 `model` 字段区分。\n- 提交成功后立即返回 MAPI 公开任务 ID。请通过 `GET /v1/music/generations/{task_id}` 轮询任务状态。\n- 本模型无版本维度，不要传 `version`；即使传入也会被 MAPI 丢弃，不影响计费。\n- `stem_type` 省略时默认提取 `lead_vocal`（主人声）。\n- 官方支持 100 多种分轨类型，常用值包括 `lead_vocal`、`backing_vocals`、`drum_kit`、`bass`、`piano`、`electric_guitar`。\n- 任务完成后，结果中包含分离出的音轨 URL；建议每 3–5 秒查询一次公共任务接口。",
+        "description": "从歌曲分离出指定轨。\n\n- 源：`task_id` 必填 + `audio_index`（默认 1）。无版本维度，不要传 `version`。\n- `stem_type` 省略默认 `lead_vocal`。常用值：`lead_vocal`、`backing_vocals`、`drum_kit`、`bass`、`piano`、`electric_guitar`。`808` 必须作为字符串发送。\n- `audio_format` 可选 `mp3` / `m4a` / `wav`。",
         "operationId": "suno-stems",
         "security": [
           {
@@ -66,7 +66,7 @@
                   },
                   "stem_type": {
                     "type": "string",
-                    "description": "需要提取的分轨类型，默认 `lead_vocal`；支持 100 多种类型。",
+                    "description": "要提取的分轨类型，省略默认 `lead_vocal`。常用值包括 `lead_vocal`、`backing_vocals`、`drum_kit`、`bass`、`piano`、`electric_guitar`。`808` 必须作为字符串发送。",
                     "examples": [
                       "lead_vocal",
                       "backing_vocals",
@@ -76,6 +76,11 @@
                       "electric_guitar"
                     ],
                     "default": "lead_vocal"
+                  },
+                  "audio_format": {
+                    "type": "string",
+                    "enum": ["mp3", "m4a", "wav"],
+                    "description": "输出音频格式。"
                   }
                 },
                 "required": [

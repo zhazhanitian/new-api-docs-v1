@@ -3,17 +3,21 @@ title: 生成音乐
 full: true
 ---
 
-根据灵感描述或自定义歌词生成完整歌曲，适用于歌曲创作、纯音乐和指定风格音乐生成。
+根据灵感描述或自定义歌词生成完整歌曲。
 
-`custom` 决定字段是否生效：写了但模式不对的字段会被**静默忽略**（不报错）。`custom=true`（自定义）时 `prompt`（歌词）、`title`、`style`、`negative_tags`、`auto_lyrics`、`persona_id`、`style_weight`、`weirdness_constraint`、`audio_weight` 生效；`custom=false`（灵感）时 `prompt` 作灵感描述，`title`/`style` 及上述自定义字段被忽略。`vocal_gender` 两种模式都生效。
+`custom` 只决定**文本字段**是否生效，不是「写错模式就静默忽略、不报错」：
 
-> **注意**：`suno-music` 使用 `style` 表示风格标签，而非其他模型的 `tags`。
+- `custom=false`（默认，灵感）：`prompt` 作灵感描述；`title`、`style`、`negative_tags`、`auto_lyrics`、`persona_id` 不生效。
+- `custom=true`（自定义）：`prompt` 作歌词；上述文本字段生效。
+- `style_weight`、`weirdness_constraint`、`audio_weight`、`vocal_gender` **两种模式都会校验并生效**。越界直接 400，不会静默丢掉。
 
-- `version` 是平台在提交阶段**强制校验的必填字段**，不传直接返回 400。
-- `custom=false` 或省略时为灵感模式，`prompt` 必填（作为灵感描述）；`custom=true` 时为自定义模式，`instrumental=false` 时 `prompt` 必填（作为歌词），`instrumental=true` 时可省略。
-- 模式不匹配的字段会被上游静默忽略，不会报错。
-- 音乐生成通常需要 30–120 秒，建议每 3–5 秒查询一次公共任务接口。
-- **提交接口**：统一通过 `POST /v1/music/generations` 提交，使用 `model: "suno-music"` 选择此能力。
-- **任务查询**：提交返回 `task_id`，通过 `GET /v1/music/generations/{task_id}` 获取任务状态和结果。
+本模型用 `style` 表示风格标签，不是其他模型的 `tags`。创意度字段是 `weirdness_constraint`，不是 `weirdness`。
+
+- `version`（`v6` / `v6-wild` / `v6-mini`）与 `custom_model_id` **至少提供一个，不能同时发送**。只用自定义模型时不要传 `version`。`persona_id` 与 `custom_model_id` 互斥。
+- `custom=false` 时 `prompt` 必填（≤3000）；`custom=true` 且 `instrumental=false` 时 `prompt` 必填（歌词 ≤5000）；自定义纯音乐可省略歌词。
+- `max_mode=true` 要求 `custom=true`，按普通售价 **2 倍**计费。`variety: "max"` 不会触发 Max 计费。
+- `duration` 仅 `custom=true`，范围 10–360 秒。实际成品时长以任务结果为准。
+- **提交接口**：`POST /v1/music/generations`，`model: "suno-music"`。
+- **任务查询**：`GET /v1/music/generations/{task_id}`。完成后从 `result.music[]` 取 `audio_url`。
 
 <APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-music.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

@@ -3,13 +3,9 @@
   "info": {
     "title": "段落替换",
     "version": "1.0.0",
-    "description": "重新生成并替换已有音轨的指定时间段。\n\n- 所有 Suno 能力均通过 MAPI 公共提交接口调用；模型由请求体中的 `model` 字段区分。\n- 提交成功后立即返回 MAPI 公开任务 ID。请通过 `GET /v1/music/generations/{task_id}` 轮询任务状态。\n- `start_s` 和 `end_s` 均为必填，表示需要重新生成并替换的时间区间。\n- `version` 仅支持 `v4`、`v4.5+`、`v5`、`v5.5`，默认 `v5.5`。\n- `infill_lyrics` 是替换段歌词，`prompt` 是上下文歌词，两者含义不同。\n- 任务完成后，从结果 `music[]` 中读取替换后音频的 `audio_url`；通常需要 30–120 秒，建议每 3–5 秒查询。"
+    "description": "替换歌曲的某一段（infill）。版本 `v6` / `v6-wild` / `v6-mini`。`start_s`、`end_s` 必填。不要发送 `custom`、`instrumental`、`auto_lyrics` 或旧编辑会话字段。"
   },
-  "tags": [
-    {
-      "name": "音频（Audio）/Suno"
-    }
-  ],
+  "tags": [{ "name": "音频（Audio）/Suno" }],
   "components": {
     "securitySchemes": {
       "BearerAuth": {
@@ -22,17 +18,11 @@
   "paths": {
     "/v1/music/generations": {
       "post": {
-        "tags": [
-          "音频（Audio）/Suno"
-        ],
+        "tags": ["音频（Audio）/Suno"],
         "summary": "段落替换",
-        "description": "重新生成并替换已有音轨的指定时间段。\n\n- 所有 Suno 能力均通过 MAPI 公共提交接口调用；模型由请求体中的 `model` 字段区分。\n- 提交成功后立即返回 MAPI 公开任务 ID。请通过 `GET /v1/music/generations/{task_id}` 轮询任务状态。\n- `start_s` 和 `end_s` 均为必填，表示需要重新生成并替换的时间区间。\n- `version` 仅支持 `v4`、`v4.5+`、`v5`、`v5.5`，默认 `v5.5`。\n- `infill_lyrics` 是替换段歌词，`prompt` 是上下文歌词，两者含义不同。\n- 任务完成后，从结果 `music[]` 中读取替换后音频的 `audio_url`；通常需要 30–120 秒，建议每 3–5 秒查询。",
+        "description": "替换歌曲的某一段（infill）。\n\n- 用 `task_id` + `audio_index`（默认 1）引用源音轨。\n- `start_s`、`end_s` 必填，须满足 `0 ≤ start_s < end_s`；源时长已知时不能越界。\n- `version`：`v6` / `v6-wild` / `v6-mini`，默认 `v6`；与 `custom_model_id` 互斥。\n- `prompt` 是原歌词上下文，`infill_lyrics` 是替换片段的新歌词。\n- 不要发送 `custom`、`instrumental`、`auto_lyrics` 或旧编辑会话字段。\n- `max_mode=true` 按 2 倍计费。完成后从 `result.music[]` 取 `audio_url`。",
         "operationId": "suno-replace-section",
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
+        "security": [{ "BearerAuth": [] }],
         "requestBody": {
           "required": true,
           "content": {
@@ -40,93 +30,35 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "model": {
-                    "type": "string",
-                    "const": "suno-replace-section",
-                    "description": "固定填写 `suno-replace-section`。",
-                    "examples": [
-                      "suno-replace-section"
-                    ]
-                  },
-                  "version": {
-                    "type": "string",
-                    "description": "仅支持 `v4`、`v4.5+`、`v5`、`v5.5`，默认 `v5.5`。",
-                    "examples": [
-                      "v5"
-                    ],
-                    "enum": [
-                      "v4",
-                      "v4.5+",
-                      "v5",
-                      "v5.5"
-                    ],
-                    "default": "v5.5"
-                  },
-                  "task_id": {
-                    "type": "string",
-                    "description": "产出源音轨的任务 ID，必填。",
-                    "examples": [
-                      "task_source123"
-                    ]
-                  },
-                  "audio_index": {
-                    "type": "integer",
-                    "description": "源任务音轨序号，1-based，默认 `1`。",
-                    "examples": [
-                      1
-                    ],
-                    "default": 1,
-                    "minimum": 1
-                  },
-                  "start_s": {
-                    "type": "number",
-                    "description": "替换区间起点（秒），必填。",
-                    "minimum": 0
-                  },
-                  "end_s": {
-                    "type": "number",
-                    "description": "替换区间终点（秒），必填。",
-                    "minimum": 0
-                  },
-                  "infill_lyrics": {
-                    "type": "string",
-                    "description": "用于替换指定区间的新歌词。"
-                  },
-                  "prompt": {
-                    "type": "string",
-                    "description": "用于衔接替换段的上下文歌词。"
-                  },
-                  "title": {
-                    "type": "string",
-                    "description": "结果标题。"
-                  },
-                  "tags": {
-                    "type": "string",
-                    "description": "风格标签。"
-                  },
-                  "negative_tags": {
-                    "type": "string",
-                    "description": "需要排除的风格标签。"
-                  }
+                  "model": { "type": "string", "const": "suno-replace-section", "description": "固定填写 `suno-replace-section`。", "examples": ["suno-replace-section"] },
+                  "task_id": { "type": "string", "description": "产出源音轨的任务 ID，必填。" },
+                  "audio_index": { "type": "integer", "default": 1, "minimum": 1 },
+                  "start_s": { "type": "number", "minimum": 0, "description": "替换起点（秒），必填。" },
+                  "end_s": { "type": "number", "description": "替换终点（秒），必填。须满足 `0 ≤ start_s < end_s`。" },
+                  "infill_lyrics": { "type": "string", "description": "替换段歌词。" },
+                  "prompt": { "type": "string", "description": "上下文歌词。" },
+                  "version": { "type": "string", "enum": ["v6", "v6-wild", "v6-mini"], "default": "v6" },
+                  "custom_model_id": { "type": "string", "description": "自定义模型 UUID，与 `version` 互斥。" },
+                  "title": { "type": "string" },
+                  "tags": { "type": "string" },
+                  "negative_tags": { "type": "string" },
+                  "variety": { "type": "string", "enum": ["off", "normal", "high", "extra", "max"] },
+                  "max_mode": { "type": "boolean", "default": false, "description": "Max 模式，2 倍计费。" },
+                  "audio_format": { "type": "string", "enum": ["mp3", "m4a", "wav"] }
                 },
-                "required": [
-                  "model",
-                  "task_id",
-                  "start_s",
-                  "end_s"
-                ]
+                "required": ["model", "task_id", "start_s", "end_s"]
               },
               "examples": {
                 "suno-replace-section": {
                   "summary": "段落替换",
                   "value": {
                     "model": "suno-replace-section",
-                    "version": "v5",
                     "task_id": "task_source123",
                     "audio_index": 1,
-                    "start_s": 45,
-                    "end_s": 68,
-                    "infill_lyrics": "[Chorus]\nSing into the morning light",
+                    "start_s": 30,
+                    "end_s": 45,
+                    "version": "v6",
+                    "infill_lyrics": "[Chorus]\\nSing into the morning light",
                     "tags": "anthemic pop"
                   }
                 }
@@ -142,94 +74,40 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "code": {
-                      "type": "integer",
-                      "examples": [
-                        200
-                      ]
-                    },
-                    "message": {
-                      "type": "string",
-                      "examples": [
-                        "success"
-                      ]
-                    },
+                    "code": { "type": "integer", "examples": [200] },
+                    "message": { "type": "string", "examples": ["success"] },
                     "data": {
                       "type": "array",
                       "items": {
                         "type": "object",
                         "properties": {
-                          "status": {
-                            "type": "string",
-                            "enum": [
-                              "submitted"
-                            ]
-                          },
-                          "task_id": {
-                            "type": "string",
-                            "description": "MAPI 公开任务 ID，用于公共查询接口。",
-                            "examples": [
-                              "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
-                            ]
-                          }
+                          "status": { "type": "string", "enum": ["submitted"] },
+                          "task_id": { "type": "string" }
                         },
-                        "required": [
-                          "status",
-                          "task_id"
-                        ]
+                        "required": ["status", "task_id"]
                       }
                     }
                   },
-                  "required": [
-                    "code",
-                    "data"
-                  ]
+                  "required": ["code", "data"]
                 },
-                "example": {
-                  "code": 200,
-                  "message": "success",
-                  "data": [
-                    {
-                      "status": "submitted",
-                      "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
-                    }
-                  ]
-                }
+                "example": { "code": 200, "message": "success", "data": [{ "status": "submitted", "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw" }] }
               }
             }
           },
           "400": {
-            "description": "请求参数错误、模型版本不支持或源任务无效",
+            "description": "请求参数错误或源任务无效",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "code": {
-                      "type": "string",
-                      "description": "错误代码",
-                      "examples": [
-                        "invalid_request"
-                      ]
-                    },
-                    "message": {
-                      "type": "string",
-                      "description": "错误说明"
-                    },
-                    "data": {
-                      "description": "错误附加数据，可为空"
-                    }
+                    "code": { "type": "string", "examples": ["invalid_request"] },
+                    "message": { "type": "string" },
+                    "data": { "description": "错误附加数据，可为空" }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 },
-                "example": {
-                  "code": "invalid_request",
-                  "message": "task_id is required",
-                  "data": null
-                }
+                "example": { "code": "invalid_request", "message": "task_id is required", "data": null }
               }
             }
           }

@@ -3,7 +3,7 @@
   "info": {
     "title": "上传音频",
     "version": "1.0.0",
-    "description": "把一段公网音频导入，得到可供后续翻唱、续写等操作引用的音轨；任务完成后，本任务 `task_id` 即可作为源任务，并使用 `audio_index=1` 引用音轨。\n\n- 所有 Suno 能力均通过 MAPI 公共提交接口调用；模型由请求体中的 `model` 字段区分。\n- 提交成功后立即返回 MAPI 公开任务 ID。请通过 `GET /v1/music/generations/{task_id}` 轮询任务状态。\n- 本模型无版本维度，不要传 `version`；即使传入也会被 MAPI 丢弃，不影响计费。\n- 请提供公网可直接访问的音频直链（`audio_file_path`）；缺失时提交期直接返回 400（不扣费）。\n- **已知限制**：不要上传**纯器乐（无人声）**音频，此类音频可能解析失败。\n- 任务完成后，可使用本任务 `task_id` 和 `audio_index=1` 作为翻唱、续写等后续操作的源音轨。\n- 建议每 3–5 秒查询一次公共任务接口；生成中状态为 `pending`，`progress` 值排队约 10、就绪约 50、完成为 100。\n- 失败时 `data.error.message` 为原因，平台自动退回预扣额度。"
+    "description": "把公网音频导入为后续翻唱 / 续写等可引用的音轨。只收 JSON，不上传二进制。无版本维度，不要传 `version` 或 `audio_format`。完成后用本任务 `task_id` + `audio_index=1` 作源；结果可能只有 `audio_id`，不保证可播放 `audio_url`。"
   },
   "tags": [
     {
@@ -26,7 +26,7 @@
           "音频（Audio）/Suno"
         ],
         "summary": "上传音频",
-        "description": "把一段公网音频导入，得到可供后续翻唱、续写等操作引用的音轨；任务完成后，本任务 `task_id` 即可作为源任务，并使用 `audio_index=1` 引用音轨。\n\n- 所有 Suno 能力均通过 MAPI 公共提交接口调用；模型由请求体中的 `model` 字段区分。\n- 提交成功后立即返回 MAPI 公开任务 ID。请通过 `GET /v1/music/generations/{task_id}` 轮询任务状态。\n- 本模型无版本维度，不要传 `version`；即使传入也会被 MAPI 丢弃，不影响计费。\n- 请提供公网可直接访问的音频直链（`audio_file_path`）；缺失时提交期直接返回 400（不扣费）。\n- **已知限制**：不要上传**纯器乐（无人声）**音频，此类音频可能解析失败。\n- 任务完成后，可使用本任务 `task_id` 和 `audio_index=1` 作为翻唱、续写等后续操作的源音轨。\n- 建议每 3–5 秒查询一次公共任务接口；生成中状态为 `pending`，`progress` 值排队约 10、就绪约 50、完成为 100。\n- 失败时 `data.error.message` 为原因，平台自动退回预扣额度。",
+        "description": "把公网音频导入，得到可供后续翻唱、续写等引用的音轨。\n\n- 只接收 JSON，不上传二进制文件。请先把音频放到对象存储，再填入 `audio_file_path`（MAPI 会转成上游 `audioFilePath`）。\n- 必须是可公开读取的 HTTP(S) 直链；本机路径与 `blob:` URL 不可用。\n- 无版本维度，不要发送 `version`、`audio_format` 或未列出的参数。\n- 完成后使用本任务 `task_id` + `audio_index=1` 作为其它操作的源；上传结果可能只有 `audio_id`，不保证返回可播放的 `audio_url`。",
         "operationId": "suno-upload",
         "security": [
           {
@@ -50,7 +50,7 @@
                   },
                   "audio_file_path": {
                     "type": "string",
-                    "description": "公网可直接访问的音频直链，**必填**；缺失时提交期直接返回 400（不扣费）。MAPI 会将该字段转换为上游需要的音频文件路径字段。",
+                    "description": "已上传到对象存储、可公开读取的音频 HTTP(S) 直链，必填。本机路径与 `blob:` URL 不可用。MAPI 会转换为上游 `audioFilePath`。",
                     "examples": [
                       "https://example.com/source.mp3"
                     ],

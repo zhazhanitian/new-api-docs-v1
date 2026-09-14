@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "生成混搭",
+    "title": "上传音频并延伸",
     "version": "1.0.0",
-    "description": "把两首已有歌曲混搭再创作。`task_ids` 须恰好 2 个。版本 `v6` / `v6-wild` / `v6-mini`。不支持目标时长。"
+    "description": "直接用公网音频 URL 延伸歌曲，无需先 `suno-upload`。必填 `audio_url` + `continue_at`。固定自定义模式，不要发 `custom`、`instrumental`、`gpt_description`。"
   },
   "tags": [{ "name": "音频（Audio）/Suno" }],
   "components": {
@@ -19,9 +19,9 @@
     "/v1/music/generations": {
       "post": {
         "tags": ["音频（Audio）/Suno"],
-        "summary": "生成混搭",
-        "description": "把歌曲做混搭再创作。\n\n- `task_ids` 须**恰好 2 个**源任务 ID；可选 `audio_indexes` 与之平行（1-based，默认都取 1）。数量不对直接 400。\n- `version`：`v6` / `v6-wild` / `v6-mini`，默认 `v6`。`custom_model_id` 与 `version`、`persona_id` 互斥。\n- `custom=false` 时 `gpt_description` 必填。`custom=true && instrumental=false` 时 `prompt` 必填。已提交字段无论模式是否生效都须通过校验。\n- 不支持目标时长字段。`max_mode` 要求自定义模式，2 倍计费。新请求用 `weirdness`。",
-        "operationId": "suno-mashup",
+        "summary": "上传音频并延伸",
+        "description": "上传公网音频 URL，并从指定位置用 Suno V6 延伸歌曲。\n\n- 无需先调用 `suno-upload`。必填 `audio_url`（公网 HTTP(S) 直链，建议不超过 8 分钟）和 `continue_at`（≥1 秒且严格小于源时长）。\n- **固定自定义模式**：不要发送 `custom`、`instrumental` 或 `gpt_description`。\n- `version`：`v6` / `v6-wild` / `v6-mini`，默认 `v6`；与 `custom_model_id`、`persona_id` 互斥。\n- `duration_s` 目标时长 10–360 秒。`max_mode=true` 按 2 倍计费。新请求用 `weirdness`。\n- 通过 `GET /v1/music/generations/{task_id}` 轮询。",
+        "operationId": "suno-upload-extend",
         "security": [{ "BearerAuth": [] }],
         "requestBody": {
           "required": true,
@@ -30,51 +30,42 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "model": { "type": "string", "const": "suno-mashup", "description": "固定填写 `suno-mashup`。", "examples": ["suno-mashup"] },
-                  "task_ids": {
-                    "type": "array",
-                    "minItems": 2,
-                    "maxItems": 2,
-                    "items": { "type": "string" },
-                    "description": "恰好 2 个源任务 ID。"
-                  },
-                  "audio_indexes": {
-                    "type": "array",
-                    "items": { "type": "integer", "minimum": 1 },
-                    "description": "与 `task_ids` 平行，指定各任务取 `music[]` 第几首，默认都取 1。"
-                  },
-                  "instrumental": { "type": "boolean", "default": false },
+                  "model": { "type": "string", "const": "suno-upload-extend", "description": "固定填写 `suno-upload-extend`。", "examples": ["suno-upload-extend"] },
+                  "audio_url": { "type": "string", "format": "uri", "description": "公网音频直链，必填。不要传本地路径或 `blob:` URL。" },
+                  "continue_at": { "type": "number", "minimum": 1, "description": "延伸起点（秒），必填，须 ≥1 且小于源时长。" },
                   "version": { "type": "string", "enum": ["v6", "v6-wild", "v6-mini"], "default": "v6" },
                   "custom_model_id": { "type": "string", "description": "自定义模型 UUID，与 `version`、`persona_id` 互斥。" },
-                  "custom": { "type": "boolean" },
-                  "prompt": { "type": "string", "description": "`custom=true && instrumental=false` 时必填歌词。" },
-                  "gpt_description": { "type": "string", "description": "`custom=false` 时必填。" },
-                  "title": { "type": "string" },
+                  "prompt": { "type": "string", "description": "延伸段歌词，省略时按纯音乐延伸。" },
                   "tags": { "type": "string" },
+                  "title": { "type": "string" },
                   "negative_tags": { "type": "string" },
-                  "auto_lyrics": { "type": "boolean", "description": "对输入歌词二次创作，仅 `custom=true` 时生效。" },
                   "style_weight": { "type": "number", "minimum": 0, "maximum": 1 },
                   "weirdness": { "type": "number", "minimum": 0, "maximum": 1, "description": "创意度。新请求用本字段。" },
-                  "weirdness_constraint": { "type": "number", "minimum": 0, "maximum": 1, "description": "`weirdness` 兼容旧名。" },
+                  "weirdness_constraint": { "type": "number", "minimum": 0, "maximum": 1 },
                   "audio_weight": { "type": "number", "minimum": 0, "maximum": 1 },
+                  "auto_lyrics": { "type": "boolean" },
                   "vocal_gender": { "type": "string", "enum": ["Male", "Female"] },
-                  "persona_id": { "type": "string", "description": "Persona ID，仅 `custom=true` 时生效，与 `custom_model_id` 互斥。" },
+                  "persona_id": { "type": "string", "description": "Persona ID，与 `custom_model_id` 互斥。" },
+                  "duration_s": { "type": "integer", "minimum": 10, "maximum": 360, "description": "目标生成时长，10–360 秒。" },
                   "variety": { "type": "string", "enum": ["off", "normal", "high", "extra", "max"] },
-                  "max_mode": { "type": "boolean", "default": false, "description": "Max 模式，启用要求自定义模式，2 倍计费。" },
+                  "max_mode": { "type": "boolean", "default": false, "description": "Max 模式，2 倍计费。" },
                   "audio_format": { "type": "string", "enum": ["mp3", "m4a", "wav"] }
                 },
-                "required": ["model", "task_ids"]
+                "required": ["model", "audio_url", "continue_at"]
               },
               "examples": {
-                "suno-mashup": {
-                  "summary": "生成混搭",
+                "suno-upload-extend": {
+                  "summary": "上传音频并延伸",
                   "value": {
-                    "model": "suno-mashup",
-                    "task_ids": ["task_01ABC", "task_01DEF"],
-                    "audio_indexes": [1, 2],
-                    "version": "v6",
-                    "custom": true,
-                    "prompt": "upbeat mashup of the two tracks"
+                    "model": "suno-upload-extend",
+                    "version": "v6-mini",
+                    "audio_url": "https://example.com/reference.wav",
+                    "continue_at": 30,
+                    "prompt": "[Outro]\\n下一段旅途，我们一起走",
+                    "tags": "acoustic pop",
+                    "duration_s": 60,
+                    "max_mode": true,
+                    "audio_format": "mp3"
                   }
                 }
               }
@@ -105,12 +96,12 @@
                   },
                   "required": ["code", "data"]
                 },
-                "example": { "code": 200, "message": "success", "data": [{ "status": "submitted", "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw" }] }
+                "example": { "code": 200, "message": "success", "data": [{ "status": "submitted", "task_id": "task_01M24YMN4EV04M84R5QYM77R1E" }] }
               }
             }
           },
           "400": {
-            "description": "请求参数错误或源数量不对",
+            "description": "请求参数错误",
             "content": {
               "application/json": {
                 "schema": {
@@ -122,7 +113,7 @@
                   },
                   "required": ["code", "message"]
                 },
-                "example": { "code": "invalid_request", "message": "task_ids must contain exactly 2 items", "data": null }
+                "example": { "code": "invalid_request", "message": "audio_url is required", "data": null }
               }
             }
           }

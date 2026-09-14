@@ -1,0 +1,114 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "创建自定义模型",
+    "version": "1.0.0",
+    "description": "使用 6–24 条参考音频创建可用于 Suno V6 生成的自定义模型。完成后读取 `result.model_id`，后续作为 `custom_model_id` 使用。"
+  },
+  "tags": [{ "name": "音频（Audio）/Suno" }],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "使用 MAPI Bearer Token 认证。格式：`Authorization: Bearer sk-xxxxxx`。"
+      }
+    }
+  },
+  "paths": {
+    "/v1/music/generations": {
+      "post": {
+        "tags": ["音频（Audio）/Suno"],
+        "summary": "创建自定义模型",
+        "description": "使用 6–24 条参考音频创建自定义模型。\n\n- 必填：`name`（去空白后不能为空）+ `audio_urls`（6–24 条公网 HTTP(S) 音频直链，建议 MP3 / WAV / M4A）。不要传本地路径或 `blob:` URL。\n- **无版本维度**：不要传 `version` 或 `task_id`。\n- 完成后读取 `result.model_id`，后续在支持自定义模型的操作中作为 `custom_model_id`，并省略 `version` 与 `persona_id`。Persona ID 不能当 `custom_model_id` 用。\n- 训练可能需要数分钟，最长约 20 分钟。创建模型与后续每次生成分别计费。\n- 通过 `GET /v1/music/generations/{task_id}` 轮询。",
+        "operationId": "suno-create-model",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "model": { "type": "string", "const": "suno-create-model", "description": "固定填写 `suno-create-model`。", "examples": ["suno-create-model"] },
+                  "name": { "type": "string", "description": "自定义模型名称，必填。" },
+                  "audio_urls": {
+                    "type": "array",
+                    "minItems": 6,
+                    "maxItems": 24,
+                    "items": { "type": "string", "format": "uri" },
+                    "description": "6–24 条公网可访问的音频直链。"
+                  }
+                },
+                "required": ["model", "name", "audio_urls"]
+              },
+              "examples": {
+                "suno-create-model": {
+                  "summary": "创建自定义模型",
+                  "value": {
+                    "model": "suno-create-model",
+                    "name": "温暖民谣模型",
+                    "audio_urls": [
+                      "https://example.com/ref-01.mp3",
+                      "https://example.com/ref-02.mp3",
+                      "https://example.com/ref-03.wav",
+                      "https://example.com/ref-04.m4a",
+                      "https://example.com/ref-05.mp3",
+                      "https://example.com/ref-06.mp3"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "任务提交成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": { "type": "integer", "examples": [200] },
+                    "message": { "type": "string", "examples": ["success"] },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "status": { "type": "string", "enum": ["submitted"] },
+                          "task_id": { "type": "string" }
+                        },
+                        "required": ["status", "task_id"]
+                      }
+                    }
+                  },
+                  "required": ["code", "data"]
+                },
+                "example": { "code": 200, "message": "success", "data": [{ "status": "submitted", "task_id": "task_01M24YMN4EV04M84R5QYM77R1E" }] }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误或 audio_urls 数量不在 6–24",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": { "type": "string", "examples": ["invalid_request"] },
+                    "message": { "type": "string" },
+                    "data": { "description": "错误附加数据，可为空" }
+                  },
+                  "required": ["code", "message"]
+                },
+                "example": { "code": "invalid_request", "message": "create-model requires 6-24 audio_urls, got 2", "data": null }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

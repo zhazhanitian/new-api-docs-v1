@@ -3,13 +3,11 @@ title: Create Mashup
 full: true
 ---
 
-Blend audio tracks from two existing tasks into a new song.
+Mash up two existing songs. `task_ids` must contain exactly 2 IDs; optional `audio_indexes` is parallel (default 1).
 
-`task_ids` must contain **exactly 2** source task IDs; `audio_indexes` corresponds element-wise (1-based, defaults to 1 for each).
+Submitted fields are validated even if unused. `gpt_description` is required when `custom=false`. `prompt` is required when `custom=true` and `instrumental=false`.
 
-The `custom` flag controls which fields take effect; fields in the wrong mode are **silently ignored**. When `custom=true`: `prompt` (lyrics), `title`, `tags`, `negative_tags`, `auto_lyrics`, `style_weight`, `weirdness_constraint`, `audio_weight`, and `persona_id` are active; `gpt_description` is ignored. When `custom=false`: only `gpt_description` is read (**required**; missing it returns 400). `vocal_gender` works in both modes. When `custom` is omitted, the backend infers: has `prompt` → `true`; no `prompt` but has `gpt_description` → `false`; otherwise has `tags`/`title` → `true`.
-
-- `instrumental` defaults to `false`; `version` supports all seven values, defaults to `v5.5`. Invalid values return `400`.
-- Once complete, read `audio_url` from `result.music[]`; generation typically takes 30–120 s; poll every 3–5 s.
+- `version`: `v6` / `v6-wild` / `v6-mini`, default `v6`. `custom_model_id` is mutually exclusive with `version` and `persona_id`.
+- Target duration is not supported. `max_mode` requires custom mode and bills at 2×.
 
 <APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-mashup.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

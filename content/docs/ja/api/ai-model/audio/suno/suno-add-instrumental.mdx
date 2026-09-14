@@ -3,12 +3,12 @@ title: 伴奏追加
 full: true
 ---
 
-既存のボーカル音源に伴奏を追加します。
+既存のボーカルに伴奏を追加します。ソースは **`suno-upload` のアップロード音源のみ**。
 
-> **重要**: ソース音源は `suno-upload` でアップロードした音源のみ使用可能です。AI生成タスクの音源をソースとして使用するとエラーになります。
+送信したフィールドは、現在のモードで使われなくても検証されます。`custom=false` のとき `gpt_description` は必須です。
 
-`custom` フラグにより有効なフィールドが決まります。`custom=true` 時: `prompt`（歌詞）、`title`、`tags`、`negative_tags`、`style_weight`、`weirdness_constraint`、`audio_weight` が有効、`gpt_description` は無視。`custom=false` 時: `gpt_description` のみ有効（**必須**、未指定は 400）。`vocal_gender` は両モードで有効。`custom` 未指定時は `prompt` → `gpt_description` → `tags`/`title` の順で推定します。
-
-- `version` は `v5`/`v5.5` のみ対応、デフォルト `v5.5`、無効値は 400。完了後は `result.music[]` の `audio_url` を参照。
+- `version`: `v6` / `v6-wild` / `v6-mini`、デフォルト `v6`。`custom_model_id` と互斥。
+- 非対応: `auto_lyrics`、`persona_id`、`instrumental`、目標尺。
+- `max_mode` はカスタムモード必須、通常価格の 2 倍。新規は `weirdness` を使います。
 
 <APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-add-instrumental.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

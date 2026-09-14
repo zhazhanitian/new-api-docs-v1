@@ -3,15 +3,19 @@ title: Generate Music
 full: true
 ---
 
-Generate a complete song from a text prompt or custom lyrics, suitable for songwriting, instrumental music, and style-directed generation.
+Generate a complete song from an inspiration prompt or custom lyrics.
 
-The `custom` flag controls which fields take effect; fields in the wrong mode are **silently ignored**. When `custom=true` (custom mode): `prompt` (lyrics), `title`, `style`, `negative_tags`, `auto_lyrics`, `persona_id`, `style_weight`, `weirdness_constraint`, `audio_weight` are active. When `custom=false` (inspiration mode): `prompt` acts as an inspiration description; `title`, `style`, and custom-only fields are ignored. `vocal_gender` works in both modes.
+`custom` controls **text fields only**. Mismatched text is ignored; weight fields are still validated:
 
-> **Note**: `suno-music` uses `style` for style tags, not `tags` as used by other models.
+- `custom=false` (default, inspiration): `prompt` is the inspiration description. `title`, `style`, `negative_tags`, `auto_lyrics`, and `persona_id` are ignored.
+- `custom=true` (custom): `prompt` is lyrics. Those text fields take effect.
+- `style_weight`, `weirdness_constraint`, `audio_weight`, and `vocal_gender` apply in **both** modes and are validated. Out-of-range values return 400; they are not silently dropped.
 
-- `version` is **required** and validated at submission time; missing it returns 400 immediately.
-- In inspiration mode (`custom=false` or omitted): `prompt` is required as an inspiration description. In custom mode (`custom=true`): `prompt` is required as lyrics unless `instrumental=true`.
-- Fields that don't match the current mode are silently ignored by the upstream.
-- Generation typically takes 30–120 s; poll every 3–5 s.
+This model uses `style` for genre tags, not `tags`. Creativity uses `weirdness_constraint`, not `weirdness`.
+
+- Provide either `version` (`v6` / `v6-wild` / `v6-mini`) or `custom_model_id`, not both. `persona_id` cannot be combined with `custom_model_id`.
+- `custom=false`: `prompt` is required (≤3000). `custom=true` and not instrumental: `prompt` is required as lyrics (≤5000).
+- `max_mode=true` requires `custom=true` and bills at **2×**. `variety: "max"` does not enable Max billing.
+- `duration` is custom-mode only, 10–360 seconds.
 
 <APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-music.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

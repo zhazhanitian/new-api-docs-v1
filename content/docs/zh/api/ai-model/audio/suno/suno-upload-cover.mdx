@@ -1,0 +1,16 @@
+---
+title: 上传音频并翻唱
+full: true
+---
+
+- 直接用公网音频 URL 生成翻唱，无需先调用 `suno-upload`。
+
+- `audio_url` 必填（公网 HTTP(S) 直链，建议不超过 8 分钟）。不要传本地路径或 `blob:` URL。
+- `version` 仅支持 `v6` / `v6-wild` / `v6-mini`，省略默认 `v6`；与 `custom_model_id`、`persona_id` 互斥。
+- 建议显式传 `custom`。`custom=false` 时 `gpt_description` 必填；`custom=true && instrumental=false` 时 `prompt` 必填。
+- `duration_s` 仅自定义模式，范围 10–360。`max_mode` 要求自定义模式，2 倍计费。新请求用 `weirdness`。
+
+- **提交接口**：统一通过 `POST /v1/music/generations` 提交，使用 `model: "suno-upload-cover"` 选择此能力。
+- **任务查询**：提交返回 `task_id`，通过 `GET /v1/music/generations/{task_id}` 获取任务状态和结果。
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/Suno/post-v1-music-generations-suno-upload-cover.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />
