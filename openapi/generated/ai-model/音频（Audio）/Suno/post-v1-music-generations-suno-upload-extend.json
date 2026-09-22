@@ -3,7 +3,7 @@
   "info": {
     "title": "上传音频并延伸",
     "version": "1.0.0",
-    "description": "直接用公网音频 URL 延伸歌曲，无需先 `suno-upload`。必填 `audio_url` + `continue_at`。固定自定义模式，不要发 `custom`、`instrumental`、`gpt_description`。"
+    "description": "上传公网音频 URL，并从指定位置使用 Suno V6 延伸歌曲。直接延伸公开音频，无需先调用 `suno-upload`。接口固定使用自定义模式，不要发送 `custom`、`instrumental` 或 `gpt_description`。"
   },
   "tags": [{ "name": "音频（Audio）/Suno" }],
   "components": {
@@ -20,7 +20,7 @@
       "post": {
         "tags": ["音频（Audio）/Suno"],
         "summary": "上传音频并延伸",
-        "description": "上传公网音频 URL，并从指定位置用 Suno V6 延伸歌曲。\n\n- 无需先调用 `suno-upload`。必填 `audio_url`（公网 HTTP(S) 直链，建议不超过 8 分钟）和 `continue_at`（≥1 秒且严格小于源时长）。\n- **固定自定义模式**：不要发送 `custom`、`instrumental` 或 `gpt_description`。\n- `version`：`v6` / `v6-wild` / `v6-mini`，默认 `v6`；与 `custom_model_id`、`persona_id` 互斥。\n- `duration_s` 目标时长 10–360 秒。`max_mode=true` 按 2 倍计费。新请求用 `weirdness`。\n- 通过 `GET /v1/music/generations/{task_id}` 轮询。",
+        "description": "上传公网音频 URL，并从指定位置使用 Suno V6 延伸歌曲。\n\n- 直接延伸公开音频，无需先调用 `suno-upload`。必填 `audio_url`（公网 HTTP(S) 直链，建议不超过 8 分钟）和 `continue_at`（≥1 秒，且严格小于源音频实际时长）。本地路径与 `blob:` URL 不可用。\n- **固定自定义模式**：不要发送 `custom`、`instrumental` 或 `gpt_description`。\n- `version`：`v6` / `v6-wild` / `v6-mini`，省略默认 `v6`。使用 `custom_model_id` 时省略 `version`。\n- `custom_model_id` 与 `version`、`persona_id` 互斥。\n- `prompt` 为延伸段歌词，不超过 5000 个字符；省略时按纯音乐延伸。`duration_s` 目标时长 10–360 秒，实际成品时长以任务结果为准。\n- `max_mode=true` 按普通售价的 2 倍计费。\n- 通过 `GET /v1/music/generations/{task_id}` 轮询。",
         "operationId": "suno-upload-extend",
         "security": [{ "BearerAuth": [] }],
         "requestBody": {
@@ -30,26 +30,103 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "model": { "type": "string", "const": "suno-upload-extend", "description": "固定填写 `suno-upload-extend`。", "examples": ["suno-upload-extend"] },
-                  "audio_url": { "type": "string", "format": "uri", "description": "公网音频直链，必填。不要传本地路径或 `blob:` URL。" },
-                  "continue_at": { "type": "number", "minimum": 1, "description": "延伸起点（秒），必填，须 ≥1 且小于源时长。" },
-                  "version": { "type": "string", "enum": ["v6", "v6-wild", "v6-mini"], "default": "v6" },
-                  "custom_model_id": { "type": "string", "description": "自定义模型 UUID，与 `version`、`persona_id` 互斥。" },
-                  "prompt": { "type": "string", "description": "延伸段歌词，省略时按纯音乐延伸。" },
-                  "tags": { "type": "string" },
-                  "title": { "type": "string" },
-                  "negative_tags": { "type": "string" },
-                  "style_weight": { "type": "number", "minimum": 0, "maximum": 1 },
-                  "weirdness": { "type": "number", "minimum": 0, "maximum": 1, "description": "创意度。新请求用本字段。" },
-                  "weirdness_constraint": { "type": "number", "minimum": 0, "maximum": 1 },
-                  "audio_weight": { "type": "number", "minimum": 0, "maximum": 1 },
-                  "auto_lyrics": { "type": "boolean" },
-                  "vocal_gender": { "type": "string", "enum": ["Male", "Female"] },
-                  "persona_id": { "type": "string", "description": "Persona ID，与 `custom_model_id` 互斥。" },
-                  "duration_s": { "type": "integer", "minimum": 10, "maximum": 360, "description": "目标生成时长，10–360 秒。" },
-                  "variety": { "type": "string", "enum": ["off", "normal", "high", "extra", "max"] },
-                  "max_mode": { "type": "boolean", "default": false, "description": "Max 模式，2 倍计费。" },
-                  "audio_format": { "type": "string", "enum": ["mp3", "m4a", "wav"] }
+                  "model": {
+                    "type": "string",
+                    "const": "suno-upload-extend",
+                    "description": "固定填写 `suno-upload-extend`。",
+                    "examples": ["suno-upload-extend"]
+                  },
+                  "audio_url": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "公网可访问的 HTTP(S) 音频直链，建议不超过 8 分钟。本地路径与 `blob:` URL 不可用。"
+                  },
+                  "continue_at": {
+                    "type": "number",
+                    "minimum": 1,
+                    "description": "延伸起点，必须大于等于 1 秒，并严格小于源音频实际时长。"
+                  },
+                  "version": {
+                    "type": "string",
+                    "enum": ["v6", "v6-wild", "v6-mini"],
+                    "default": "v6",
+                    "description": "公共版本：`v6` / `v6-wild` / `v6-mini`。省略默认 `v6`。使用 `custom_model_id` 时省略。"
+                  },
+                  "custom_model_id": {
+                    "type": "string",
+                    "description": "创建模型任务返回的完整 UUID。与 `version`、`persona_id` 互斥。"
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "maxLength": 5000,
+                    "description": "延伸段歌词，不超过 5000 个字符；省略时按纯音乐延伸语义使用。"
+                  },
+                  "tags": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "description": "风格描述，不超过 1000 个字符。"
+                  },
+                  "title": {
+                    "type": "string",
+                    "maxLength": 80,
+                    "description": "标题，不超过 80 个字符。"
+                  },
+                  "negative_tags": {
+                    "type": "string",
+                    "description": "不希望出现的风格。"
+                  },
+                  "style_weight": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "风格权重，范围 0–1。"
+                  },
+                  "weirdness": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "创意度权重，范围 0–1。"
+                  },
+                  "audio_weight": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "音频权重，范围 0–1。"
+                  },
+                  "auto_lyrics": {
+                    "type": "boolean",
+                    "description": "是否对输入歌词进行二次创作。"
+                  },
+                  "vocal_gender": {
+                    "type": "string",
+                    "enum": ["Male", "Female"],
+                    "description": "人声性别：`Male` / `Female`。"
+                  },
+                  "persona_id": {
+                    "type": "string",
+                    "description": "Persona ID，与 `custom_model_id` 互斥。"
+                  },
+                  "duration_s": {
+                    "type": "integer",
+                    "minimum": 10,
+                    "maximum": 360,
+                    "description": "目标生成时长，范围 10–360 秒。实际成品时长以任务结果为准。"
+                  },
+                  "variety": {
+                    "type": "string",
+                    "enum": ["off", "normal", "high", "extra", "max"],
+                    "description": "风格变化程度：`off` / `normal` / `high` / `extra` / `max`。"
+                  },
+                  "max_mode": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "是否启用 Max 模式；启用后按普通售价的 2 倍计费。"
+                  },
+                  "audio_format": {
+                    "type": "string",
+                    "enum": ["mp3", "m4a", "wav"],
+                    "description": "输出格式：`mp3` / `m4a` / `wav`。"
+                  }
                 },
                 "required": ["model", "audio_url", "continue_at"]
               },
@@ -61,7 +138,7 @@
                     "version": "v6-mini",
                     "audio_url": "https://example.com/reference.wav",
                     "continue_at": 30,
-                    "prompt": "[Outro]\\n下一段旅途，我们一起走",
+                    "prompt": "[Outro]\n下一段旅途，我们一起走",
                     "tags": "acoustic pop",
                     "duration_s": 60,
                     "max_mode": true,
@@ -80,10 +157,11 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "code": { "type": "integer", "examples": [200] },
+                    "code": { "type": "integer", "description": "响应状态码。", "examples": [200] },
                     "message": { "type": "string", "examples": ["success"] },
                     "data": {
                       "type": "array",
+                      "description": "提交结果，读取 `data[0].task_id` 并轮询任务查询接口。",
                       "items": {
                         "type": "object",
                         "properties": {
@@ -96,7 +174,11 @@
                   },
                   "required": ["code", "data"]
                 },
-                "example": { "code": 200, "message": "success", "data": [{ "status": "submitted", "task_id": "task_01M24YMN4EV04M84R5QYM77R1E" }] }
+                "example": {
+                  "code": 200,
+                  "message": "success",
+                  "data": [{ "status": "submitted", "task_id": "task_01M24YMN4EV04M84R5QYM77R1E" }]
+                }
               }
             }
           },
