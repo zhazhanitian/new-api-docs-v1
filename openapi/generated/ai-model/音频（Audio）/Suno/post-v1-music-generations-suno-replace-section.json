@@ -20,7 +20,7 @@
       "post": {
         "tags": ["音频（Audio）/Suno"],
         "summary": "段落替换",
-        "description": "替换歌曲的某一段（infill）。\n\n- 用 `task_id` + `audio_index`（默认 1）引用源音轨。\n- `start_s`、`end_s` 必填，须满足 `0 ≤ start_s < end_s`；源时长已知时不能越界。\n- `version`：`v6` / `v6-wild` / `v6-mini`，默认 `v6`；与 `custom_model_id` 互斥。\n- `prompt` 是原歌词上下文，`infill_lyrics` 是替换片段的新歌词。\n- 不要发送 `custom`、`instrumental`、`auto_lyrics` 或旧编辑会话字段。\n- `max_mode=true` 按 2 倍计费。完成后从 `result.music[]` 取 `audio_url`。",
+        "description": "替换歌曲的某一段（infill）。\n\n- 用产出源音轨那次任务的 `task_id` + `audio_index`（1-based，默认 1）引用 `music[]` 中的音轨，无需额外 id。缺失或无法解析源时提交期直接 400。\n- `start_s`、`end_s` 必填，须满足 `0 ≤ start_s < end_s`；源时长已知时不能越界。缺失直接返回 400。\n- `version`：`v6` / `v6-wild` / `v6-mini`，省略默认 `v6`。使用 `custom_model_id` 时省略。`custom_model_id` 与 `version` 互斥。\n- `prompt` 是原歌词上下文，`infill_lyrics` 是替换片段的新歌词。\n- 不要发送 `custom`、`instrumental`、`auto_lyrics` 或旧编辑会话字段。本接口不支持目标时长。\n- `max_mode=true` 按普通售价的 2 倍计费。完成后从 `result.music[]` 取替换后的 `audio_url`。\n- 通过 `GET /v1/music/generations/{task_id}` 轮询。",
         "operationId": "suno-replace-section",
         "security": [{ "BearerAuth": [] }],
         "requestBody": {
@@ -30,21 +30,76 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "model": { "type": "string", "const": "suno-replace-section", "description": "固定填写 `suno-replace-section`。", "examples": ["suno-replace-section"] },
-                  "task_id": { "type": "string", "description": "产出源音轨的任务 ID，必填。" },
-                  "audio_index": { "type": "integer", "default": 1, "minimum": 1 },
-                  "start_s": { "type": "number", "minimum": 0, "description": "替换起点（秒），必填。" },
-                  "end_s": { "type": "number", "description": "替换终点（秒），必填。须满足 `0 ≤ start_s < end_s`。" },
-                  "infill_lyrics": { "type": "string", "description": "替换段歌词。" },
-                  "prompt": { "type": "string", "description": "上下文歌词。" },
-                  "version": { "type": "string", "enum": ["v6", "v6-wild", "v6-mini"], "default": "v6" },
-                  "custom_model_id": { "type": "string", "description": "自定义模型 UUID，与 `version` 互斥。" },
-                  "title": { "type": "string" },
-                  "tags": { "type": "string" },
-                  "negative_tags": { "type": "string" },
-                  "variety": { "type": "string", "enum": ["off", "normal", "high", "extra", "max"] },
-                  "max_mode": { "type": "boolean", "default": false, "description": "Max 模式，2 倍计费。" },
-                  "audio_format": { "type": "string", "enum": ["mp3", "m4a", "wav"] }
+                  "model": {
+                    "type": "string",
+                    "const": "suno-replace-section",
+                    "description": "固定填写 `suno-replace-section`。",
+                    "examples": ["suno-replace-section"]
+                  },
+                  "task_id": {
+                    "type": "string",
+                    "description": "产出源音轨那次任务的 ID，必填。缺失或无法解析源时提交期直接返回 400。"
+                  },
+                  "audio_index": {
+                    "type": "integer",
+                    "default": 1,
+                    "minimum": 1,
+                    "description": "源任务结果 `music[]` 中的第几首（1-based，默认 1；一次生成通常 2 首：索引 1 与 2）。"
+                  },
+                  "infill_lyrics": {
+                    "type": "string",
+                    "description": "替换片段的新歌词。"
+                  },
+                  "start_s": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "替换起点（秒），必填。缺失直接返回 400。须满足 `0 ≤ start_s < end_s`。"
+                  },
+                  "end_s": {
+                    "type": "number",
+                    "description": "替换终点（秒），必填。必须满足 `0 ≤ start_s < end_s`；源时长已知时不能越界。缺失直接返回 400。"
+                  },
+                  "version": {
+                    "type": "string",
+                    "enum": ["v6", "v6-wild", "v6-mini"],
+                    "default": "v6",
+                    "description": "公共版本：`v6` / `v6-wild` / `v6-mini`。省略默认 `v6`。使用 `custom_model_id` 时省略。"
+                  },
+                  "custom_model_id": {
+                    "type": "string",
+                    "description": "创建模型任务返回的完整 UUID，与 `version` 互斥。"
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "description": "原歌词上下文。与 `infill_lyrics`（替换片段的新歌词）含义不同。"
+                  },
+                  "title": {
+                    "type": "string",
+                    "description": "标题。"
+                  },
+                  "tags": {
+                    "type": "string",
+                    "description": "风格标签。"
+                  },
+                  "negative_tags": {
+                    "type": "string",
+                    "description": "要排除的风格标签。"
+                  },
+                  "variety": {
+                    "type": "string",
+                    "enum": ["off", "normal", "high", "extra", "max"],
+                    "description": "风格变化程度：`off` / `normal` / `high` / `extra` / `max`。可省略。"
+                  },
+                  "max_mode": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "是否启用 Max 模式；启用后按普通售价的 2 倍计费。"
+                  },
+                  "audio_format": {
+                    "type": "string",
+                    "enum": ["mp3", "m4a", "wav"],
+                    "description": "输出音频格式：`mp3` / `m4a` / `wav`。本接口不支持目标时长字段。"
+                  }
                 },
                 "required": ["model", "task_id", "start_s", "end_s"]
               },
@@ -53,13 +108,11 @@
                   "summary": "段落替换",
                   "value": {
                     "model": "suno-replace-section",
-                    "task_id": "task_source123",
+                    "task_id": "task_01ABC",
                     "audio_index": 1,
                     "start_s": 30,
                     "end_s": 45,
-                    "version": "v6",
-                    "infill_lyrics": "[Chorus]\\nSing into the morning light",
-                    "tags": "anthemic pop"
+                    "infill_lyrics": "新的一段歌词"
                   }
                 }
               }
@@ -74,15 +127,16 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "code": { "type": "integer", "examples": [200] },
+                    "code": { "type": "integer", "description": "响应状态码。", "examples": [200] },
                     "message": { "type": "string", "examples": ["success"] },
                     "data": {
                       "type": "array",
+                      "description": "提交结果，读取 `data[0].task_id` 并轮询任务查询接口。",
                       "items": {
                         "type": "object",
                         "properties": {
-                          "status": { "type": "string", "enum": ["submitted"] },
-                          "task_id": { "type": "string" }
+                          "status": { "type": "string", "enum": ["submitted"], "description": "任务状态。`submitted` 表示已提交。" },
+                          "task_id": { "type": "string", "description": "任务 ID，用于轮询 `GET /v1/music/generations/{task_id}`。" }
                         },
                         "required": ["status", "task_id"]
                       }
@@ -90,7 +144,11 @@
                   },
                   "required": ["code", "data"]
                 },
-                "example": { "code": 200, "message": "success", "data": [{ "status": "submitted", "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw" }] }
+                "example": {
+                  "code": 200,
+                  "message": "success",
+                  "data": [{ "status": "submitted", "task_id": "task_01K8SGYNNNVBQTXNR4MM964S7K" }]
+                }
               }
             }
           },
@@ -107,7 +165,7 @@
                   },
                   "required": ["code", "message"]
                 },
-                "example": { "code": "invalid_request", "message": "task_id is required", "data": null }
+                "example": { "code": "invalid_request", "message": "start_s is required", "data": null }
               }
             }
           }

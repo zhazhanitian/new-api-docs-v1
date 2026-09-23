@@ -3,12 +3,14 @@ title: 段落替换
 full: true
 ---
 
-替换歌曲的某一段（infill）。`start_s`、`end_s` 必填，须满足 `0 ≤ start_s < end_s`。
+替换歌曲的某一段（infill）。用产出源音轨那次任务的 `task_id` + `audio_index`（1-based，默认 1）引用源。
+
+`start_s`、`end_s` 必填，须满足 `0 ≤ start_s < end_s`；源时长已知时不能越界。
 
 - `prompt` 是原歌词上下文，`infill_lyrics` 是替换片段的新歌词。
-- `version`：`v6` / `v6-wild` / `v6-mini`，默认 `v6`；与 `custom_model_id` 互斥。
-- 不要发送 `custom`、`instrumental`、`auto_lyrics` 或旧编辑会话字段。
-- `max_mode=true` 按 2 倍计费。
+- `version`：`v6` / `v6-wild` / `v6-mini`，省略默认 `v6`。使用 `custom_model_id` 时省略。`custom_model_id` 与 `version` 互斥。
+- 不要发送 `custom`、`instrumental`、`auto_lyrics` 或旧编辑会话字段。本接口不支持目标时长。
+- `max_mode=true` 按普通售价的 2 倍计费。
 - **提交接口**：`POST /v1/music/generations`，`model: "suno-replace-section"`。
 - **任务查询**：`GET /v1/music/generations/{task_id}`。
 

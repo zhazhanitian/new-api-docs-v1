@@ -3,7 +3,7 @@
   "info": {
     "title": "添加伴奏",
     "version": "1.0.0",
-    "description": "给现有人声 / 音轨叠加伴奏。源必须来自 `suno-upload` 上传任务。版本 `v6` / `v6-wild` / `v6-mini`。不支持 `auto_lyrics`、`persona_id`、`instrumental`、目标时长。"
+    "description": "给现有人声或音轨叠加伴奏。源必须来自 `suno-upload` 上传任务。版本 `v6` / `v6-wild` / `v6-mini`。不支持 `auto_lyrics`、`persona_id`、`instrumental`、目标时长。"
   },
   "tags": [{ "name": "音频（Audio）/Suno" }],
   "components": {
@@ -20,7 +20,7 @@
       "post": {
         "tags": ["音频（Audio）/Suno"],
         "summary": "添加伴奏",
-        "description": "给现有（人声 / 音轨）叠加伴奏。\n\n- 源必须来自 `suno-upload`。普通生成任务不能作为源。\n- `version`：`v6` / `v6-wild` / `v6-mini`，默认 `v6`；与 `custom_model_id` 互斥。\n- `custom=false` 时 `gpt_description` 必填。\n- 不支持：`auto_lyrics`、`persona_id`、`instrumental`、目标时长。\n- `max_mode` 要求自定义模式，2 倍计费。新请求用 `weirdness`。",
+        "description": "给现有人声或音轨叠加伴奏。\n\n- 源必须来自 `suno-upload`（对应上游 `uploadTask`）。用 `task_id` + `audio_index`（1-based，默认 1）引用 `music[]` 中的音轨。普通生成任务不能作为源；缺失或无法解析源时提交期直接 400。\n- `version`：`v6` / `v6-wild` / `v6-mini`，省略默认 `v6`。使用 `custom_model_id` 时省略。`custom_model_id` 与 `version` 互斥。\n- `custom` 决定哪些字段生效。不传时按此推断：有 `prompt` → `true`；无 `prompt` 但有 `gpt_description` → `false`；否则有 `tags` 或 `title` → `true`。已提交字段无论当前模式是否生效，都须满足类型、范围和长度。\n- `custom=true` 时 `prompt`、`title`、`tags`、`negative_tags`、`style_weight`、`weirdness`、`audio_weight` 生效，`gpt_description` 被忽略。`custom=false` 时只读 `gpt_description`（必填，缺失提交期 400、不扣费）。`vocal_gender` 两种模式都生效。\n- 不支持 `auto_lyrics`、`persona_id`、`instrumental`、目标时长。`max_mode` 启用要求自定义模式，按普通售价的 2 倍计费。创意度用 `weirdness`，兼容旧名 `weirdness_constraint`。\n- 通过 `GET /v1/music/generations/{task_id}` 轮询。",
         "operationId": "suno-add-instrumental",
         "security": [{ "BearerAuth": [] }],
         "requestBody": {
@@ -30,25 +30,94 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "model": { "type": "string", "const": "suno-add-instrumental", "description": "固定填写 `suno-add-instrumental`。", "examples": ["suno-add-instrumental"] },
-                  "task_id": { "type": "string", "description": "suno-upload 上传任务的 ID，必填。" },
-                  "audio_index": { "type": "integer", "default": 1 },
-                  "version": { "type": "string", "enum": ["v6", "v6-wild", "v6-mini"], "default": "v6" },
-                  "custom_model_id": { "type": "string", "description": "自定义模型 UUID，与 `version` 互斥。" },
-                  "custom": { "type": "boolean" },
-                  "prompt": { "type": "string" },
-                  "gpt_description": { "type": "string", "description": "`custom=false` 时必填。" },
-                  "title": { "type": "string" },
-                  "tags": { "type": "string" },
-                  "negative_tags": { "type": "string" },
-                  "style_weight": { "type": "number", "minimum": 0, "maximum": 1 },
-                  "weirdness": { "type": "number", "minimum": 0, "maximum": 1, "description": "创意度。新请求用本字段。" },
-                  "weirdness_constraint": { "type": "number", "minimum": 0, "maximum": 1 },
-                  "audio_weight": { "type": "number", "minimum": 0, "maximum": 1 },
-                  "vocal_gender": { "type": "string", "enum": ["Male", "Female"] },
-                  "variety": { "type": "string", "enum": ["off", "normal", "high", "extra", "max"] },
-                  "max_mode": { "type": "boolean", "default": false, "description": "Max 模式，2 倍计费。" },
-                  "audio_format": { "type": "string", "enum": ["mp3", "m4a", "wav"] }
+                  "model": {
+                    "type": "string",
+                    "const": "suno-add-instrumental",
+                    "description": "固定填写 `suno-add-instrumental`。",
+                    "examples": ["suno-add-instrumental"]
+                  },
+                  "task_id": {
+                    "type": "string",
+                    "description": "`suno-upload` 上传任务的 ID，必填。普通生成任务不能使用；缺失或无法解析源时提交期直接返回 400。"
+                  },
+                  "audio_index": {
+                    "type": "integer",
+                    "default": 1,
+                    "minimum": 1,
+                    "description": "源任务结果 `music[]` 中的第几首（1-based，默认 1；一次上传通常 2 首：索引 1 与 2）。"
+                  },
+                  "version": {
+                    "type": "string",
+                    "enum": ["v6", "v6-wild", "v6-mini"],
+                    "default": "v6",
+                    "description": "公共版本：`v6` / `v6-wild` / `v6-mini`。省略默认 `v6`。使用 `custom_model_id` 时省略。"
+                  },
+                  "custom_model_id": {
+                    "type": "string",
+                    "description": "创建模型任务返回的完整 UUID，与 `version` 互斥。"
+                  },
+                  "custom": {
+                    "type": "boolean",
+                    "description": "`true` 为自定义模式，`prompt` 作歌词；`false` 为灵感模式，用 `gpt_description`。省略时按内容推断：有 `prompt` → `true`；无 `prompt` 但有 `gpt_description` → `false`；否则有 `tags` 或 `title` → `true`。"
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "description": "歌词。仅 `custom=true` 时生效，灵感模式下被忽略。"
+                  },
+                  "gpt_description": {
+                    "type": "string",
+                    "description": "灵感提示词。`custom=false` 时必填，缺失提交期直接返回 400、不扣费。`custom=true` 时被忽略。"
+                  },
+                  "title": {
+                    "type": "string",
+                    "description": "标题。仅 `custom=true` 时生效。"
+                  },
+                  "tags": {
+                    "type": "string",
+                    "description": "风格标签。仅 `custom=true` 时生效。"
+                  },
+                  "negative_tags": {
+                    "type": "string",
+                    "description": "要排除的风格标签。仅 `custom=true` 时生效。"
+                  },
+                  "style_weight": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "风格权重，范围 0.00–1.00。越界提交期直接返回 400。仅 `custom=true` 时生效。"
+                  },
+                  "weirdness": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "创意权重，范围 0.00–1.00。兼容旧名 `weirdness_constraint`；新请求请使用 `weirdness`。"
+                  },
+                  "audio_weight": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "音频权重，范围 0.00–1.00。仅 `custom=true` 时生效。"
+                  },
+                  "vocal_gender": {
+                    "type": "string",
+                    "enum": ["Male", "Female"],
+                    "description": "人声性别：`Male` / `Female`。两种模式都生效。"
+                  },
+                  "variety": {
+                    "type": "string",
+                    "enum": ["off", "normal", "high", "extra", "max"],
+                    "description": "风格变化程度：`off` / `normal` / `high` / `extra` / `max`。"
+                  },
+                  "max_mode": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "是否启用 Max 模式。启用时要求自定义模式，并按普通售价的 2 倍计费。"
+                  },
+                  "audio_format": {
+                    "type": "string",
+                    "enum": ["mp3", "m4a", "wav"],
+                    "description": "输出音频格式：`mp3` / `m4a` / `wav`。本接口不支持目标时长字段。"
+                  }
                 },
                 "required": ["model", "task_id"]
               },
@@ -57,11 +126,10 @@
                   "summary": "添加伴奏",
                   "value": {
                     "model": "suno-add-instrumental",
-                    "task_id": "task_uploadXXXXXXXX",
+                    "task_id": "task_01ABC",
                     "audio_index": 1,
                     "version": "v6",
-                    "custom": true,
-                    "tags": "acoustic guitar, warm pad"
+                    "tags": "lo-fi"
                   }
                 }
               }
@@ -76,15 +144,16 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "code": { "type": "integer", "examples": [200] },
+                    "code": { "type": "integer", "description": "响应状态码。", "examples": [200] },
                     "message": { "type": "string", "examples": ["success"] },
                     "data": {
                       "type": "array",
+                      "description": "提交结果，读取 `data[0].task_id` 并轮询任务查询接口。",
                       "items": {
                         "type": "object",
                         "properties": {
-                          "status": { "type": "string", "enum": ["submitted"] },
-                          "task_id": { "type": "string" }
+                          "status": { "type": "string", "enum": ["submitted"], "description": "任务状态。`submitted` 表示已提交。" },
+                          "task_id": { "type": "string", "description": "任务 ID，用于轮询 `GET /v1/music/generations/{task_id}`。" }
                         },
                         "required": ["status", "task_id"]
                       }
@@ -92,7 +161,11 @@
                   },
                   "required": ["code", "data"]
                 },
-                "example": { "code": 200, "message": "success", "data": [{ "status": "submitted", "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw" }] }
+                "example": {
+                  "code": 200,
+                  "message": "success",
+                  "data": [{ "status": "submitted", "task_id": "task_01K8SGYNNNVBQTXNR4MM964S7K" }]
+                }
               }
             }
           },

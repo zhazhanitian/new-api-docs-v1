@@ -3,13 +3,13 @@ title: 添加音轨
 full: true
 ---
 
-在现有音轨上叠加一条 stem。用产出源音轨那次任务的 `task_id` + `audio_index` 引用源。
+在现有音轨上叠加一条 stem。用产出源音轨那次任务的 `task_id` + `audio_index`（1-based，默认 1）引用源，无需额外 id。
 
-已提交字段无论模式是否生效都须通过校验。`custom=false` 时 `gpt_description` 必填。不支持 `vocal_gender`。
+`custom` 决定哪些字段生效。已提交字段无论当前模式是否生效，都须满足类型、范围和长度。不传 `custom` 时按此推断：有 `prompt` → `true`；无 `prompt` 但有 `gpt_description` → `false`；否则有 `tags` 或 `title` → `true`。
 
-- `version`：`v6` / `v6-wild` / `v6-mini`，默认 `v6`；与 `custom_model_id` 互斥。
-- 不支持 `auto_lyrics`、`persona_id`、`instrumental`、目标时长。
-- `max_mode` 要求自定义模式，2 倍计费。新请求用 `weirdness`。
+- `custom=true` 时 `prompt`、`title`、`tags`、`negative_tags`、`style_weight`、`weirdness`、`audio_weight` 生效，`gpt_description` 被忽略。`custom=false` 时只读 `gpt_description`（必填，缺失提交期 400、不扣费）。
+- `version`：`v6` / `v6-wild` / `v6-mini`，省略默认 `v6`。使用 `custom_model_id` 时省略。`custom_model_id` 与 `version` 互斥。
+- 不支持 `auto_lyrics`、`persona_id`、`instrumental`、`vocal_gender`、目标时长。`max_mode` 启用要求自定义模式，按普通售价的 2 倍计费。创意度用 `weirdness`，兼容旧名 `weirdness_constraint`。
 - **提交接口**：`POST /v1/music/generations`，`model: "suno-add-stem"`。
 - **任务查询**：`GET /v1/music/generations/{task_id}`。
 
