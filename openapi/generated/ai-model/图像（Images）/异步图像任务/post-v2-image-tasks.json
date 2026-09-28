@@ -91,7 +91,7 @@
                   },
                   "watermark": {
                     "type": "boolean",
-                    "description": "是否在生成的图片上添加水印。豆包 Seedream 系列支持，默认 `false`。"
+                    "description": "是否在生成的图片上添加水印。豆包 Seedream 系列支持，默认 `true`。"
                   },
                   "extra_fields": {
                     "type": "object",
