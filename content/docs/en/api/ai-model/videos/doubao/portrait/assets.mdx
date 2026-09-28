@@ -62,7 +62,7 @@ curl -X POST 'https://api.mapi.zone/v1/portrait/assets' \
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | `id` | integer | 本平台本地自增 ID |
-| `asset_id` | string | **素材 ID**（查询详情、Seedance 引用时使用此值） |
+| `asset_id` | string | **素材 ID**（轮询路径、以及生视频时拼 `asset://{asset_id}`） |
 | `remote_group_id` | string | 所属素材组 ID |
 | `status` | string | 初始为 **`Submitted`** |
 
@@ -145,8 +145,8 @@ curl 'https://api.mapi.zone/v1/portrait/assets?group_id=ag-7f3c2b1a9e8d4c6f&p=1&
 | `name` | string | 素材名称 |
 | `asset_type` | string | `Image` / `Video` / `Audio` |
 | `source_url` | string | 创建时提交的原始 URL |
-| `status` | string | 审核状态，见[概述页状态枚举](/zh/docs/api/ai-model/videos/portrait) |
-| `resolved_url` | string | 审核通过后的可用 URL；`Active` 前可能为空 |
+| `status` | string | 审核状态，见[概述页状态枚举](/zh/docs/api/ai-model/videos/doubao/portrait) |
+| `resolved_url` | string | 审核通过后的旁证字段；`Active` 前可能为空。**生视频请勿使用本字段**，应传 `asset://{asset_id}` |
 | `created_at` | string | 创建时间 |
 | `updated_at` | string | 最后更新时间 |
 

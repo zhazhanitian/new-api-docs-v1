@@ -1,9 +1,13 @@
 ---
 title: 人像库审核概述
-description: 人像库素材管理与审核接口说明，供 Seedance 2.0 等视频生成能力在生成前完成素材注册与审核状态查询。
+description: 人像库素材管理与审核接口说明。自 Seedance 2.0 起，含人脸素材须先经本接口审核通过，再以 asset://{asset_id} 引用，否则无法用于视频生成。
 ---
 
 ## 概述
+
+人像库自 **Seedance 2.0** 起配套提供，**2.0 及后续版本均须使用**。当参考图 / 参考视频 / 首帧等素材中**包含人脸**时，必须先完成本接口的注册与审核，待 `status` 为 `Active` 后，在生视频请求里用 **`asset://{asset_id}`** 引用；**未审核、未通过，或仍传原始 HTTPS / `resolved_url`，人脸都无法正确用于视频生成**。
+
+不含人脸的纯场景图、产品图，可继续直接传公网 HTTPS URL，不必走人像库。
 
 本平台提供人像库 **HTTP REST 接口**，完成以下能力：
 
@@ -14,6 +18,7 @@ description: 人像库素材管理与审核接口说明，供 Seedance 2.0 等�
 | 状态同步 | 单条查询时**实时**刷新审核状态；后台另每 **5 分钟**轮询非终态素材 |
 
 <Callout type="warn" title="重要限制（接入前必读）">
+- **人脸必审（自 2.0 起）**：素材含人脸时，须先注册并等待 `status === "Active"`，再在 [Seedance 视频生成](/zh/docs/api/ai-model/videos/doubao/createvideogeneration) 的 `metadata.content` 中传入 `asset://{asset_id}`；跳过审核或误用原图 URL / `resolved_url` 则人脸无法用于生视频
 - **不提供文件上传**：平台**不代理** multipart 上传。须先将文件放到自有 OSS/CDN，再调用「创建素材」传入 **HTTPS 公网 URL**
 - **数据隔离维度**：素材组、素材列表均按**用户账号**隔离，同账号下多把 Key 看到的数据相同
 - **路径参数中的 ID**：路径参数 `:assetId` 为平台返回的 `asset_id`；`:groupId` 为平台返回的 `group_id`，**不是**本地自增字段 `id`
@@ -123,7 +128,7 @@ https://api.mapi.zone/v1/portrait/...
 |--------|------|----------|
 | `Submitted` | 已提交，排队处理中（创建后初始状态） | 否 |
 | `Processing` | 处理 / 审核中 | 否 |
-| `Active` | 审核通过，`resolved_url` 可用 | **是** |
+| `Active` | 审核通过，可用 `asset://{asset_id}` 引用 | **是** |
 | `Failed` | 处理失败（URL 不可达、格式不符、审核拒绝等） | **是** |
 
 > 终态定义：`Active`、`Failed`。处于终态时，单条查询接口不再实时刷新。
@@ -137,9 +142,42 @@ https://api.mapi.zone/v1/portrait/...
 
 ### 接入建议
 
-1. 创建素材后，用 `GET /v1/portrait/assets/{assetId}` 轮询（建议间隔 3～10 秒）直到 `status` 为终态。
-2. 仅展示列表时，用 `GET /v1/portrait/assets` 即可，依赖后台 5 分钟同步。
-3. 调用 Seedance 2.0 前确认 `status === "Active"`，并使用 `resolved_url`。
+1. 创建素材后，用 `GET /v1/portrait/assets/{assetId}` 轮询（建议间隔 3～10 秒）直到 `status` 为终态；**不要**依赖列表接口或后台 5 分钟同步来等待审核。
+2. 仅展示列表时，用 `GET /v1/portrait/assets` 即可。
+3. 含人脸素材须确认 `status === "Active"` 后，再用 `asset://{asset_id}` 提交生视频。
+
+---
+
+## 审核通过后如何引用
+
+生视频请求里，把 `asset_id` 拼成 **`asset://{asset_id}`**，写入 `metadata.content[].image_url.url`（视频 / 音频同理）：
+
+```json
+{
+  "type": "image_url",
+  "image_url": { "url": "asset://asset-20260520181205-vvds9" },
+  "role": "reference_image"
+}
+```
+
+| 写法 | 是否可用 | 说明 |
+|------|----------|------|
+| `asset://{asset_id}` | **必须用这个** | 保留人像库授权上下文 |
+| 创建时的原始 HTTPS / `source_url` | 否（含人脸时） | 会被风控拦截或丢失人物一致性 |
+| 详情里的 `resolved_url` | 否 | 多为动态签名地址，会过期，且丢失授权上下文；仅作审核通过旁证 |
+| 本地自增 `id` | 否 | 不是素材 ID |
+| `asset://{group_id}` | 否 | `group_id` 与 `asset_id` 不可混用 |
+| 在 `prompt` 里写 `asset://...` | 否 | 提示词用「图片 1」「图片 2」指代，不要写 asset ID 原文 |
+
+提示词指代：`content` 中第 1 张图 =「图片 1」，第 2 张 =「图片 2」；视频 / 音频同理为「视频 1」「音频 1」。
+
+**ID 对照：**
+
+| 业务称呼 | 创建响应字段 | 列表字段 | 用途 |
+|----------|------------|----------|------|
+| 素材组 ID | `group_id` | `remote_group_id` | `POST /assets` 的 `group_id` |
+| 素材 ID | `asset_id` | `remote_asset_id` | 轮询路径、以及 `asset://{asset_id}` |
+| 本地自增 ID | `id` | `id` | 不用 |
 
 ---
 
@@ -156,23 +194,23 @@ sequenceDiagram
     Client->>Client: 上传文件到自有 CDN，得到公网 URL
 
     Client->>API: POST /assets（group_id + url + asset_type）
-    API-->>Client: data.asset_id, status=Processing
+    API-->>Client: data.asset_id, status=Submitted
 
     loop 直到终态（Active 或 Failed）
         Client->>API: GET /assets/{assetId}
-        API-->>Client: data.status, data.resolved_url
+        API-->>Client: data.status
     end
 
-    Client->>Client: status=Active 后，使用 resolved_url 调用 Seedance 2.0
+    Client->>Client: status=Active 后拼 asset://{asset_id}，写入生视频 content
 ```
 
 **最小可行步骤：**
 
-1. `POST /v1/portrait/groups` → 保存 `data.group_id`
+1. `POST /v1/portrait/groups` → 保存 `data.group_id`（列表复用时用 `remote_group_id`）
 2. 将素材上传至公网存储 → 得到 `https://...`
-3. `POST /v1/portrait/assets` → 保存 `data.asset_id`
+3. `POST /v1/portrait/assets` → **立刻保存** `data.asset_id`
 4. 循环 `GET /v1/portrait/assets/{asset_id}` 直至 `data.status` 为 `Active` / `Failed`
-5. `status = Active` 后，使用 `data.resolved_url` 发起视频生成
+5. `status = Active` 后，用 `asset://{asset_id}` 写入 `metadata.content` 发起视频生成
 
 ---
 
@@ -181,10 +219,11 @@ sequenceDiagram
 | 现象 | 可能原因 | 建议 |
 |------|----------|------|
 | Token 相关错误 | 未传 Authorization、Key 错误、过期、额度耗尽 | 检查控制台令牌状态与请求头格式 |
-| `素材组名称不能为空` | `name` 全空格或未传 | 传非空 `name` |
-| `group_id 不能为空` / `url 不能为空` | 必填字段缺失 | 检查 JSON 字段名与值 |
+| `素材组名称不能为空` / 创建组失败 | `name` 为空、含中文/空格、未以 `group-` 开头 | 使用 `group-xxx`（仅字母、数字、`-`） |
+| `group_id 不能为空` / `url 不能为空` | 必填字段缺失，或误用本地 `id` | 用创建组返回的 `group_id`，或列表的 `remote_group_id` |
 | `asset_type 须为 Image / Video / Audio` | 大小写或拼写错误 | 使用三种枚举之一 |
 | `上游服务调用失败` | 渠道凭据错误、组 ID 无效、URL 无法拉取 | 联系平台管理员；自查 URL 公网可达性 |
 | `素材不存在` | `assetId` 写错、用了本地 `id` 而非 `asset_id` | 使用创建接口返回的 `data.asset_id` |
 | 长期 `Processing` | 上游审核排队或 URL 拉取慢 | 继续轮询单条查询；检查 `refresh_error` 字段 |
-| 列表状态滞后 | 列表不实时查询上游 | 对关键素材用单条 `GET` 接口，或等待后台 5 分钟轮询 |
+| 列表状态滞后 | 列表不实时查询上游 | 生成前必须用单条 `GET` 接口 |
+| 生视频报真人素材 / 风控，或人物不像参考图 | 人脸图仍传了 HTTPS / `resolved_url` | 等 `Active` 后改为 `asset://{asset_id}` |

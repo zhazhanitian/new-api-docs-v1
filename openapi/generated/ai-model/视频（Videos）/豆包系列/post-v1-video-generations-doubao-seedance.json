@@ -1,0 +1,610 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "豆包 Seedance 视频生成",
+    "version": "1.0.0",
+    "description": "提交豆包 Seedance 视频生成任务。请求地址与统一视频接口相同：`POST /v1/video/generations`。\n\n立即返回任务 ID，可通过 `GET /v1/video/generations/{task_id}` 轮询状态与结果。\n\n**人像库（自 Seedance 2.0 起）：** 参考图、参考视频、首帧等素材中**包含人脸**时，须先完成「人像库审核」并待 `status` 为 `Active`，再在 `metadata.content` 中传入 **`asset://{asset_id}`**（不要用原始 HTTPS，也不要用 `resolved_url`）；**否则人脸无法用于视频生成**。不含人脸的场景图可继续直接传公网 URL。适用于 2.0 及后续所有版本。详见豆包系列下的人像库文档。\n\n**调用约定：**\n- **`prompt` 必填**，推荐只用本字段传提示词，保持一条文案。\n- 若 `metadata.content` 中也有相同 text，不会重复追加；不同 text 会一并提交。\n- 外层 `size`：传分辨率档位只覆盖 `resolution`；传 `宽x高` 会同时覆盖 `resolution` 与 `ratio`。\n- 简单首帧可用外层 `images[]`；首尾帧 / 参考图 / 参考视频 / 参考音频 / 样片请用 `metadata.content`。\n"
+  },
+  "tags": [
+    {
+      "name": "视频（Videos）/豆包系列"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "使用 Bearer Token 认证。\n格式: `Authorization: Bearer sk-xxxxxx`\n"
+      }
+    }
+  },
+  "paths": {
+    "/v1/video/generations": {
+      "post": {
+        "tags": [
+          "视频（Videos）/豆包系列"
+        ],
+        "summary": "豆包 Seedance 视频生成",
+        "description": "提交豆包 Seedance 视频生成任务（文生 / 图生首帧 / 首尾帧 / 全模态参考）。\n\n支持模型见 `model` 字段说明。2.5 另支持样片模式（`draft`）、样片转正式片（`draft_task`）、任务类型引导（`omni_reference_task_type`）与输出格式（`output_format`）。\n\n**人脸素材：** 自 Seedance **2.0 起**，使用含人脸的图片或视频时，必须先走「人像库审核」并通过（`Active`），再在 `content` 中传 `asset://{asset_id}`；传原始 URL 或 `resolved_url` 均不正确。",
+        "operationId": "createDoubaoSeedanceVideoGeneration",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model",
+                  "prompt"
+                ],
+                "description": "豆包 Seedance 视频生成请求",
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "description": "模型 ID。\n\n| 模型 | 主要能力 |\n|---|---|\n| Seedance 2.5 | 文生 / 首帧 / 首尾帧 / 全模态参考；最长 30s；样片模式；可单独传音频 |\n| Seedance 2.0 | 文生 / 首帧 / 首尾帧 / 全模态参考；最长 15s；支持 4k |\n| Seedance 2.0 Fast | 同 2.0 能力面；仅 `480p`/`720p` |\n| Seedance 2.0 Mini | 同 2.0 能力面；仅 `480p`/`720p` |\n| Seedance 2.0（国际线路同款） | 参数同 2.0 |\n| Seedance 2.0 Fast（国际线路同款） | 参数同 2.0 Fast |\n| Seedance 1.5 Pro | 文生 / 首帧 / 首尾帧；有声/无声；样片 `draft` |\n| Seedance 1.0 Pro | 文生 / 首帧 / 首尾帧 |\n| Seedance 1.0 Lite 文生 | 仅文生视频 |\n| Seedance 1.0 Lite 图生 | 仅首帧图生视频 |",
+                    "examples": [
+                      "doubao-seedance-2-5-260628",
+                      "doubao-seedance-2-0-260128",
+                      "doubao-seedance-1-5-pro-251215"
+                    ]
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "description": "文本提示词，**必填**。\n\n- 推荐只用本字段传提示词，保持一条文案。\n- 提交时写入 `content` 的 `type=text`；若 `metadata.content` 中已有相同 text，则不再重复追加。\n- 中文建议不超过 500 字，英文建议不超过 1000 词。",
+                    "examples": [
+                      "小猫对着镜头打哈欠",
+                      "宇航员在月球表面缓缓行走，远处是蓝色地球"
+                    ]
+                  },
+                  "images": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "图片 URL 数组，用于简单图生视频（首帧）。提交时转为 `content` 中的 `image_url`。\n\n支持公网 URL、Base64（`data:image/...;base64,...`）或 `asset://{asset_id}`。\n\n**含人脸时（自 Seedance 2.0 起）：** 须先经人像库审核通过，再传 `asset://{asset_id}`；不要传原始 HTTPS 或 `resolved_url`。\n\n首尾帧、参考图、参考视频、参考音频请使用 `metadata.content`。",
+                    "examples": [
+                      [
+                        "https://example.com/first-frame.jpg"
+                      ]
+                    ]
+                  },
+                  "duration": {
+                    "type": "integer",
+                    "description": "生成视频时长（秒）。超出模型合法范围会报错。\n\n| 模型 | 合法范围 | 说明 |\n|---|---|---|\n| Seedance 2.5 | `[4, 30]` 或 `-1` | `-1` 为智能选时长；**视频编辑任务必须为 `-1`** |\n| Seedance 2.0 / Fast / Mini | `[4, 15]` 或 `-1` | `-1` 为智能选时长 |\n| Seedance 1.5 Pro | `[4, 12]` | — |\n| Seedance 1.0 系列 | `[2, 12]` | — |\n\n也可传 `seconds`（字符串），优先级高于本字段。",
+                    "examples": [
+                      5,
+                      15,
+                      30,
+                      -1
+                    ]
+                  },
+                  "size": {
+                    "type": "string",
+                    "description": "输出分辨率（及可选画幅）。能解析出有效值时覆盖对应 metadata 字段。\n\n**两种写法（行为不同）：**\n- 分辨率档位：`480p` / `720p` / `1080p` / `4k`（大小写不敏感）→ **只覆盖** `metadata.resolution`，**不改** `metadata.ratio`\n- `宽x高`（如 `1920x1080`）→ 按短边归档分辨率，并就近匹配宽高比；**同时覆盖** `resolution` 与 `ratio`\n\n不支持把 `16:9` 这类宽高比字符串直接当作 `size`（不会生效）。\n\n| 模型 | 合法分辨率 | 默认 |\n|---|---|---|\n| Seedance 2.5 | `480p` / `720p` / `1080p` | `720p` |\n| Seedance 2.0 | `480p` / `720p` / `1080p` / `4k` | `720p` |\n| Seedance 2.0 Fast / Mini | `480p` / `720p` | `720p` |\n| Seedance 1.5 Pro | `480p` / `720p` / `1080p` | `720p` |\n| Seedance 1.0 系列 | `480p` / `720p` / `1080p` | `1080p` |\n\n`宽x高` 可推导的宽高比：`16:9`、`9:16`、`1:1`、`4:3`、`3:4`、`21:9`。",
+                    "examples": [
+                      "720p",
+                      "1080p",
+                      "1920x1080",
+                      "720x1280"
+                    ]
+                  },
+                  "seed": {
+                    "type": "integer",
+                    "description": "随机种子，用于控制生成结果的可复现性。取值范围 `[-1, 2147483647]`，`-1` 表示随机。\n\n优先使用本字段；也可写在 `metadata.seed`，外层本字段覆盖 metadata。主要适用于 Seedance 1.0 系列，其他型号透传效果因模型而异。",
+                    "examples": [
+                      11,
+                      20240303
+                    ]
+                  },
+                  "n": {
+                    "type": "integer",
+                    "description": "生成数量。固定为 1，不支持批量。",
+                    "examples": [
+                      1
+                    ]
+                  },
+                  "response_format": {
+                    "type": "string",
+                    "description": "响应格式，默认 `url`。",
+                    "examples": [
+                      "url"
+                    ]
+                  },
+                  "user": {
+                    "type": "string",
+                    "description": "终端用户标识，用于日志追踪。",
+                    "examples": [
+                      "user-1234"
+                    ]
+                  },
+                  "metadata": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "豆包 Seedance 扩展参数。未支持或非法的字段可能被忽略或导致请求失败。\n\n### 字段\n\n| 字段 | 类型 | 支持模型 | 说明 |\n|---|---|---|---|\n| `resolution` | string | 全部 | 分辨率档位。被外层 `size`（档位或 `宽x高`）覆盖 |\n| `ratio` | string | 全部 | `16:9` / `4:3` / `1:1` / `3:4` / `9:16` / `21:9` / `adaptive`（自适应）。仅当外层 `size` 为 `宽x高` 时覆盖；2.5 首帧/首尾帧/编辑/延长仅允许 `adaptive`（自适应） |\n| `generate_audio` | boolean | 2.5、2.0 系列、1.5 Pro | 是否生成有声视频，默认 `true` |\n| `return_last_frame` | boolean | 全部 | 是否返回尾帧图，默认 `false` |\n| `watermark` | boolean | 全部 | 是否添加「AI 生成」水印，默认 `false` |\n| `camera_fixed` | boolean | **仅 1.5 Pro / 1.0 系列** | 固定摄像头；2.0/2.5 不支持 |\n| `draft` | boolean | **1.5 Pro、2.5** | 样片模式；开启时通常强制 `480p`。2.0 不支持 |\n| `service_tier` | string | **主要 1.0 / 1.5** | `default` / `flex`。2.0 / 2.5 **不支持 flex** |\n| `frames` | integer | **仅 1.0 系列** | 按帧数控制时长；与 `duration` 二选一，`frames` 优先 |\n| `content` | array | 全部（能力因模型而异） | 多模态素材，见下方 |\n| `tools` | array | 2.5、2.0 系列 | 如 `[{\"type\":\"web_search\"}]` 开启联网搜索 |\n| `omni_reference_task_type` | string | **仅 2.5** | 全模态子任务引导：`auto`（默认）/ `reference` / `edit` / `extend`。用于提前提交校验，减少异步报错 |\n| `output_format` | string | **仅 2.5** | `mp4`（默认，通用兼容）/ `mov`（专业后期，编辑 / 延长更推荐） |\n\n**`omni_reference_task_type` 约束摘要：**\n- `edit`：`content` 须含 `reference_video`（单段 4–30s）；`ratio` 须 `adaptive`（自适应）；`duration` 须 `-1`\n- `extend`：须含 `reference_video`；`ratio` 须 `adaptive`（自适应）\n- `reference`：`ratio` / `duration` 无上述特殊限制\n\n### `content` 元素结构\n\n| 字段 | 类型 | 说明 |\n|---|---|---|\n| `type` | string | `image_url` / `video_url` / `audio_url` / `draft_task`（2.5） |\n| `role` | string | 见下表 |\n| `image_url.url` | string | 图片地址；含人脸须 `asset://{asset_id}`，否则可用公网 URL / Base64 |\n| `video_url.url` | string | 视频地址；含真人须 `asset://{asset_id}`，否则可用公网 URL |\n| `audio_url.url` | string | 音频地址；需审核时用 `asset://{asset_id}`，否则可用公网 URL / Base64 |\n| `draft_task.id` | string | **仅 2.5**：样片任务 ID，用于生成正式视频 |\n\n**`role` 取值：**\n\n| role | 适用 type | 说明 |\n|---|---|---|\n| `first_frame` | image_url | 首帧；单图时可省略 |\n| `last_frame` | image_url | 尾帧；须同时有首帧 |\n| `reference_image` | image_url | 参考图（全模态） |\n| `reference_video` | video_url | 参考视频（全模态） |\n| `reference_audio` | audio_url | 参考音频（全模态） |\n\n**互斥规则：**「首帧/首尾帧」与「全模态参考（图/视频/音频）」不可混用。\n\n**人脸素材（自 Seedance 2.0 起）：** 图 / 视频中含人脸时，须先完成人像库审核并通过，再在对应 `*.url` 中传 **`asset://{asset_id}`**；不要传原始 HTTPS 或 `resolved_url`。不含人脸的场景图可直接传公网 URL。提示词用「图片 1」等指代，不要写 asset ID 原文。\n\n**素材数量与时长上限：**\n\n| 项目 | Seedance 2.5 | Seedance 2.0 系列 |\n|---|---|---|\n| 参考图 | 1–30 张 | 1–9 张 |\n| 参考视频 | ≤10 个；单段非编辑 `[2,30]`s，编辑 `[4,30]`s；合计 ≤30s | ≤3 个；单段/合计 ≤15s |\n| 参考音频 | ≤10 段；单段/合计 ≤30s；**可单独传音频** | ≤3 段；单段/合计 ≤15s；**不可单独传音频** |\n\n1.5 / 1.0 主要使用首帧 / 首尾帧图片，不支持参考视频与参考音频。",
+                    "properties": {
+                      "resolution": {
+                        "type": "string",
+                        "description": "分辨率档位。被外层 `size` 覆盖（`size` 为分辨率档位或 `宽x高` 且能解析时）。可选值因模型而异，见 `size` 说明。",
+                        "examples": [
+                          "720p",
+                          "1080p",
+                          "480p"
+                        ]
+                      },
+                      "ratio": {
+                        "type": "string",
+                        "description": "宽高比。可选：`16:9`、`4:3`、`1:1`、`3:4`、`9:16`、`21:9`、`adaptive`（自适应，由模型根据输入内容或提示词自动选择宽高比）。\n\n- 外层 `size` 为 **`宽x高`** 时会覆盖本字段；`size` 仅为 `720p` 这类档位时**不覆盖**本字段。\n- 2.0 / 2.5 / 1.5 默认常为 `adaptive`；1.0 文生默认 `16:9`。\n- **Seedance 2.5**：首帧 / 首尾帧、视频编辑、视频延长任务仅允许 `adaptive`（可不传，由模型自适应）。",
+                        "examples": [
+                          "16:9",
+                          "9:16",
+                          "adaptive"
+                        ]
+                      },
+                      "generate_audio": {
+                        "type": "boolean",
+                        "description": "是否生成有声视频。默认 `true`。支持：2.5、2.0 系列、1.5 Pro。",
+                        "examples": [
+                          true
+                        ]
+                      },
+                      "return_last_frame": {
+                        "type": "boolean",
+                        "description": "是否返回生成视频尾帧图像，默认 `false`。可用于连续多段视频衔接。"
+                      },
+                      "watermark": {
+                        "type": "boolean",
+                        "description": "是否添加「AI 生成」水印，默认 `false`。"
+                      },
+                      "camera_fixed": {
+                        "type": "boolean",
+                        "description": "是否固定摄像头。**仅 1.5 Pro / 1.0 系列**；2.0 / 2.5 不支持。默认 `false`。"
+                      },
+                      "draft": {
+                        "type": "boolean",
+                        "description": "样片模式。`true` 时生成预览视频（通常强制 `480p`）。**支持 1.5 Pro、2.5**；2.0 不支持。默认 `false`。\n\n2.5 正式片流程：先 `draft=true` 拿样片任务 ID，再提交 `content: [{ \"type\": \"draft_task\", \"draft_task\": { \"id\": \"...\" } }]`。",
+                        "examples": [
+                          false
+                        ]
+                      },
+                      "service_tier": {
+                        "type": "string",
+                        "enum": [
+                          "default",
+                          "flex"
+                        ],
+                        "description": "服务等级。`flex` 为离线推理（更便宜）。**2.0 / 2.5 不支持 flex**。默认 `default`。"
+                      },
+                      "frames": {
+                        "type": "integer",
+                        "description": "按帧数控制时长。**仅 Seedance 1.0 系列**。与 `duration` 二选一，本字段优先。取值需满足 `25+4n` 格式约束（区间见模型说明）。"
+                      },
+                      "omni_reference_task_type": {
+                        "type": "string",
+                        "enum": [
+                          "auto",
+                          "reference",
+                          "edit",
+                          "extend"
+                        ],
+                        "description": "**仅 Seedance 2.5。** 全模态子任务类型引导，用于提交时提前校验。\n\n- `auto`：由模型判定（默认）\n- `reference`：参考生视频\n- `edit`：视频编辑（须参考视频 + `ratio=adaptive`（自适应）+ `duration=-1`）\n- `extend`：视频延长（须参考视频 + `ratio=adaptive`（自适应））",
+                        "examples": [
+                          "auto",
+                          "edit"
+                        ]
+                      },
+                      "output_format": {
+                        "type": "string",
+                        "enum": [
+                          "mp4",
+                          "mov"
+                        ],
+                        "description": "**仅 Seedance 2.5。** 输出容器格式。\n\n- `mp4`：通用兼容（默认）\n- `mov`：专业后期（色彩精度更高；编辑 / 延长场景更推荐）",
+                        "examples": [
+                          "mp4",
+                          "mov"
+                        ]
+                      },
+                      "tools": {
+                        "type": "array",
+                        "description": "工具配置。2.5 / 2.0 支持 `web_search`：`[{\"type\":\"web_search\"}]`。",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "description": "工具类型，当前支持 `web_search`。",
+                              "examples": [
+                                "web_search"
+                              ]
+                            }
+                          }
+                        }
+                      },
+                      "content": {
+                        "type": "array",
+                        "description": "多模态输入内容（图片 / 视频 / 音频 / 样片任务）。详见上方 `metadata` 总说明。",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "description": "`image_url` / `video_url` / `audio_url` / `draft_task`",
+                              "examples": [
+                                "image_url",
+                                "video_url",
+                                "audio_url",
+                                "draft_task"
+                              ]
+                            },
+                            "role": {
+                              "type": "string",
+                              "description": "`first_frame` / `last_frame` / `reference_image` / `reference_video` / `reference_audio`",
+                              "examples": [
+                                "first_frame",
+                                "reference_image",
+                                "reference_video"
+                              ]
+                            },
+                            "image_url": {
+                              "type": "object",
+                              "properties": {
+                                "url": {
+                                  "type": "string",
+                                  "description": "图片地址。含人脸时必须为 `asset://{asset_id}`；不含人脸可用公网 URL / Base64"
+                                }
+                              }
+                            },
+                            "video_url": {
+                              "type": "object",
+                              "properties": {
+                                "url": {
+                                  "type": "string",
+                                  "description": "视频地址。含真人时须为 `asset://{asset_id}`；否则可用公网 URL"
+                                }
+                              }
+                            },
+                            "audio_url": {
+                              "type": "object",
+                              "properties": {
+                                "url": {
+                                  "type": "string",
+                                  "description": "音频地址。含人声需审核时用 `asset://{asset_id}`；否则可用公网 URL / Base64"
+                                }
+                              }
+                            },
+                            "draft_task": {
+                              "type": "object",
+                              "description": "仅 Seedance 2.5。基于样片任务生成正式视频。",
+                              "properties": {
+                                "id": {
+                                  "type": "string",
+                                  "description": "样片任务 ID（`draft=true` 创建成功后返回的任务 ID）"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "x-apifox-orders": [
+                      "resolution",
+                      "ratio",
+                      "generate_audio",
+                      "return_last_frame",
+                      "watermark",
+                      "camera_fixed",
+                      "draft",
+                      "service_tier",
+                      "frames",
+                      "omni_reference_task_type",
+                      "output_format",
+                      "tools",
+                      "content"
+                    ]
+                  }
+                },
+                "x-apifox-orders": [
+                  "model",
+                  "prompt",
+                  "images",
+                  "duration",
+                  "size",
+                  "seed",
+                  "n",
+                  "response_format",
+                  "user",
+                  "metadata"
+                ]
+              },
+              "examples": {
+                "seedance-2-5-t2v": {
+                  "summary": "Seedance 2.5 文生视频",
+                  "value": {
+                    "model": "doubao-seedance-2-5-260628",
+                    "prompt": "清晨海岸公路，镜头缓慢推进，海风吹过路旁草木",
+                    "size": "720p",
+                    "duration": 8,
+                    "metadata": {
+                      "ratio": "16:9",
+                      "generate_audio": true,
+                      "watermark": false
+                    }
+                  }
+                },
+                "seedance-2-5-i2v-first-last": {
+                  "summary": "Seedance 2.5 首尾帧图生视频",
+                  "value": {
+                    "model": "doubao-seedance-2-5-260628",
+                    "prompt": "人物从坐姿缓缓站起并转身微笑",
+                    "duration": 5,
+                    "metadata": {
+                      "ratio": "adaptive",
+                      "generate_audio": true,
+                      "content": [
+                        {
+                          "type": "image_url",
+                          "role": "first_frame",
+                          "image_url": {
+                            "url": "https://example.com/first.jpg"
+                          }
+                        },
+                        {
+                          "type": "image_url",
+                          "role": "last_frame",
+                          "image_url": {
+                            "url": "https://example.com/last.jpg"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                "seedance-2-5-omni-reference": {
+                  "summary": "Seedance 2.5 全模态参考（图+视频+音频）",
+                  "value": {
+                    "model": "doubao-seedance-2-5-260628",
+                    "prompt": "保持视频 1 的运镜，使用音频 1 作为全程背景音乐",
+                    "size": "1080p",
+                    "duration": 10,
+                    "metadata": {
+                      "omni_reference_task_type": "reference",
+                      "output_format": "mp4",
+                      "generate_audio": true,
+                      "content": [
+                        {
+                          "type": "image_url",
+                          "role": "reference_image",
+                          "image_url": {
+                            "url": "https://example.com/ref1.jpg"
+                          }
+                        },
+                        {
+                          "type": "video_url",
+                          "role": "reference_video",
+                          "video_url": {
+                            "url": "https://example.com/ref.mp4"
+                          }
+                        },
+                        {
+                          "type": "audio_url",
+                          "role": "reference_audio",
+                          "audio_url": {
+                            "url": "https://example.com/bgm.mp3"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                "seedance-2-5-draft-then-final": {
+                  "summary": "Seedance 2.5 样片 → 正式片（第二步）",
+                  "value": {
+                    "model": "doubao-seedance-2-5-260628",
+                    "prompt": "",
+                    "metadata": {
+                      "content": [
+                        {
+                          "type": "draft_task",
+                          "draft_task": {
+                            "id": "cgt-xxxxxxxxxxxx"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                "seedance-2-0-omni": {
+                  "summary": "Seedance 2.0 多模态参考（人脸图用 asset://）",
+                  "value": {
+                    "model": "doubao-seedance-2-0-260128",
+                    "prompt": "全程使用图片 1 中的人物形象，并使用视频 1 的视角与音频 1 作为背景音乐。",
+                    "size": "1920x1080",
+                    "duration": 5,
+                    "metadata": {
+                      "generate_audio": true,
+                      "watermark": false,
+                      "content": [
+                        {
+                          "type": "image_url",
+                          "role": "reference_image",
+                          "image_url": {
+                            "url": "asset://asset-20260520181205-vvds9"
+                          }
+                        },
+                        {
+                          "type": "video_url",
+                          "role": "reference_video",
+                          "video_url": {
+                            "url": "https://example.com/ref_video.mp4"
+                          }
+                        },
+                        {
+                          "type": "audio_url",
+                          "role": "reference_audio",
+                          "audio_url": {
+                            "url": "https://example.com/bgm.mp3"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                "seedance-2-0-fast-t2v": {
+                  "summary": "Seedance 2.0 Fast 文生视频",
+                  "value": {
+                    "model": "doubao-seedance-2-0-fast-260128",
+                    "prompt": "宇航员在月球表面缓缓行走，远处是蓝色地球，星空背景",
+                    "size": "720p",
+                    "duration": 5,
+                    "metadata": {
+                      "generate_audio": true,
+                      "watermark": false
+                    }
+                  }
+                },
+                "seedance-2-0-mini-t2v": {
+                  "summary": "Seedance 2.0 Mini 文生视频",
+                  "value": {
+                    "model": "doubao-seedance-2-0-mini-260615",
+                    "prompt": "一只橘猫趴在阳光下的窗台上，懒洋洋地眯起眼睛",
+                    "size": "720p",
+                    "duration": 5,
+                    "metadata": {
+                      "generate_audio": false
+                    }
+                  }
+                },
+                "seedance-1-5-pro-i2v": {
+                  "summary": "Seedance 1.5 Pro 图生视频",
+                  "value": {
+                    "model": "doubao-seedance-1-5-pro-251215",
+                    "prompt": "人物转过头微笑，背景轻微虚化",
+                    "size": "720x1280",
+                    "duration": 5,
+                    "metadata": {
+                      "generate_audio": true,
+                      "return_last_frame": true,
+                      "content": [
+                        {
+                          "type": "image_url",
+                          "image_url": {
+                            "url": "https://example.com/portrait.jpg"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                "seedance-1-0-pro-t2v": {
+                  "summary": "Seedance 1.0 Pro 文生视频",
+                  "value": {
+                    "model": "doubao-seedance-1-0-pro-250528",
+                    "prompt": "小猫对着镜头打哈欠",
+                    "size": "1080p",
+                    "duration": 5,
+                    "seed": 11,
+                    "metadata": {
+                      "ratio": "16:9",
+                      "camera_fixed": false,
+                      "watermark": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功创建视频生成任务",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "task_id": {
+                      "type": "string",
+                      "description": "任务 ID，用于 `GET /v1/video/generations/{task_id}` 查询。样片模式下为 Draft 任务 ID。",
+                      "examples": [
+                        "cgt-20260323xxxxxx"
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "queued",
+                        "NOT_START"
+                      ],
+                      "description": "任务初始状态。请轮询最终结果。",
+                      "examples": [
+                        "queued"
+                      ]
+                    }
+                  },
+                  "x-apifox-orders": [
+                    "task_id",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "错误信息"
+                        },
+                        "type": {
+                          "type": "string",
+                          "description": "错误类型"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "description": "相关参数"
+                        },
+                        "code": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "description": "错误代码"
+                        }
+                      },
+                      "x-apifox-orders": [
+                        "message",
+                        "type",
+                        "param",
+                        "code"
+                      ]
+                    }
+                  },
+                  "x-apifox-orders": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
