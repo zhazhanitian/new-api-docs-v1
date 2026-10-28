@@ -1,0 +1,249 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "混元视频生成",
+    "version": "2.0.0",
+    "description": "提交混元视频生成任务。请求地址与统一视频接口相同：`POST /v1/video/generations`。\n\n立即返回任务 ID，可通过 `GET /v1/video/generations/{task_id}` 查询。\n\n文生、首帧、参考图。首帧必须写 `role=first_frame`。不写 `role` 时按参考图处理。不支持尾帧和参考视频。\n\n不传时长、分辨率、宽高比。\n"
+  },
+  "tags": [
+    {
+      "name": "视频（Videos）/混元系列"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "使用 Bearer Token 认证。\n格式: `Authorization: Bearer sk-xxxxxx`\n"
+      }
+    }
+  },
+  "paths": {
+    "/v1/video/generations": {
+      "post": {
+        "tags": [
+          "视频（Videos）/混元系列"
+        ],
+        "summary": "混元视频生成",
+        "description": "提交混元视频生成任务。不传时长、分辨率、宽高比。",
+        "operationId": "createHunyuanVideoGeneration",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model"
+                ],
+                "description": "视频生成请求",
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "description": "模型 ID。\n\n| 模型 | 说明 |\n|---|---|\n| Hunyuan 1.5 | 文生、首帧、参考图。不传时长、分辨率、宽高比 |\n",
+                    "examples": [
+                      "hunyuan-video-1.5"
+                    ]
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "description": "文本描述提示词。文生必填；首帧和参考图建议填写。",
+                    "examples": [
+                      "宇航员站起身走了"
+                    ]
+                  },
+                  "seed": {
+                    "type": "integer",
+                    "description": "随机种子，控制生成结果可复现性。",
+                    "examples": [
+                      20231234
+                    ]
+                  },
+                  "metadata": {
+                    "type": "object",
+                    "description": "扩展参数。不支持尾帧和参考视频。\n\n| 字段 | 类型 | 说明 |\n|---|---|---|\n| `content` | array | 素材列表。见下方元素字段 |\n| `negative_prompt` | string | 反向提示词 |\n| `enhance_prompt` | string | 自动优化提示词，`Enabled` / `Disabled` |\n| `enhance_switch` | string | 视频超分增强，`Enabled` / `Disabled` |\n\n### `content` 元素结构\n\n| 字段 | 类型 | 说明 |\n|---|---|---|\n| `type` | string | `image_url` |\n| `role` | string | 见下表 |\n| `image_url.url` | string | 图片地址 |\n\n**`role` 取值：**\n\n| role | 适用 type | 说明 |\n|---|---|---|\n| `first_frame` | image_url | 首帧。必须显式填写，省略时按参考图提交 |\n| `reference_image` | image_url | 参考图 |\n",
+                    "additionalProperties": true,
+                    "properties": {
+                      "content": {
+                        "type": "array",
+                        "description": "素材列表。首帧写 `first_frame`，参考图写 `reference_image`。",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "image_url"
+                              ],
+                              "description": "`image_url`"
+                            },
+                            "image_url": {
+                              "type": "object",
+                              "properties": {
+                                "url": {
+                                  "type": "string",
+                                  "description": "图片地址。"
+                                }
+                              }
+                            },
+                            "role": {
+                              "type": "string",
+                              "enum": [
+                                "first_frame",
+                                "reference_image"
+                              ],
+                              "description": "首帧写 `first_frame`。不写时按参考图处理。"
+                            }
+                          }
+                        }
+                      },
+                      "negative_prompt": {
+                        "type": "string",
+                        "description": "反向提示词。"
+                      },
+                      "enhance_prompt": {
+                        "type": "string",
+                        "enum": [
+                          "Enabled",
+                          "Disabled"
+                        ],
+                        "description": "自动优化提示词，`Enabled` / `Disabled`。",
+                        "examples": [
+                          "Enabled"
+                        ]
+                      },
+                      "enhance_switch": {
+                        "type": "string",
+                        "enum": [
+                          "Enabled",
+                          "Disabled"
+                        ],
+                        "description": "视频超分增强，`Enabled` / `Disabled`。",
+                        "examples": [
+                          "Enabled"
+                        ]
+                      }
+                    },
+                    "x-apifox-orders": [
+                      "content",
+                      "negative_prompt",
+                      "enhance_prompt",
+                      "enhance_switch"
+                    ]
+                  }
+                },
+                "x-apifox-orders": [
+                  "model",
+                  "prompt",
+                  "seed",
+                  "metadata"
+                ]
+              },
+              "examples": {
+                "hunyuan-video-1-5": {
+                  "summary": "Hunyuan 1.5 文生视频",
+                  "value": {
+                    "model": "hunyuan-video-1.5",
+                    "prompt": "宇航员站起身走了",
+                    "seed": 20231234
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功创建视频生成任务",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "task_id": {
+                      "type": "string",
+                      "description": "任务 ID，用于 GET /v1/video/generations/{task_id} 查询状态",
+                      "examples": [
+                        "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "queued",
+                        "NOT_START"
+                      ],
+                      "description": "任务初始状态。请用 GET 接口轮询最终状态。",
+                      "examples": [
+                        "queued"
+                      ]
+                    }
+                  },
+                  "x-apifox-orders": [
+                    "task_id",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "错误信息"
+                        },
+                        "type": {
+                          "type": "string",
+                          "description": "错误类型"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "description": "相关参数"
+                        },
+                        "code": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "description": "错误代码"
+                        }
+                      },
+                      "x-apifox-orders": [
+                        "message",
+                        "type",
+                        "param",
+                        "code"
+                      ]
+                    }
+                  },
+                  "x-apifox-orders": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

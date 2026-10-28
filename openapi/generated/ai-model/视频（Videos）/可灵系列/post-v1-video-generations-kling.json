@@ -1,0 +1,413 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "可灵视频生成",
+    "version": "2.0.0",
+    "description": "提交可灵视频生成任务。请求地址与统一视频接口相同：`POST /v1/video/generations`。\n\n立即返回任务 ID，可通过 `GET /v1/video/generations/{task_id}` 查询。\n\n**调用约定：**\n- 素材只通过 `metadata.content` 传入。首帧必须写 `role=first_frame`。不写 `role` 时按参考图处理。\n- 已有素材时不要传宽高比，由素材决定。\n- `kling-video-2.1` 的尾帧须同时传首帧，且分辨率为 `1080P`。\n"
+  },
+  "tags": [
+    {
+      "name": "视频（Videos）/可灵系列"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "使用 Bearer Token 认证。\n格式: `Authorization: Bearer sk-xxxxxx`\n"
+      }
+    }
+  },
+  "paths": {
+    "/v1/video/generations": {
+      "post": {
+        "tags": [
+          "视频（Videos）/可灵系列"
+        ],
+        "summary": "可灵视频生成",
+        "description": "提交可灵视频生成任务（文生、首帧、首尾帧、参考图、参考视频）。\n\n支持模型见 `model` 字段。尾帧仅 `kling-video-2.1`，且分辨率为 `1080P`。\n",
+        "operationId": "createKlingVideoGeneration",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model"
+                ],
+                "description": "视频生成请求",
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "description": "模型 ID。\n\n| model | 说明 |\n|---|---|\n| `kling-video-1.6` | 文生、首帧、参考图、参考视频 |\n| `kling-video-2.0` | 文生、首帧、参考图、参考视频 |\n| `kling-video-2.1` | 同上，另支持首尾帧，须 `1080P` |\n| `kling-video-2.5` | 文生、首帧、参考图、参考视频 |\n| `kling-video-2.6` | 文生、首帧、参考图、参考视频 |\n| `kling-video-o1` | 文生、首帧、参考图、参考视频 |\n| `kling-video-3.0` | 文生、首帧、参考图、参考视频；支持动作控制、数字人、对口型 |\n| `kling-video-3.0-omni` | 文生、首帧、参考图、参考视频 |\n",
+                    "examples": [
+                      "kling-video-1.6",
+                      "kling-video-2.0",
+                      "kling-video-2.1",
+                      "kling-video-2.5",
+                      "kling-video-2.6",
+                      "kling-video-o1",
+                      "kling-video-3.0",
+                      "kling-video-3.0-omni"
+                    ]
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "description": "文本描述提示词。t2v 模式必填；i2v / 参考图模式建议填写以精确描述运动效果。",
+                    "examples": [
+                      "宇航员站起身走了",
+                      "小猫慢慢睁开眼睛，轻轻伸了个懒腰"
+                    ]
+                  },
+                  "duration": {
+                    "type": "number",
+                    "description": "视频时长（秒）。范围 3–15，默认 5。超出范围时限制到范围内；不传则使用默认 5 秒。",
+                    "examples": [
+                      5,
+                      8,
+                      10
+                    ]
+                  },
+                  "resolution": {
+                    "type": "string",
+                    "description": "分辨率。`720P`、`1080P`，默认 `720P`，使用大写 P。`kling-video-2.1` 使用尾帧时必须是 `1080P`。",
+                    "examples": [
+                      "1080P",
+                      "720P"
+                    ]
+                  },
+                  "ratio": {
+                    "type": "string",
+                    "description": "宽高比。文生视频可选 `16:9`、`9:16`、`1:1`。已经有素材时不要传，由素材决定。",
+                    "examples": [
+                      "16:9",
+                      "9:16",
+                      "1:1"
+                    ]
+                  },
+                  "seed": {
+                    "type": "integer",
+                    "description": "随机种子，控制生成结果可复现性。全部模型支持。",
+                    "examples": [
+                      20231234
+                    ]
+                  },
+                  "metadata": {
+                    "type": "object",
+                    "description": "扩展参数。尾帧仅 `kling-video-2.1`，须与首帧同时传入，且分辨率为 `1080P`。已有素材时不传宽高比。\n\n| 字段 | 类型 | 说明 |\n|---|---|---|\n| `content` | array | 素材列表。见下方元素字段 |\n| `negative_prompt` | string | 反向提示词 |\n| `enhance_prompt` | string | 自动优化提示词，`Enabled` / `Disabled` |\n| `scene_type` | string | `motion_control` 动作控制、`avatar_i2v` 数字人、`lip_sync` 对口型 |\n| `audio_generation` | string | 是否生成 AI 音频，`Enabled` / `Disabled`。有值即转发 |\n| `enhance_switch` | string | 视频超分增强，`Enabled` / `Disabled` |\n\n### `content` 元素结构\n\n| 字段 | 类型 | 说明 |\n|---|---|---|\n| `type` | string | `image_url` / `video_url` / `audio_url` |\n| `role` | string | 见下表 |\n| `image_url.url` | string | 图片地址 |\n| `video_url.url` | string | 视频地址 |\n| `audio_url.url` | string | 音频地址 |\n| `reference_type` | string | 写在对应视频项上。`feature` 为特征参考，`base` 为待编辑视频。普通参考图不传 |\n\n**`role` 取值：**\n\n| role | 适用 type | 说明 |\n|---|---|---|\n| `first_frame` | image_url | 首帧。必须显式填写，省略时按参考图提交 |\n| `last_frame` | image_url | 尾帧。仅 `kling-video-2.1`，须与首帧同时传入，且分辨率为 `1080P` |\n| `reference_image` | image_url | 参考图 |\n| `reference_video` | video_url | 参考视频 |\n| `reference_audio` | audio_url | 参考音频 |\n",
+                    "additionalProperties": true,
+                    "properties": {
+                      "negative_prompt": {
+                        "type": "string",
+                        "description": "反向提示词，描述不希望在视频中出现的元素。"
+                      },
+                      "enhance_prompt": {
+                        "type": "string",
+                        "enum": [
+                          "Enabled",
+                          "Disabled"
+                        ],
+                        "description": "自动优化提示词，取值 `\"Enabled\"` / `\"Disabled\"`。",
+                        "examples": [
+                          "Enabled"
+                        ]
+                      },
+                      "scene_type": {
+                        "type": "string",
+                        "description": "场景类型。\n\n- `motion_control`：动作控制\n- `avatar_i2v`：数字人\n- `lip_sync`：对口型",
+                        "examples": [
+                          "motion_control",
+                          "avatar_i2v",
+                          "lip_sync"
+                        ]
+                      },
+                      "audio_generation": {
+                        "type": "string",
+                        "enum": [
+                          "Enabled",
+                          "Disabled"
+                        ],
+                        "description": "是否开启 AI 音频生成，取值 `\"Enabled\"` / `\"Disabled\"`。有值就原样转发给上游，不再按模型过滤。上游不支持时由上游忽略或报错。",
+                        "examples": [
+                          "Enabled"
+                        ]
+                      },
+                      "enhance_switch": {
+                        "type": "string",
+                        "enum": [
+                          "Enabled",
+                          "Disabled"
+                        ],
+                        "description": "视频超分增强开关，取值 `\"Enabled\"` / `\"Disabled\"`。",
+                        "examples": [
+                          "Enabled"
+                        ]
+                      },
+                      "content": {
+                        "type": "array",
+                        "description": "素材列表。图片不写 `role` 时按参考图处理。首帧写 `first_frame`，尾帧写 `last_frame`（仅 2.1 且 `1080P`）。参考视频的 `reference_type` 取 `feature` 或 `base`。",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "image_url",
+                                "video_url",
+                                "audio_url"
+                              ],
+                              "description": "`image_url` / `video_url` / `audio_url`"
+                            },
+                            "image_url": {
+                              "type": "object",
+                              "properties": {
+                                "url": {
+                                  "type": "string",
+                                  "description": "图片地址。"
+                                }
+                              }
+                            },
+                            "video_url": {
+                              "type": "object",
+                              "properties": {
+                                "url": {
+                                  "type": "string",
+                                  "description": "视频地址。"
+                                }
+                              }
+                            },
+                            "audio_url": {
+                              "type": "object",
+                              "properties": {
+                                "url": {
+                                  "type": "string",
+                                  "description": "音频地址。"
+                                }
+                              }
+                            },
+                            "role": {
+                              "type": "string",
+                              "enum": [
+                                "first_frame",
+                                "last_frame",
+                                "reference_image",
+                                "reference_video",
+                                "reference_audio"
+                              ],
+                              "description": "不写时图片按参考图处理。首帧必须写 `first_frame`。"
+                            },
+                            "reference_type": {
+                              "type": "string",
+                              "description": "参考视频类型：`feature` 特征参考，`base` 待编辑视频。"
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "可灵不使用。留空即可。"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "x-apifox-orders": [
+                      "content",
+                      "negative_prompt",
+                      "enhance_prompt",
+                      "scene_type",
+                      "audio_generation",
+                      "enhance_switch"
+                    ]
+                  }
+                },
+                "x-apifox-orders": [
+                  "model",
+                  "prompt",
+                  "duration",
+                  "resolution",
+                  "ratio",
+                  "seed",
+                  "metadata"
+                ]
+              },
+              "examples": {
+                "kling-video-2-1-i2v": {
+                  "summary": "Kling 2.1 图生视频（i2v）",
+                  "value": {
+                    "model": "kling-video-2.1",
+                    "prompt": "小猫慢慢睁开眼睛，轻轻伸了个懒腰",
+                    "resolution": "1080P",
+                    "duration": 5,
+                    "seed": 20240101,
+                    "metadata": {
+                      "audio_generation": "Enabled",
+                      "content": [
+                        {
+                          "type": "image_url",
+                          "role": "first_frame",
+                          "image_url": {
+                            "url": "https://example.com/cat.jpg"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                "kling-video-2-1-first-last-frame": {
+                  "summary": "Kling 2.1 首尾帧（须 1080P）",
+                  "value": {
+                    "model": "kling-video-2.1",
+                    "prompt": "人物从坐到站，缓缓转身",
+                    "resolution": "1080P",
+                    "duration": 5,
+                    "metadata": {
+                      "content": [
+                        {
+                          "type": "image_url",
+                          "role": "first_frame",
+                          "image_url": {
+                            "url": "https://example.com/start.jpg"
+                          }
+                        },
+                        {
+                          "type": "image_url",
+                          "role": "last_frame",
+                          "image_url": {
+                            "url": "https://example.com/end.jpg"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                "kling-video-3-0-t2v": {
+                  "summary": "Kling 3.0 文生视频（t2v）",
+                  "value": {
+                    "model": "kling-video-3.0",
+                    "prompt": "宇航员站起身走了，背景是星空",
+                    "resolution": "1080P",
+                    "ratio": "16:9",
+                    "duration": 5,
+                    "seed": 20240303
+                  }
+                },
+                "kling-video-motion-control": {
+                  "summary": "Kling 动作控制（scene_type=motion_control）",
+                  "value": {
+                    "model": "kling-video-3.0",
+                    "prompt": "人物向前走三步",
+                    "resolution": "720P",
+                    "duration": 5,
+                    "metadata": {
+                      "scene_type": "motion_control",
+                      "content": [
+                        {
+                          "type": "image_url",
+                          "role": "first_frame",
+                          "image_url": {
+                            "url": "https://example.com/person.jpg"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功创建视频生成任务",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "视频生成任务提交响应",
+                  "properties": {
+                    "task_id": {
+                      "type": "string",
+                      "description": "任务 ID，用于后续通过 GET /v1/video/generations/:task_id 查询状态",
+                      "examples": [
+                        "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "queued",
+                        "NOT_START"
+                      ],
+                      "description": "任务初始状态。不同渠道表现不同：\n- `queued` — 已进入本地队列，后台处理\n- `NOT_START` — 已提交至上游，等待系统轮询\n\n请使用 `GET /v1/video/generations/{task_id}` 轮询最终状态。",
+                      "examples": [
+                        "queued"
+                      ]
+                    }
+                  },
+                  "x-apifox-orders": [
+                    "task_id",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "错误信息"
+                        },
+                        "type": {
+                          "type": "string",
+                          "description": "错误类型"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "description": "相关参数"
+                        },
+                        "code": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "description": "错误代码"
+                        }
+                      },
+                      "x-apifox-orders": [
+                        "message",
+                        "type",
+                        "param",
+                        "code"
+                      ]
+                    }
+                  },
+                  "x-apifox-orders": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

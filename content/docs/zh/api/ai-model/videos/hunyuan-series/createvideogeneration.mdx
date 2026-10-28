@@ -1,0 +1,26 @@
+---
+title: 混元视频生成
+full: true
+_openapi:
+  method: POST
+  toc: []
+  structuredData:
+    headings: []
+    contents:
+      - content: |
+          提交混元视频生成任务。
+
+          请求地址与统一视频接口相同，参数以本页为准。
+---
+
+提交混元视频生成任务。
+
+请求地址仍为 `POST /v1/video/generations`，完成后用 `GET /v1/video/generations/{task_id}` 查询。
+
+支持文生、首帧和参考图。首帧写 `metadata.content`，`role=first_frame`。不写 `role` 时按参考图处理。不支持尾帧和参考视频。
+
+不传时长、分辨率、宽高比。上游没有这三项。
+
+各字段说明见下方接口文档。
+
+<APIPage document={"openapi/generated/ai-model/视频（Videos）/混元系列/post-v1-video-generations-hunyuan.json"} operations={[{"path":"/v1/video/generations","method":"post"}]} />

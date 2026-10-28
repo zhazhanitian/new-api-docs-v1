@@ -1,0 +1,26 @@
+---
+title: 可灵视频生成
+full: true
+_openapi:
+  method: POST
+  toc: []
+  structuredData:
+    headings: []
+    contents:
+      - content: |
+          提交可灵视频生成任务。
+
+          请求地址与统一视频接口相同，参数以本页为准。
+---
+
+提交可灵视频生成任务（文生、首帧、首尾帧、参考图、参考视频）。
+
+请求地址仍为 `POST /v1/video/generations`，完成后用 `GET /v1/video/generations/{task_id}` 查询。
+
+素材只通过 `metadata.content` 传入。首帧必须写 `role=first_frame`；不写 `role` 时按参考图提交。已经有素材时不要传宽高比。
+
+尾帧只支持 `kling-video-2.1`，须与首帧一起传，且分辨率为 `1080P`。
+
+各版本能力与字段说明见下方接口文档。
+
+<APIPage document={"openapi/generated/ai-model/视频（Videos）/可灵系列/post-v1-video-generations-kling.json"} operations={[{"path":"/v1/video/generations","method":"post"}]} />

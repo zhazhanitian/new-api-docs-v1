@@ -1,0 +1,333 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Hailuo 视频生成",
+    "version": "2.0.0",
+    "description": "提交 Hailuo 视频生成任务。请求地址与统一视频接口相同：`POST /v1/video/generations`。\n\n立即返回任务 ID，可通过 `GET /v1/video/generations/{task_id}` 查询。\n\n时长、分辨率、宽高比按调用方传入的值转给上游。上游不接受时，错误原样返回。\n\n**02、2.3、2.3-fast：**\n- 文生、首帧。首帧必须写 `role=first_frame`。\n- 时长 `6` 或 `10`，不传时上游默认 `6`。\n- 分辨率 `768P`、`1080P`，不传时上游默认 `768P`。\n- 不传宽高比。\n\n**H3：**\n- 文生、参考生、首尾帧。尾帧须与首帧一起传。\n- 时长为 `4`–`15` 的整数。\n- 分辨率写 `resolution`：`768P`、`1080P`、`2K`、`4K`。\n- 宽高比写 `ratio`：`21:9`、`16:9`、`4:3`、`1:1`、`3:4`、`9:16`。首尾帧不传 `ratio`，比例跟随图片。\n"
+  },
+  "tags": [
+    {
+      "name": "视频（Videos）/Hailuo 系列"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "使用 Bearer Token 认证。\n格式: `Authorization: Bearer sk-xxxxxx`\n"
+      }
+    }
+  },
+  "paths": {
+    "/v1/video/generations": {
+      "post": {
+        "tags": [
+          "视频（Videos）/Hailuo 系列"
+        ],
+        "summary": "Hailuo 视频生成",
+        "description": "提交 Hailuo 视频生成任务。02、2.3、2.3-fast 为文生和首帧。H3 另支持参考生和首尾帧。非法参数由上游拒绝。",
+        "operationId": "createHailuoVideoGeneration",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model"
+                ],
+                "description": "视频生成请求",
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "description": "模型 ID。\n\n| 模型 | 说明 |\n|---|---|\n| Hailuo 02 | 文生、首帧。时长 `6` / `10`，分辨率 `768P` / `1080P` |\n| Hailuo 2.3 | 同 02 |\n| Hailuo 2.3 Fast | 同 02 |\n| Hailuo H3 | 文生、参考生、首尾帧。时长 `4`–`15` 秒。分辨率写 `resolution`，宽高比写 `ratio` |\n",
+                    "examples": [
+                      "hailuo-video-02",
+                      "hailuo-video-h3"
+                    ]
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "description": "文本描述提示词。t2v 模式必填；i2v / 参考图模式建议填写以精确描述运动效果。",
+                    "examples": [
+                      "宇航员站起身走了",
+                      "小猫慢慢睁开眼睛，轻轻伸了个懒腰"
+                    ]
+                  },
+                  "duration": {
+                    "type": "number",
+                    "description": "视频时长（秒）。02、2.3、2.3-fast 为 `6` 或 `10`，不传时上游默认 `6`。H3 为 `4`–`15` 的整数。不在我们这里收成最近合法值，上游不接受就报错。",
+                    "examples": [
+                      5,
+                      8,
+                      10
+                    ]
+                  },
+                  "resolution": {
+                    "type": "string",
+                    "description": "分辨率。02、2.3、2.3-fast 为 `768P`、`1080P`，不传时上游默认 `768P`。H3 还可传 `2K`、`4K`。",
+                    "examples": [
+                      "768P",
+                      "1080P",
+                      "2K"
+                    ]
+                  },
+                  "ratio": {
+                    "type": "string",
+                    "description": "宽高比，只给 H3 的文生和参考生。取值 `21:9`、`16:9`、`4:3`、`1:1`、`3:4`、`9:16`。首尾帧不传，比例跟随图片。02、2.3、2.3-fast 不传。",
+                    "examples": [
+                      "16:9",
+                      "9:16"
+                    ]
+                  },
+                  "seed": {
+                    "type": "integer",
+                    "description": "随机种子，控制生成结果可复现性。全部模型支持。",
+                    "examples": [
+                      20231234
+                    ]
+                  },
+                  "metadata": {
+                    "type": "object",
+                    "description": "扩展参数。02、2.3、2.3-fast 只使用首帧。H3 尾帧须与首帧一起传。\n\n| 字段 | 类型 | 说明 |\n|---|---|---|\n| `content` | array | 素材列表。见下方元素字段 |\n| `negative_prompt` | string | 反向提示词 |\n| `enhance_prompt` | string | 自动优化提示词，`Enabled` / `Disabled` |\n| `enhance_switch` | string | 视频超分增强，`Enabled` / `Disabled` |\n\n### `content` 元素结构\n\n| 字段 | 类型 | 说明 |\n|---|---|---|\n| `type` | string | `image_url` |\n| `role` | string | 见下表 |\n| `image_url.url` | string | 图片地址 |\n\n**`role` 取值：**\n\n| role | 适用 type | 说明 |\n|---|---|---|\n| `first_frame` | image_url | 首帧。必须显式填写，省略时按参考图提交 |\n| `last_frame` | image_url | 尾帧。仅 H3，须与首帧一起传 |\n| `reference_image` | image_url | 参考图。仅 H3 |\n",
+                    "additionalProperties": true,
+                    "properties": {
+                      "negative_prompt": {
+                        "type": "string",
+                        "description": "反向提示词，描述不希望在视频中出现的元素。"
+                      },
+                      "enhance_prompt": {
+                        "type": "string",
+                        "enum": [
+                          "Enabled",
+                          "Disabled"
+                        ],
+                        "description": "自动优化提示词，取值 `\"Enabled\"` / `\"Disabled\"`。",
+                        "examples": [
+                          "Enabled"
+                        ]
+                      },
+                      "enhance_switch": {
+                        "type": "string",
+                        "enum": [
+                          "Enabled",
+                          "Disabled"
+                        ],
+                        "description": "视频超分增强开关，取值 `\"Enabled\"` / `\"Disabled\"`。",
+                        "examples": [
+                          "Enabled"
+                        ]
+                      },
+                      "content": {
+                        "type": "array",
+                        "description": "素材列表。首帧写 `first_frame`。H3 的尾帧写 `last_frame`，参考图写 `reference_image`。",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "image_url",
+                                "video_url",
+                                "audio_url"
+                              ],
+                              "description": "`image_url` / `video_url` / `audio_url`"
+                            },
+                            "image_url": {
+                              "type": "object",
+                              "properties": {
+                                "url": {
+                                  "type": "string",
+                                  "description": "图片地址。"
+                                }
+                              }
+                            },
+                            "video_url": {
+                              "type": "object",
+                              "properties": {
+                                "url": {
+                                  "type": "string",
+                                  "description": "视频地址。"
+                                }
+                              }
+                            },
+                            "audio_url": {
+                              "type": "object",
+                              "properties": {
+                                "url": {
+                                  "type": "string",
+                                  "description": "音频地址。"
+                                }
+                              }
+                            },
+                            "role": {
+                              "type": "string",
+                              "enum": [
+                                "first_frame",
+                                "last_frame",
+                                "reference_image",
+                                "reference_video",
+                                "reference_audio"
+                              ],
+                              "description": "首帧写 `first_frame`。H3 尾帧写 `last_frame`，参考图写 `reference_image`。"
+                            },
+                            "reference_type": {
+                              "type": "string",
+                              "description": "Hailuo 不使用。"
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "Hailuo 不使用。"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "x-apifox-orders": [
+                      "content",
+                      "negative_prompt",
+                      "enhance_prompt",
+                      "enhance_switch"
+                    ]
+                  }
+                },
+                "x-apifox-orders": [
+                  "model",
+                  "prompt",
+                  "duration",
+                  "resolution",
+                  "ratio",
+                  "seed",
+                  "metadata"
+                ]
+              },
+              "examples": {
+                "hailuo-video-2-3": {
+                  "summary": "Hailuo 2.3 文生视频（时长 6 或 10）",
+                  "value": {
+                    "model": "hailuo-video-2.3",
+                    "prompt": "海浪拍打礁石，浪花四溅",
+                    "resolution": "1080P",
+                    "duration": 6
+                  }
+                },
+                "hailuo-video-2-3-first-frame": {
+                  "summary": "Hailuo 2.3 首帧",
+                  "value": {
+                    "model": "hailuo-video-2.3",
+                    "prompt": "海浪拍打礁石，浪花四溅",
+                    "resolution": "1080P",
+                    "duration": 6,
+                    "metadata": {
+                      "content": [
+                        {
+                          "type": "image_url",
+                          "role": "first_frame",
+                          "image_url": {
+                            "url": "https://example.com/first.jpg"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功创建视频生成任务",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "视频生成任务提交响应",
+                  "properties": {
+                    "task_id": {
+                      "type": "string",
+                      "description": "任务 ID，用于后续通过 GET /v1/video/generations/:task_id 查询状态",
+                      "examples": [
+                        "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "queued",
+                        "NOT_START"
+                      ],
+                      "description": "任务初始状态。不同渠道表现不同：\n- `queued` — 已进入本地队列，后台处理\n- `NOT_START` — 已提交至上游，等待系统轮询\n\n请使用 `GET /v1/video/generations/{task_id}` 轮询最终状态。",
+                      "examples": [
+                        "queued"
+                      ]
+                    }
+                  },
+                  "x-apifox-orders": [
+                    "task_id",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "错误信息"
+                        },
+                        "type": {
+                          "type": "string",
+                          "description": "错误类型"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "description": "相关参数"
+                        },
+                        "code": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "description": "错误代码"
+                        }
+                      },
+                      "x-apifox-orders": [
+                        "message",
+                        "type",
+                        "param",
+                        "code"
+                      ]
+                    }
+                  },
+                  "x-apifox-orders": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

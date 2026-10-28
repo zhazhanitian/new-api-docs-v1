@@ -1,0 +1,26 @@
+---
+title: Vidu 视频生成
+full: true
+_openapi:
+  method: POST
+  toc: []
+  structuredData:
+    headings: []
+    contents:
+      - content: |
+          提交 Vidu 视频生成任务。
+
+          请求地址与统一视频接口相同，参数以本页为准。
+---
+
+提交 Vidu 视频生成任务（文生、首帧、首尾帧、参考图、参考视频）。
+
+请求地址仍为 `POST /v1/video/generations`，完成后用 `GET /v1/video/generations/{task_id}` 查询。
+
+素材只通过 `metadata.content` 传入。首帧必须写 `role=first_frame`；不写 `role` 时按参考图提交。
+
+尾帧只支持 `vidu-video-q2-pro` 和 `vidu-video-q2-turbo`。参考视频只支持 `vidu-video-q2-pro`。宽高比 `4:3`、`3:4` 只支持 `vidu-video-q2`。
+
+各版本能力与字段说明见下方接口文档。
+
+<APIPage document={"openapi/generated/ai-model/视频（Videos）/Vidu系列/post-v1-video-generations-vidu.json"} operations={[{"path":"/v1/video/generations","method":"post"}]} />

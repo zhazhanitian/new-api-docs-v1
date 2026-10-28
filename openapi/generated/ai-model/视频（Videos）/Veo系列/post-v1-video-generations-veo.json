@@ -1,0 +1,338 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Veo 视频生成",
+    "version": "2.0.0",
+    "description": "提交 Veo 视频生成任务。请求地址与统一视频接口相同：`POST /v1/video/generations`。\n\n立即返回任务 ID，可通过 `GET /v1/video/generations/{task_id}` 查询。\n\n**调用约定：**\n- 素材只通过 `metadata.content` 传入。首帧必须写 `role=first_frame`。不写 `role` 时按参考图处理。\n- 尾帧必须和首帧一起传。不支持参考视频。\n- 参考图的 `reference_type` 取 `asset` 或 `style`。\n- 时长固定 8 秒，传入的值会被忽略。\n- 分辨率使用大写 `720P`、`1080P`，默认 `720P`。宽高比只支持 `16:9`、`9:16`。\n"
+  },
+  "tags": [
+    {
+      "name": "视频（Videos）/Veo 系列"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "使用 Bearer Token 认证。\n格式: `Authorization: Bearer sk-xxxxxx`\n"
+      }
+    }
+  },
+  "paths": {
+    "/v1/video/generations": {
+      "post": {
+        "tags": [
+          "视频（Videos）/Veo 系列"
+        ],
+        "summary": "Veo 视频生成",
+        "description": "提交 Veo 视频生成任务（文生、首帧、首尾帧、参考图）。时长固定 8 秒。不支持参考视频。",
+        "operationId": "createVeoVideoGeneration",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model"
+                ],
+                "description": "视频生成请求",
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "description": "模型 ID。两个模型能力相同。\n\n| model | 说明 |\n|---|---|\n| `veo-video-3.1` | 文生、首帧、首尾帧、参考图；时长固定 8 秒；支持音频 |\n| `veo-video-3.1-fast` | 同上 |\n",
+                    "examples": [
+                      "veo-video-3.1",
+                      "veo-video-3.1-fast"
+                    ]
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "description": "文本描述提示词。t2v 模式必填；i2v / 参考图模式建议填写以精确描述运动效果。",
+                    "examples": [
+                      "宇航员站起身走了",
+                      "小猫慢慢睁开眼睛，轻轻伸了个懒腰"
+                    ]
+                  },
+                  "duration": {
+                    "type": "number",
+                    "description": "视频时长固定为 8 秒。传入其他值会被忽略。",
+                    "examples": [
+                      5,
+                      8,
+                      10
+                    ]
+                  },
+                  "resolution": {
+                    "type": "string",
+                    "description": "分辨率。`720P`、`1080P`，默认 `720P`，使用大写 P。",
+                    "examples": [
+                      "1080P",
+                      "720P"
+                    ]
+                  },
+                  "ratio": {
+                    "type": "string",
+                    "description": "宽高比。只支持 `16:9`、`9:16`。",
+                    "examples": [
+                      "16:9",
+                      "9:16"
+                    ]
+                  },
+                  "seed": {
+                    "type": "integer",
+                    "description": "随机种子，控制生成结果可复现性。全部模型支持。",
+                    "examples": [
+                      20231234
+                    ]
+                  },
+                  "metadata": {
+                    "type": "object",
+                    "description": "扩展参数。尾帧必须和首帧一起传。不支持参考视频。\n\n| 字段 | 类型 | 说明 |\n|---|---|---|\n| `content` | array | 素材列表。见下方元素字段 |\n| `negative_prompt` | string | 反向提示词 |\n| `audio_generation` | string | 是否生成 AI 音频，`Enabled` / `Disabled`。有值即转发 |\n\n### `content` 元素结构\n\n| 字段 | 类型 | 说明 |\n|---|---|---|\n| `type` | string | `image_url` |\n| `role` | string | 见下表 |\n| `image_url.url` | string | 图片地址 |\n| `reference_type` | string | 参考图类型。`asset` 素材参考，`style` 风格参考 |\n\n**`role` 取值：**\n\n| role | 适用 type | 说明 |\n|---|---|---|\n| `first_frame` | image_url | 首帧。必须显式填写，省略时按参考图提交 |\n| `last_frame` | image_url | 尾帧。必须和首帧一起传 |\n| `reference_image` | image_url | 参考图 |\n",
+                    "additionalProperties": true,
+                    "properties": {
+                      "negative_prompt": {
+                        "type": "string",
+                        "description": "反向提示词，描述不希望在视频中出现的元素。"
+                      },
+                      "audio_generation": {
+                        "type": "string",
+                        "enum": [
+                          "Enabled",
+                          "Disabled"
+                        ],
+                        "description": "是否开启 AI 音频生成，取值 `\"Enabled\"` / `\"Disabled\"`。有值就原样转发。",
+                        "examples": [
+                          "Enabled"
+                        ]
+                      },
+                      "content": {
+                        "type": "array",
+                        "description": "素材列表。首帧写 `first_frame`，尾帧写 `last_frame` 且必须同时有首帧。参考图写 `reference_image`，并用 `reference_type` 标明 `asset` 或 `style`。",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "image_url",
+                                "video_url",
+                                "audio_url"
+                              ],
+                              "description": "`image_url` / `video_url` / `audio_url`"
+                            },
+                            "image_url": {
+                              "type": "object",
+                              "properties": {
+                                "url": {
+                                  "type": "string",
+                                  "description": "图片地址。"
+                                }
+                              }
+                            },
+                            "video_url": {
+                              "type": "object",
+                              "properties": {
+                                "url": {
+                                  "type": "string",
+                                  "description": "视频地址。"
+                                }
+                              }
+                            },
+                            "audio_url": {
+                              "type": "object",
+                              "properties": {
+                                "url": {
+                                  "type": "string",
+                                  "description": "音频地址。"
+                                }
+                              }
+                            },
+                            "role": {
+                              "type": "string",
+                              "enum": [
+                                "first_frame",
+                                "last_frame",
+                                "reference_image",
+                                "reference_video",
+                                "reference_audio"
+                              ],
+                              "description": "不写时图片按参考图处理。首帧必须写 `first_frame`。"
+                            },
+                            "reference_type": {
+                              "type": "string",
+                              "description": "参考图类型：`asset` 素材参考，`style` 风格参考。"
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "Veo 不使用。"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "x-apifox-orders": [
+                      "content",
+                      "negative_prompt",
+                      "audio_generation"
+                    ]
+                  }
+                },
+                "x-apifox-orders": [
+                  "model",
+                  "prompt",
+                  "duration",
+                  "resolution",
+                  "ratio",
+                  "seed",
+                  "metadata"
+                ]
+              },
+              "examples": {
+                "veo-video-3-1-style": {
+                  "summary": "Veo 3.1 风格参考",
+                  "value": {
+                    "model": "veo-video-3.1",
+                    "prompt": "保持画面风格，让场景流动起来",
+                    "metadata": {
+                      "audio_generation": "Enabled",
+                      "content": [
+                        {
+                          "type": "image_url",
+                          "role": "reference_image",
+                          "reference_type": "style",
+                          "image_url": {
+                            "url": "https://example.com/scene.jpg"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                "veo-video-3-1-first-last": {
+                  "summary": "Veo 3.1 首尾帧",
+                  "value": {
+                    "model": "veo-video-3.1",
+                    "prompt": "人物优雅地转过身来",
+                    "resolution": "1080P",
+                    "metadata": {
+                      "audio_generation": "Enabled",
+                      "content": [
+                        {
+                          "type": "image_url",
+                          "role": "first_frame",
+                          "image_url": {
+                            "url": "https://example.com/first.jpg"
+                          }
+                        },
+                        {
+                          "type": "image_url",
+                          "role": "last_frame",
+                          "image_url": {
+                            "url": "https://example.com/last.jpg"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功创建视频生成任务",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "视频生成任务提交响应",
+                  "properties": {
+                    "task_id": {
+                      "type": "string",
+                      "description": "任务 ID，用于后续通过 GET /v1/video/generations/:task_id 查询状态",
+                      "examples": [
+                        "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "queued",
+                        "NOT_START"
+                      ],
+                      "description": "任务初始状态。不同渠道表现不同：\n- `queued` — 已进入本地队列，后台处理\n- `NOT_START` — 已提交至上游，等待系统轮询\n\n请使用 `GET /v1/video/generations/{task_id}` 轮询最终状态。",
+                      "examples": [
+                        "queued"
+                      ]
+                    }
+                  },
+                  "x-apifox-orders": [
+                    "task_id",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "错误信息"
+                        },
+                        "type": {
+                          "type": "string",
+                          "description": "错误类型"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "description": "相关参数"
+                        },
+                        "code": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "description": "错误代码"
+                        }
+                      },
+                      "x-apifox-orders": [
+                        "message",
+                        "type",
+                        "param",
+                        "code"
+                      ]
+                    }
+                  },
+                  "x-apifox-orders": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

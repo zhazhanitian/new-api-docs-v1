@@ -1,0 +1,28 @@
+---
+title: Hailuo 视频生成
+full: true
+_openapi:
+  method: POST
+  toc: []
+  structuredData:
+    headings: []
+    contents:
+      - content: |
+          提交 Hailuo 视频生成任务。
+
+          请求地址与统一视频接口相同，参数以本页为准。
+---
+
+提交 Hailuo 视频生成任务。
+
+请求地址仍为 `POST /v1/video/generations`，完成后用 `GET /v1/video/generations/{task_id}` 查询。
+
+02、2.3、2.3-fast 是文生和首帧。首帧写 `metadata.content`，`role=first_frame`。时长 `6` 或 `10`，分辨率写 `resolution`：`768P`、`1080P`。不传 `ratio`。
+
+H3 另支持参考生和首尾帧。时长为 `4`–`15` 秒。分辨率写 `resolution`，还可传 `2K`、`4K`。宽高比写 `ratio`；首尾帧不传 `ratio`，比例跟随图片。
+
+非法参数原样交给上游，由上游拒绝。
+
+各版本能力与字段说明见下方接口文档。
+
+<APIPage document={"openapi/generated/ai-model/视频（Videos）/Hailuo系列/post-v1-video-generations-hailuo.json"} operations={[{"path":"/v1/video/generations","method":"post"}]} />

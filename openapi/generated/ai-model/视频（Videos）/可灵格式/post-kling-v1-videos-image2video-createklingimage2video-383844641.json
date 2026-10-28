@@ -93,27 +93,6 @@
                       20231234
                     ]
                   },
-                  "n": {
-                    "type": "integer",
-                    "description": "生成视频数量",
-                    "examples": [
-                      1
-                    ]
-                  },
-                  "response_format": {
-                    "type": "string",
-                    "description": "响应格式",
-                    "examples": [
-                      "url"
-                    ]
-                  },
-                  "user": {
-                    "type": "string",
-                    "description": "用户标识",
-                    "examples": [
-                      "user-1234"
-                    ]
-                  },
                   "metadata": {
                     "type": "object",
                     "description": "扩展参数 (如 negative_prompt, style, quality_level 等)",
@@ -131,9 +110,6 @@
                   "height",
                   "fps",
                   "seed",
-                  "n",
-                  "response_format",
-                  "user",
                   "metadata"
                 ]
               }

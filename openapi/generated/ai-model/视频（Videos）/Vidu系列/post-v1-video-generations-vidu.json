@@ -1,0 +1,388 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Vidu 视频生成",
+    "version": "2.0.0",
+    "description": "提交 Vidu 视频生成任务。请求地址与统一视频接口相同：`POST /v1/video/generations`。\n\n立即返回任务 ID，可通过 `GET /v1/video/generations/{task_id}` 查询。\n\n**调用约定：**\n- 素材只通过 `metadata.content` 传入。首帧必须写 `role=first_frame`。不写 `role` 时按参考图处理。\n- 尾帧仅 `vidu-video-q2-pro`、`vidu-video-q2-turbo`。\n- 参考视频仅 `vidu-video-q2-pro`，`role` 写 `reference_video`。\n- 宽高比 `4:3`、`3:4` 仅 `vidu-video-q2`。\n"
+  },
+  "tags": [
+    {
+      "name": "视频（Videos）/Vidu 系列"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "使用 Bearer Token 认证。\n格式: `Authorization: Bearer sk-xxxxxx`\n"
+      }
+    }
+  },
+  "paths": {
+    "/v1/video/generations": {
+      "post": {
+        "tags": [
+          "视频（Videos）/Vidu 系列"
+        ],
+        "summary": "Vidu 视频生成",
+        "description": "提交 Vidu 视频生成任务（文生、首帧、首尾帧、参考图、参考视频）。\n\n支持模型见 `model` 字段。尾帧仅 Q2 Pro 与 Q2 Turbo；参考视频仅 Q2 Pro。\n",
+        "operationId": "createViduVideoGeneration",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model"
+                ],
+                "description": "视频生成请求",
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "description": "模型 ID。\n\n| model | 说明 |\n|---|---|\n| `vidu-video-q2` | 文生、首帧、参考图；宽高比另支持 `4:3`、`3:4` |\n| `vidu-video-q2-pro` | 文生、首帧、尾帧、参考图、参考视频 |\n| `vidu-video-q2-turbo` | 文生、首帧、尾帧、参考图 |\n| `vidu-video-q3` | 文生、首帧、参考图 |\n| `vidu-video-q3-pro` | 文生、首帧、参考图 |\n| `vidu-video-q3-turbo` | 文生、首帧、参考图 |\n",
+                    "examples": [
+                      "vidu-video-q2",
+                      "vidu-video-q2-pro",
+                      "vidu-video-q2-turbo",
+                      "vidu-video-q3",
+                      "vidu-video-q3-pro",
+                      "vidu-video-q3-turbo"
+                    ]
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "description": "文本描述提示词。t2v 模式必填；i2v / 参考图模式建议填写以精确描述运动效果。",
+                    "examples": [
+                      "宇航员站起身走了",
+                      "小猫慢慢睁开眼睛，轻轻伸了个懒腰"
+                    ]
+                  },
+                  "duration": {
+                    "type": "number",
+                    "description": "视频时长（秒）。范围 1–10。超出范围时限制到范围内。",
+                    "examples": [
+                      5,
+                      8,
+                      10
+                    ]
+                  },
+                  "resolution": {
+                    "type": "string",
+                    "description": "分辨率。`720P`、`1080P`，默认 `720P`，使用大写 P。",
+                    "examples": [
+                      "1080P",
+                      "720P"
+                    ]
+                  },
+                  "ratio": {
+                    "type": "string",
+                    "description": "宽高比。文生和参考生可选 `16:9`、`9:16`、`1:1`。`vidu-video-q2` 另支持 `4:3`、`3:4`。",
+                    "examples": [
+                      "16:9",
+                      "9:16",
+                      "4:3"
+                    ]
+                  },
+                  "seed": {
+                    "type": "integer",
+                    "description": "随机种子，控制生成结果可复现性。全部模型支持。",
+                    "examples": [
+                      20231234
+                    ]
+                  },
+                  "metadata": {
+                    "type": "object",
+                    "description": "扩展参数。尾帧仅 `vidu-video-q2-pro`、`vidu-video-q2-turbo`。参考视频仅 `vidu-video-q2-pro`。\n\n| 字段 | 类型 | 说明 |\n|---|---|---|\n| `content` | array | 素材列表。见下方元素字段 |\n| `negative_prompt` | string | 反向提示词 |\n| `enhance_prompt` | string | 自动优化提示词，`Enabled` / `Disabled` |\n| `scene_type` | string | `template_effect`，特效模板 |\n| `audio_generation` | string | 是否生成 AI 音频，`Enabled` / `Disabled`。有值即转发 |\n| `enhance_switch` | string | 视频超分增强，`Enabled` / `Disabled` |\n| `frame_interpolate` | string | 智能插帧，`Enabled` / `Disabled` |\n\n### `content` 元素结构\n\n| 字段 | 类型 | 说明 |\n|---|---|---|\n| `type` | string | `image_url` / `video_url` |\n| `role` | string | 见下表 |\n| `image_url.url` | string | 图片地址 |\n| `video_url.url` | string | 视频地址 |\n\n**`role` 取值：**\n\n| role | 适用 type | 说明 |\n|---|---|---|\n| `first_frame` | image_url | 首帧。必须显式填写，省略时按参考图提交 |\n| `last_frame` | image_url | 尾帧。仅 `vidu-video-q2-pro`、`vidu-video-q2-turbo`，须与首帧同时传入 |\n| `reference_image` | image_url | 参考图 |\n| `reference_video` | video_url | 参考视频。仅 `vidu-video-q2-pro` |\n",
+                    "additionalProperties": true,
+                    "properties": {
+                      "negative_prompt": {
+                        "type": "string",
+                        "description": "反向提示词，描述不希望在视频中出现的元素。"
+                      },
+                      "enhance_prompt": {
+                        "type": "string",
+                        "enum": [
+                          "Enabled",
+                          "Disabled"
+                        ],
+                        "description": "自动优化提示词，取值 `\"Enabled\"` / `\"Disabled\"`。",
+                        "examples": [
+                          "Enabled"
+                        ]
+                      },
+                      "scene_type": {
+                        "type": "string",
+                        "description": "场景类型。`template_effect` 表示特效模板。",
+                        "examples": [
+                          "template_effect"
+                        ]
+                      },
+                      "audio_generation": {
+                        "type": "string",
+                        "enum": [
+                          "Enabled",
+                          "Disabled"
+                        ],
+                        "description": "是否开启 AI 音频生成，取值 `\"Enabled\"` / `\"Disabled\"`。有值就原样转发。",
+                        "examples": [
+                          "Enabled"
+                        ]
+                      },
+                      "enhance_switch": {
+                        "type": "string",
+                        "enum": [
+                          "Enabled",
+                          "Disabled"
+                        ],
+                        "description": "视频超分增强开关，取值 `\"Enabled\"` / `\"Disabled\"`。",
+                        "examples": [
+                          "Enabled"
+                        ]
+                      },
+                      "frame_interpolate": {
+                        "type": "string",
+                        "enum": [
+                          "Enabled",
+                          "Disabled"
+                        ],
+                        "description": "智能插帧，取值 `\"Enabled\"` / `\"Disabled\"`。",
+                        "examples": [
+                          "Enabled"
+                        ]
+                      },
+                      "content": {
+                        "type": "array",
+                        "description": "素材列表。图片不写 `role` 时按参考图处理。首帧写 `first_frame`。尾帧写 `last_frame`，仅 Q2 Pro 与 Q2 Turbo。参考视频写 `reference_video`，仅 Q2 Pro。",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "image_url",
+                                "video_url",
+                                "audio_url"
+                              ],
+                              "description": "`image_url` / `video_url` / `audio_url`"
+                            },
+                            "image_url": {
+                              "type": "object",
+                              "properties": {
+                                "url": {
+                                  "type": "string",
+                                  "description": "图片地址。"
+                                }
+                              }
+                            },
+                            "video_url": {
+                              "type": "object",
+                              "properties": {
+                                "url": {
+                                  "type": "string",
+                                  "description": "视频地址。"
+                                }
+                              }
+                            },
+                            "audio_url": {
+                              "type": "object",
+                              "properties": {
+                                "url": {
+                                  "type": "string",
+                                  "description": "音频地址。"
+                                }
+                              }
+                            },
+                            "role": {
+                              "type": "string",
+                              "enum": [
+                                "first_frame",
+                                "last_frame",
+                                "reference_image",
+                                "reference_video",
+                                "reference_audio"
+                              ],
+                              "description": "不写时图片按参考图处理。首帧必须写 `first_frame`。"
+                            },
+                            "reference_type": {
+                              "type": "string",
+                              "description": "Vidu 不使用。"
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "Vidu 不使用。"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "x-apifox-orders": [
+                      "content",
+                      "negative_prompt",
+                      "enhance_prompt",
+                      "scene_type",
+                      "audio_generation",
+                      "enhance_switch",
+                      "frame_interpolate"
+                    ]
+                  }
+                },
+                "x-apifox-orders": [
+                  "model",
+                  "prompt",
+                  "duration",
+                  "resolution",
+                  "ratio",
+                  "seed",
+                  "metadata"
+                ]
+              },
+              "examples": {
+                "vidu-video-q2-i2v": {
+                  "summary": "Vidu q2 图生视频",
+                  "value": {
+                    "model": "vidu-video-q2",
+                    "prompt": "人物转过头微笑，背景轻微虚化",
+                    "resolution": "1080P",
+                    "duration": 4,
+                    "metadata": {
+                      "frame_interpolate": "Enabled",
+                      "content": [
+                        {
+                          "type": "image_url",
+                          "role": "first_frame",
+                          "image_url": {
+                            "url": "https://example.com/portrait.jpg"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                "vidu-video-q2-pro-first-last": {
+                  "summary": "Vidu q2-pro 首尾帧",
+                  "value": {
+                    "model": "vidu-video-q2-pro",
+                    "prompt": "人物优雅地站起身来",
+                    "resolution": "1080P",
+                    "duration": 4,
+                    "metadata": {
+                      "content": [
+                        {
+                          "type": "image_url",
+                          "role": "first_frame",
+                          "image_url": {
+                            "url": "https://example.com/first.jpg"
+                          }
+                        },
+                        {
+                          "type": "image_url",
+                          "role": "last_frame",
+                          "image_url": {
+                            "url": "https://example.com/last.jpg"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功创建视频生成任务",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "视频生成任务提交响应",
+                  "properties": {
+                    "task_id": {
+                      "type": "string",
+                      "description": "任务 ID，用于后续通过 GET /v1/video/generations/:task_id 查询状态",
+                      "examples": [
+                        "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "queued",
+                        "NOT_START"
+                      ],
+                      "description": "任务初始状态。不同渠道表现不同：\n- `queued` — 已进入本地队列，后台处理\n- `NOT_START` — 已提交至上游，等待系统轮询\n\n请使用 `GET /v1/video/generations/{task_id}` 轮询最终状态。",
+                      "examples": [
+                        "queued"
+                      ]
+                    }
+                  },
+                  "x-apifox-orders": [
+                    "task_id",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "错误信息"
+                        },
+                        "type": {
+                          "type": "string",
+                          "description": "错误类型"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "description": "相关参数"
+                        },
+                        "code": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "description": "错误代码"
+                        }
+                      },
+                      "x-apifox-orders": [
+                        "message",
+                        "type",
+                        "param",
+                        "code"
+                      ]
+                    }
+                  },
+                  "x-apifox-orders": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

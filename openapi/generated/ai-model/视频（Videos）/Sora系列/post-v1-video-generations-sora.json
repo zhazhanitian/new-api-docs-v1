@@ -1,0 +1,323 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Sora 视频生成",
+    "version": "2.0.0",
+    "description": "提交 Sora 视频生成任务。请求地址与统一视频接口相同：`POST /v1/video/generations`。\n\n立即返回任务 ID，可通过 `GET /v1/video/generations/{task_id}` 查询。\n\n**调用约定：**\n- 只支持文生视频和首帧图生视频。首帧必须写 `role=first_frame`。\n- 不支持尾帧、参考图、参考视频。\n- 时长只接受 `4`、`8`、`12`，默认 `8`。其他值取最近的合法值。\n- 分辨率只接受大写 `720P`。传入其他分辨率会报错。宽高比只支持 `16:9`、`9:16`。\n"
+  },
+  "tags": [
+    {
+      "name": "视频（Videos）/Sora 系列"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "使用 Bearer Token 认证。\n格式: `Authorization: Bearer sk-xxxxxx`\n"
+      }
+    }
+  },
+  "paths": {
+    "/v1/video/generations": {
+      "post": {
+        "tags": [
+          "视频（Videos）/Sora 系列"
+        ],
+        "summary": "Sora 视频生成",
+        "description": "提交 Sora 视频生成任务（文生、首帧）。分辨率仅 `720P`，时长仅 4、8、12 秒。",
+        "operationId": "createSoraVideoGeneration",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model"
+                ],
+                "description": "视频生成请求",
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "description": "模型 ID。\n\n| model | 说明 |\n|---|---|\n| `sora-video-2.0` | 文生、首帧；时长 4 / 8 / 12 秒；分辨率仅 `720P`；支持音频 |\n",
+                    "examples": [
+                      "sora-video-2.0"
+                    ]
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "description": "文本描述提示词。t2v 模式必填；i2v / 参考图模式建议填写以精确描述运动效果。",
+                    "examples": [
+                      "宇航员站起身走了",
+                      "小猫慢慢睁开眼睛，轻轻伸了个懒腰"
+                    ]
+                  },
+                  "duration": {
+                    "type": "number",
+                    "description": "视频时长（秒）。只接受 `4`、`8`、`12`，默认 `8`。其他值取最近的合法值。",
+                    "examples": [
+                      5,
+                      8,
+                      10
+                    ]
+                  },
+                  "resolution": {
+                    "type": "string",
+                    "description": "分辨率。只接受大写 `720P`。传入其他档位会报错。",
+                    "examples": [
+                      "720P"
+                    ]
+                  },
+                  "ratio": {
+                    "type": "string",
+                    "description": "宽高比。只支持 `16:9`、`9:16`。",
+                    "examples": [
+                      "16:9",
+                      "9:16"
+                    ]
+                  },
+                  "seed": {
+                    "type": "integer",
+                    "description": "随机种子，控制生成结果可复现性。全部模型支持。",
+                    "examples": [
+                      20231234
+                    ]
+                  },
+                  "metadata": {
+                    "type": "object",
+                    "description": "扩展参数。不支持尾帧、参考图、参考视频。\n\n| 字段 | 类型 | 说明 |\n|---|---|---|\n| `content` | array | 只用于首帧。见下方元素字段 |\n| `negative_prompt` | string | 反向提示词 |\n| `audio_generation` | string | 是否生成 AI 音频，`Enabled` / `Disabled`。有值即转发 |\n\n### `content` 元素结构\n\n| 字段 | 类型 | 说明 |\n|---|---|---|\n| `type` | string | `image_url` |\n| `role` | string | 见下表 |\n| `image_url.url` | string | 图片地址 |\n\n**`role` 取值：**\n\n| role | 适用 type | 说明 |\n|---|---|---|\n| `first_frame` | image_url | 首帧。必须写 `first_frame` |\n",
+                    "additionalProperties": true,
+                    "properties": {
+                      "negative_prompt": {
+                        "type": "string",
+                        "description": "反向提示词，描述不希望在视频中出现的元素。"
+                      },
+                      "audio_generation": {
+                        "type": "string",
+                        "enum": [
+                          "Enabled",
+                          "Disabled"
+                        ],
+                        "description": "是否开启 AI 音频生成，取值 `\"Enabled\"` / `\"Disabled\"`。有值就原样转发。",
+                        "examples": [
+                          "Enabled"
+                        ]
+                      },
+                      "content": {
+                        "type": "array",
+                        "description": "首帧列表。只接受 `image_url`，`role` 必须是 `first_frame`。",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "image_url",
+                                "video_url",
+                                "audio_url"
+                              ],
+                              "description": "`image_url` / `video_url` / `audio_url`"
+                            },
+                            "image_url": {
+                              "type": "object",
+                              "properties": {
+                                "url": {
+                                  "type": "string",
+                                  "description": "图片地址。"
+                                }
+                              }
+                            },
+                            "video_url": {
+                              "type": "object",
+                              "properties": {
+                                "url": {
+                                  "type": "string",
+                                  "description": "视频地址。"
+                                }
+                              }
+                            },
+                            "audio_url": {
+                              "type": "object",
+                              "properties": {
+                                "url": {
+                                  "type": "string",
+                                  "description": "音频地址。"
+                                }
+                              }
+                            },
+                            "role": {
+                              "type": "string",
+                              "enum": [
+                                "first_frame",
+                                "last_frame",
+                                "reference_image",
+                                "reference_video",
+                                "reference_audio"
+                              ],
+                              "description": "必须写 `first_frame`。不支持尾帧和参考图。"
+                            },
+                            "reference_type": {
+                              "type": "string",
+                              "description": "Sora 不使用。"
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "Sora 不使用。"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "x-apifox-orders": [
+                      "content",
+                      "negative_prompt",
+                      "audio_generation"
+                    ]
+                  }
+                },
+                "x-apifox-orders": [
+                  "model",
+                  "prompt",
+                  "duration",
+                  "resolution",
+                  "ratio",
+                  "seed",
+                  "metadata"
+                ]
+              },
+              "examples": {
+                "sora-video-2-0-t2v": {
+                  "summary": "Sora 2.0 文生视频",
+                  "value": {
+                    "model": "sora-video-2.0",
+                    "prompt": "宇航员站起身，缓缓走向舱门",
+                    "resolution": "720P",
+                    "duration": 8,
+                    "metadata": {
+                      "audio_generation": "Enabled"
+                    }
+                  }
+                },
+                "sora-video-2-0-first-frame": {
+                  "summary": "Sora 2.0 首帧",
+                  "value": {
+                    "model": "sora-video-2.0",
+                    "prompt": "宇航员站起身，缓缓走向舱门",
+                    "resolution": "720P",
+                    "ratio": "16:9",
+                    "duration": 8,
+                    "metadata": {
+                      "audio_generation": "Enabled",
+                      "content": [
+                        {
+                          "type": "image_url",
+                          "role": "first_frame",
+                          "image_url": {
+                            "url": "https://example.com/first.jpg"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功创建视频生成任务",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "视频生成任务提交响应",
+                  "properties": {
+                    "task_id": {
+                      "type": "string",
+                      "description": "任务 ID，用于后续通过 GET /v1/video/generations/:task_id 查询状态",
+                      "examples": [
+                        "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "queued",
+                        "NOT_START"
+                      ],
+                      "description": "任务初始状态。不同渠道表现不同：\n- `queued` — 已进入本地队列，后台处理\n- `NOT_START` — 已提交至上游，等待系统轮询\n\n请使用 `GET /v1/video/generations/{task_id}` 轮询最终状态。",
+                      "examples": [
+                        "queued"
+                      ]
+                    }
+                  },
+                  "x-apifox-orders": [
+                    "task_id",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "description": "错误信息"
+                        },
+                        "type": {
+                          "type": "string",
+                          "description": "错误类型"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "description": "相关参数"
+                        },
+                        "code": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "description": "错误代码"
+                        }
+                      },
+                      "x-apifox-orders": [
+                        "message",
+                        "type",
+                        "param",
+                        "code"
+                      ]
+                    }
+                  },
+                  "x-apifox-orders": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
