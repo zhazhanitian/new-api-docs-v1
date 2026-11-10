@@ -141,7 +141,30 @@ function processMarkdownHeaders(body: string): string {
   processed = processed.replace(/^##\s+/gm, '### ');
   processed = processed.replace(/^#\s+/gm, '### ');
 
-  return processed;
+  // Release notes are embedded in MDX. `{key}` would be compiled as a variable.
+  return escapeMdxExpressions(processed);
+}
+
+function escapeMdxExpressions(markdown: string): string {
+  const placeholders: string[] = [];
+  const stash = (match: string) => {
+    const token = `\u0000MDX${placeholders.length}\u0000`;
+    placeholders.push(match);
+    return token;
+  };
+
+  let text = markdown.replace(/```[\s\S]*?```/g, stash);
+  text = text.replace(/`[^`\n]+`/g, stash);
+  text = text.replace(/\\*[{}]/g, (match) => {
+    const slashes = match.slice(0, -1);
+    if (slashes.length % 2 === 1) return match;
+    return `${slashes}\\${match.slice(-1)}`;
+  });
+
+  return text.replace(
+    /\u0000MDX(\d+)\u0000/g,
+    (_, index) => placeholders[Number(index)]
+  );
 }
 
 function formatFileSize(bytes: number): string {
