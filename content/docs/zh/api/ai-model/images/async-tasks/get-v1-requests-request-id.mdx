@@ -1,0 +1,26 @@
+---
+title: 查询生图请求扣费
+full: true
+_openapi:
+  method: GET
+  toc: []
+  structuredData:
+    headings: []
+    contents:
+      - content: |
+          通过 `request_id` 查询一次生图请求的扣费金额。
+
+          同步接口 `POST /v1/images/generations` 和异步接口 `POST /v2/image-tasks` 都可以查。`request_id` 取对应响应头 `X-Oneapi-Request-Id`。
+
+          异步任务完成后如果按实际用量做了差额结算，或失败后退款，本接口返回的仍是提交时写入的那笔金额。任务最终扣费以查询异步图像生成任务返回的 `amount` 为准。
+---
+
+通过 `request_id` 查询一次生图请求的扣费金额。
+
+**`request_id` 来源**：调用 `POST /v1/images/generations` 或 `POST /v2/image-tasks` 后，从响应头 `X-Oneapi-Request-Id` 获取。
+
+> 账单记录在请求完成后异步落库，建议延迟 1–2 秒再调用本接口，避免记录尚未写入。
+
+> 异步任务的差额结算和失败退款不会回写这条记录。任务最终扣费以查询异步图像生成任务返回的 `amount` 为准。
+
+<APIPage document={"openapi/generated/ai-model/图像（Images）/异步图像任务/get-v1-requests-request-id.json"} operations={[{"path":"/v1/requests/{request_id}","method":"get"}]} />

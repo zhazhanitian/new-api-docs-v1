@@ -28,6 +28,8 @@ async function walkJsonFiles(dir: string): Promise<string[]> {
 export const openapi = createOpenAPI({
   // Set proxy URL to resolve CORS issues
   proxyUrl: '/api/proxy',
+  // 开发时每次重新读 OpenAPI JSON，避免改文档后页面还是旧内容
+  disableCache: process.env.NODE_ENV !== 'production',
   // Always load generated per-endpoint OpenAPI files (clean single source of truth)
   async input() {
     const files = await walkJsonFiles('./openapi/generated');
