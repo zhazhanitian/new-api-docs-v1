@@ -1,0 +1,275 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "查询音乐任务",
+    "version": "1.0.0",
+    "description": "查询所有音乐模型的异步任务。Suno、Flow Music 以及之后新增的音乐模型都使用这个接口，提交时返回的 `task_id` 即可查询。"
+  },
+  "tags": [
+    {
+      "name": "音频（Audio）"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "使用 MAPI Bearer Token 认证。格式：`Authorization: Bearer sk-xxxxxx`。"
+      }
+    }
+  },
+  "paths": {
+    "/v1/music/generations/{task_id}": {
+      "get": {
+        "tags": [
+          "音频（Audio）"
+        ],
+        "summary": "查询音乐任务",
+        "description": "查询任意音乐模型的任务。\n\n- `action` 是提交时的模型 ID，例如 `suno-music`、`flowmusic`。\n- `result` 是上游结果原样透传，结构随模型不同。音乐类通常在 `result.music[]`，歌词类在 `result.lyrics[]`。各模型页面说明自己的结果字段。\n- 状态：`submitted`→`SUBMITTED`，`pending`→`QUEUED`，`processing`→`IN_PROGRESS`，`completed`→`SUCCESS`，`failed`→`FAILURE`。未识别状态记为 `IN_PROGRESS` 并继续轮询。\n- 建议首次等待约 3 秒，之后每 5–10 秒查询一次，直到 `SUCCESS` 或 `FAILURE`。不要因网络超时重发已经提交的 POST。\n- 失败时 `fail_reason` 有说明，预扣额度会退回。",
+        "operationId": "get-music-task",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "description": "提交接口返回的 MAPI 公开任务 ID",
+            "schema": {
+              "type": "string"
+            },
+            "example": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功获取任务",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "success"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "task_id": {
+                          "type": "string"
+                        },
+                        "action": {
+                          "type": "string",
+                          "description": "提交时的模型 ID。"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "NOT_START",
+                            "SUBMITTED",
+                            "QUEUED",
+                            "IN_PROGRESS",
+                            "SUCCESS",
+                            "FAILURE"
+                          ],
+                          "description": "`SUBMITTED` 已提交；`QUEUED` 排队；`IN_PROGRESS` 处理中；`SUCCESS` 完成；`FAILURE` 失败。"
+                        },
+                        "fail_reason": {
+                          "type": "string"
+                        },
+                        "progress": {
+                          "type": "string",
+                          "description": "进度字符串，例如 `50%`、`100%`。是否完成以 `status` 为准。"
+                        },
+                        "amount": {
+                          "type": "string",
+                          "description": "人民币金额，保留 6 位小数。"
+                        },
+                        "submit_time": {
+                          "type": "integer",
+                          "description": "提交时间，Unix 秒。"
+                        },
+                        "start_time": {
+                          "type": "integer",
+                          "description": "开始时间，Unix 秒。"
+                        },
+                        "finish_time": {
+                          "type": "integer",
+                          "description": "完成时间，Unix 秒。未完成为 0。"
+                        },
+                        "result": {
+                          "type": "object",
+                          "description": "完成后的上游结果，原样透传。字段随模型不同。",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "task_id",
+                        "action",
+                        "status",
+                        "fail_reason",
+                        "progress",
+                        "amount",
+                        "submit_time",
+                        "start_time",
+                        "finish_time"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "data"
+                  ]
+                },
+                "examples": {
+                  "processing": {
+                    "summary": "处理中",
+                    "value": {
+                      "code": "success",
+                      "message": "",
+                      "data": {
+                        "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw",
+                        "action": "suno-music",
+                        "status": "IN_PROGRESS",
+                        "fail_reason": "",
+                        "progress": "50%",
+                        "amount": "0.730000",
+                        "submit_time": 1787018400,
+                        "start_time": 1787018410,
+                        "finish_time": 0
+                      }
+                    }
+                  },
+                  "sunoMusic": {
+                    "summary": "Suno 音乐成功",
+                    "value": {
+                      "code": "success",
+                      "message": "",
+                      "data": {
+                        "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw",
+                        "action": "suno-music",
+                        "status": "SUCCESS",
+                        "fail_reason": "",
+                        "progress": "100%",
+                        "amount": "0.730000",
+                        "submit_time": 1787018400,
+                        "start_time": 1787018410,
+                        "finish_time": 1787018520,
+                        "result": {
+                          "music": [
+                            {
+                              "audio_id": "audio_01",
+                              "title": "Summer Breeze",
+                              "audio_url": "https://cdn.example.com/generated-song.mp3",
+                              "image_url": "https://cdn.example.com/cover.png",
+                              "duration": 128.5
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  "flowMusic": {
+                    "summary": "Flow Music 音乐成功",
+                    "value": {
+                      "code": "success",
+                      "message": "",
+                      "data": {
+                        "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw",
+                        "action": "flowmusic",
+                        "status": "SUCCESS",
+                        "fail_reason": "",
+                        "progress": "100%",
+                        "amount": "0.438000",
+                        "submit_time": 1787018400,
+                        "start_time": 1787018410,
+                        "finish_time": 1787018460,
+                        "result": {
+                          "music": [
+                            {
+                              "clip_id": "a41aade4-993e-4d28-b56f-d97e7ef7167c",
+                              "title": "坚持",
+                              "audio_url": "https://cdn.example.com/flowmusic.m4a",
+                              "image_url": "https://cdn.example.com/cover.jpg",
+                              "lyrics": "[Verse 1]\n黑夜再长也会天亮"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  "lyrics": {
+                    "summary": "歌词成功",
+                    "value": {
+                      "code": "success",
+                      "message": "",
+                      "data": {
+                        "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw",
+                        "action": "flowmusic-lyrics",
+                        "status": "SUCCESS",
+                        "fail_reason": "",
+                        "progress": "100%",
+                        "amount": "0.146000",
+                        "submit_time": 1787018400,
+                        "start_time": 1787018410,
+                        "finish_time": 1787018460,
+                        "result": {
+                          "lyrics": [
+                            {
+                              "title": "坚持",
+                              "lyrics": "[Verse 1]\n黑夜再长也会天亮"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  "failure": {
+                    "summary": "失败",
+                    "value": {
+                      "code": "success",
+                      "message": "",
+                      "data": {
+                        "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw",
+                        "action": "flowmusic",
+                        "status": "FAILURE",
+                        "fail_reason": "sound_prompt and lyrics cannot both be empty",
+                        "progress": "100%",
+                        "amount": "0.438000",
+                        "submit_time": 1787018400,
+                        "start_time": 1787018410,
+                        "finish_time": 1787018460
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "任务不存在或不属于当前用户",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": "task_not_exist",
+                  "message": "task_not_exist",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

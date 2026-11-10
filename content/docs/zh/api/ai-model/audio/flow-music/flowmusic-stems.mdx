@@ -1,0 +1,12 @@
+---
+title: 词曲分离
+full: true
+---
+
+把人声和伴奏分成轨，结果是一个 zip。
+
+- 无版本参数。
+- **提交接口**：`POST /v1/music/generations`，`model: "flowmusic-stems"`。
+- 完成后读取 `result.music[0].file_url`。
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/FlowMusic/post-v1-music-generations-flowmusic-stems.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

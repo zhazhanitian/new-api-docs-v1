@@ -1,0 +1,13 @@
+---
+title: 音乐延伸
+full: true
+---
+
+从指定时间点续写已有音乐。产物是新的 `clip_id`。
+
+- `version` 为 `lyria-3-pro`（默认）或 `lyria-3.5`。
+- `extend_s` 最大 164 秒。`extend_from_s` 不能超过源片段时长。
+- 可选 `task_id` 只用于锁定原渠道，不会传给上游。
+- **提交接口**：`POST /v1/music/generations`，`model: "flowmusic-extend"`。
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/FlowMusic/post-v1-music-generations-flowmusic-extend.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

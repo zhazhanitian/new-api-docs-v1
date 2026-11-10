@@ -1,0 +1,12 @@
+---
+title: 生成歌词
+full: true
+---
+
+根据主题生成歌词。完成后把 `result.lyrics[0]` 的 `title` 和 `lyrics` 回填到 `flowmusic`。
+
+- 本工具没有版本参数。
+- **提交接口**：`POST /v1/music/generations`，`model: "flowmusic-lyrics"`。
+- **任务查询**：`GET /v1/music/generations/{task_id}`。结果在 `result.lyrics[]`。
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/FlowMusic/post-v1-music-generations-flowmusic-lyrics.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

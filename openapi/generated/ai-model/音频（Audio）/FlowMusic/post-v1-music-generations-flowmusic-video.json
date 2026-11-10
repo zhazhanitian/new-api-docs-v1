@@ -1,0 +1,192 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "音乐视频",
+    "version": "1.0.0",
+    "description": "按模板把音乐渲染成 mp4。\n\n- `preset`：`simple`（默认）、`modern`、`player`。\n- MAPI 只校验 `model`，其余字段原样转发。时长、强度、格式等取值由上游校验；上游拒绝时退回预扣。\n- 完成后读取 `result.music[0].video_url`。"
+  },
+  "tags": [
+    {
+      "name": "音频（Audio）/Flow Music"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "使用 MAPI Bearer Token 认证。格式：`Authorization: Bearer sk-xxxxxx`。"
+      }
+    }
+  },
+  "paths": {
+    "/v1/music/generations": {
+      "post": {
+        "tags": [
+          "音频（Audio）/Flow Music"
+        ],
+        "summary": "音乐视频",
+        "description": "按模板把音乐渲染成 mp4。\n\n- `preset`：`simple`（默认）、`modern`、`player`。\n- MAPI 只校验 `model`，其余字段原样转发。时长、强度、格式等取值由上游校验；上游拒绝时退回预扣。\n- 完成后读取 `result.music[0].video_url`。",
+        "operationId": "flowmusic-video",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "const": "flowmusic-video",
+                    "description": "固定填写 `flowmusic-video`。",
+                    "examples": [
+                      "flowmusic-video"
+                    ]
+                  },
+                  "clip_id": {
+                    "type": "string",
+                    "description": "源音乐 `clip_id`，来自已成功任务的 `result.music[].clip_id`。外部音频先用 `flowmusic-upload` 导入。"
+                  },
+                  "preset": {
+                    "type": "string",
+                    "enum": [
+                      "simple",
+                      "modern",
+                      "player"
+                    ],
+                    "default": "simple",
+                    "description": "视频模板。不传为 `simple`。"
+                  },
+                  "task_id": {
+                    "type": "string",
+                    "description": "可选。产出该 `clip_id` 的 MAPI 公开任务 ID。多 Key 时用来把请求锁回原渠道，不会转发给上游。源片段本身仍传 `clip_id`。"
+                  }
+                },
+                "required": [
+                  "model",
+                  "clip_id"
+                ]
+              },
+              "examples": {
+                "default": {
+                  "summary": "modern 模板",
+                  "value": {
+                    "model": "flowmusic-video",
+                    "clip_id": "abc123-def456",
+                    "preset": "modern"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "任务提交成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "examples": [
+                        200
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "success"
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "submitted"
+                            ]
+                          },
+                          "task_id": {
+                            "type": "string",
+                            "description": "MAPI 公开任务 ID，用于 `GET /v1/music/generations/{task_id}`。",
+                            "examples": [
+                              "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "status",
+                          "task_id"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "code": 200,
+                  "message": "success",
+                  "data": [
+                    {
+                      "status": "submitted",
+                      "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "模型 ID 无效，或上游拒绝了参数",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "description": "错误代码",
+                      "examples": [
+                        "invalid_request",
+                        "upstream_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "错误说明"
+                    },
+                    "data": {
+                      "description": "错误附加数据，可为空"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                },
+                "example": {
+                  "code": "invalid_request",
+                  "message": "unknown flow music model",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

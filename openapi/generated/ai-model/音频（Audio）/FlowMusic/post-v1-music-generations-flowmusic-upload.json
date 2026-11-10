@@ -1,0 +1,180 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "上传音频",
+    "version": "1.0.0",
+    "description": "把外部音频导入 Flow Music，换取 `clip_id`。`audio_url` 必须公网可访问，后缀为 `.mp3` 或 `.wav`。\n\n- MAPI 只校验 `model`，其余字段原样转发。时长、强度、格式等取值由上游校验；上游拒绝时退回预扣。\n- 完成后读取 `result.music[0].clip_id`。"
+  },
+  "tags": [
+    {
+      "name": "音频（Audio）/Flow Music"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "使用 MAPI Bearer Token 认证。格式：`Authorization: Bearer sk-xxxxxx`。"
+      }
+    }
+  },
+  "paths": {
+    "/v1/music/generations": {
+      "post": {
+        "tags": [
+          "音频（Audio）/Flow Music"
+        ],
+        "summary": "上传音频",
+        "description": "把外部音频导入 Flow Music，换取 `clip_id`。`audio_url` 必须公网可访问，后缀为 `.mp3` 或 `.wav`。\n\n- MAPI 只校验 `model`，其余字段原样转发。时长、强度、格式等取值由上游校验；上游拒绝时退回预扣。\n- 完成后读取 `result.music[0].clip_id`。",
+        "operationId": "flowmusic-upload",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "const": "flowmusic-upload",
+                    "description": "固定填写 `flowmusic-upload`。",
+                    "examples": [
+                      "flowmusic-upload"
+                    ]
+                  },
+                  "audio_url": {
+                    "type": "string",
+                    "description": "公网音频地址，后缀 `.mp3` 或 `.wav`。",
+                    "examples": [
+                      "https://example.com/audio.mp3"
+                    ]
+                  }
+                },
+                "required": [
+                  "model",
+                  "audio_url"
+                ]
+              },
+              "examples": {
+                "default": {
+                  "summary": "导入外部音频",
+                  "value": {
+                    "model": "flowmusic-upload",
+                    "audio_url": "https://example.com/audio.mp3"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "任务提交成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "examples": [
+                        200
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "success"
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "submitted"
+                            ]
+                          },
+                          "task_id": {
+                            "type": "string",
+                            "description": "MAPI 公开任务 ID，用于 `GET /v1/music/generations/{task_id}`。",
+                            "examples": [
+                              "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "status",
+                          "task_id"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "code": 200,
+                  "message": "success",
+                  "data": [
+                    {
+                      "status": "submitted",
+                      "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "模型 ID 无效，或上游拒绝了参数",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "description": "错误代码",
+                      "examples": [
+                        "invalid_request",
+                        "upstream_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "错误说明"
+                    },
+                    "data": {
+                      "description": "错误附加数据，可为空"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                },
+                "example": {
+                  "code": "invalid_request",
+                  "message": "unknown flow music model",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

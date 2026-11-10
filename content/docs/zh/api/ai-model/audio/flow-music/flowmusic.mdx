@@ -1,0 +1,13 @@
+---
+title: 生成音乐
+full: true
+---
+
+每次请求生成一首音乐。`version` 为 `lyria-3-pro`（默认，Lyria 3 Pro）或 `lyria-3.5`。两个版本的字段相同。
+
+- `sound_prompt` 与 `lyrics` 至少传一个。`bpm` 是字符串，`length` 为 1–240 秒。
+- 取值由上游校验。提交失败会退回预扣。
+- **提交接口**：`POST /v1/music/generations`，`model: "flowmusic"`。
+- **任务查询**：`GET /v1/music/generations/{task_id}`。完成后从 `result.music[]` 取 `clip_id` 和 `audio_url`。
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/FlowMusic/post-v1-music-generations-flowmusic.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

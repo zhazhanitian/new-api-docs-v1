@@ -1938,265 +1938,8 @@ function createSubmitOpenApi(model: ModelDoc) {
   };
 }
 
-function createQueryOpenApi() {
-  const taskDataProperties = {
-    id: { type: 'integer', description: '任务数据库记录 ID' },
-    created_at: { type: 'integer', description: '记录创建时间，Unix 秒' },
-    updated_at: { type: 'integer', description: '记录更新时间，Unix 秒' },
-    task_id: { type: 'string', description: 'MAPI 公开任务 ID' },
-    platform: {
-      type: 'string',
-      description:
-        '任务平台标识；APIMart Suno 渠道当前记录为渠道类型字符串 `60`。',
-      examples: ['60'],
-    },
-    user_id: { type: 'integer', description: '所属用户 ID' },
-    group: { type: 'string', description: '计费分组' },
-    channel_id: { type: 'integer', description: '实际渠道 ID' },
-    amount: { type: 'string', description: '人民币计费金额，保留 6 位小数' },
-    action: { type: 'string', description: '提交时使用的 `suno-*` 模型 ID' },
-    status: {
-      type: 'string',
-      enum: [
-        'NOT_START',
-        'SUBMITTED',
-        'QUEUED',
-        'IN_PROGRESS',
-        'SUCCESS',
-        'FAILURE',
-        'UNKNOWN',
-      ],
-      description:
-        '`SUBMITTED` 表示已提交（上游 `submitted`）；`QUEUED` 表示上游处理中（上游 `pending`）；`SUCCESS` 表示完成；`FAILURE` 表示失败。`IN_PROGRESS` 用于未识别但仍需继续轮询的上游状态。',
-    },
-    fail_reason: {
-      type: 'string',
-      description: '失败原因；非失败任务通常为空字符串',
-    },
-    result_url: {
-      type: 'string',
-      description:
-        '主要结果 URL。音乐任务成功时通常为首个音频 URL；标签增强任务可能为增强后的标签文本。',
-    },
-    submit_time: { type: 'integer', description: '提交时间，Unix 秒' },
-    start_time: { type: 'integer', description: '开始处理时间，Unix 秒' },
-    finish_time: { type: 'integer', description: '完成时间，Unix 秒' },
-    progress: {
-      type: 'string',
-      description: '任务进度百分比字符串',
-      examples: ['50%'],
-    },
-    properties: {
-      type: 'object',
-      description: '任务模型属性',
-      properties: {
-        input: { type: 'string' },
-        upstream_model_name: { type: 'string' },
-        origin_model_name: { type: 'string' },
-      },
-    },
-    data: {
-      type: 'object',
-      description:
-        '完整保存的上游查询响应。常见字段包括耗时与计费信息，以及 `data.result.music[]`、`data.result.upsampled_tags`、错误信息等；不同工具的结果结构不同。',
-      additionalProperties: true,
-    },
-  };
-
-  const response = (
-    status: string,
-    progress: string,
-    extra: Record<string, unknown> = {}
-  ) => ({
-    code: 'success',
-    message: '',
-    data: {
-      id: 1001,
-      created_at: 1787018400,
-      updated_at: 1787018460,
-      task_id: 'task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw',
-      platform: '60',
-      user_id: 12,
-      group: 'default',
-      channel_id: 60,
-      amount: '0.730000',
-      action: 'suno-music',
-      status,
-      fail_reason: '',
-      submit_time: 1787018400,
-      start_time: 1787018410,
-      finish_time: 0,
-      progress,
-      properties: {
-        input: '',
-        upstream_model_name: 'suno-music',
-        origin_model_name: 'suno-music',
-      },
-      data: {},
-      ...extra,
-    },
-  });
-
-  const description =
-    '查询 Suno 异步任务的状态、进度、计费信息和结果。建议每 3–5 秒轮询一次，直到状态变为 `SUCCESS` 或 `FAILURE`。';
-
-  return {
-    openapi: '3.1.0',
-    info: { title: '查询 Suno 任务', version: '1.0.0', description },
-    tags: [{ name: '音频（Audio）/Suno' }],
-    components: { securitySchemes: { BearerAuth: bearerAuth } },
-    paths: {
-      '/v1/music/generations/{task_id}': {
-        get: {
-          tags: ['音频（Audio）/Suno'],
-          summary: '查询 Suno 任务',
-          description,
-          operationId: 'get-suno-task',
-          security: [{ BearerAuth: [] }],
-          parameters: [
-            {
-              name: 'task_id',
-              in: 'path',
-              required: true,
-              description: '提交接口返回的 MAPI 公开任务 ID',
-              schema: { type: 'string' },
-              example: 'task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw',
-            },
-          ],
-          responses: {
-            '200': {
-              description: '成功获取任务',
-              content: {
-                'application/json': {
-                  schema: {
-                    type: 'object',
-                    properties: {
-                      code: { type: 'string', enum: ['success'] },
-                      message: { type: 'string' },
-                      data: {
-                        type: 'object',
-                        properties: taskDataProperties,
-                      },
-                    },
-                    required: ['code', 'data'],
-                  },
-                  examples: {
-                    submitted: {
-                      summary: '已提交',
-                      value: response('SUBMITTED', '10%'),
-                    },
-                    queued: {
-                      summary: '排队中',
-                      value: response('QUEUED', '50%'),
-                    },
-                    processing: {
-                      summary: '其他处理中状态',
-                      value: response('IN_PROGRESS', '70%'),
-                    },
-                    successMusic: {
-                      summary: '音乐任务成功',
-                      value: response('SUCCESS', '100%', {
-                        finish_time: 1787018520,
-                        result_url: 'https://example.com/generated-song.mp3',
-                        data: {
-                          code: 200,
-                          data: {
-                            id: 'upstream-task',
-                            status: 'completed',
-                            progress: 100,
-                            actual_time: 161,
-                            estimated_time: 180,
-                            cost: 0.05,
-                            credits_cost: 0.5,
-                            result: {
-                              music: [
-                                {
-                                  audio_id: 'audio_01',
-                                  title: 'Summer Breeze',
-                                  duration: 128.5,
-                                  lyrics: '...',
-                                  tags: 'electronic, upbeat',
-                                  audio_url:
-                                    'https://example.com/generated-song.mp3',
-                                  image_url: 'https://example.com/cover.png',
-                                  image_large_url:
-                                    'https://example.com/cover-large.png',
-                                  video_url:
-                                    'https://example.com/music-video.mp4',
-                                  status: 'complete',
-                                },
-                              ],
-                            },
-                          },
-                        },
-                      }),
-                    },
-                    successTags: {
-                      summary: '标签增强任务成功',
-                      value: response('SUCCESS', '100%', {
-                        finish_time: 1787018450,
-                        result_url:
-                          'lo-fi hip hop, warm vinyl, rainy night, mellow piano',
-                        action: 'suno-upsample-tags',
-                        data: {
-                          code: 200,
-                          data: {
-                            id: 'upstream-task',
-                            status: 'completed',
-                            progress: 100,
-                            result: {
-                              upsampled_tags:
-                                'lo-fi hip hop, warm vinyl, rainy night, mellow piano',
-                            },
-                          },
-                        },
-                      }),
-                    },
-                    failed: {
-                      summary: '任务失败',
-                      value: response('FAILURE', '100%', {
-                        finish_time: 1787018450,
-                        fail_reason: 'source task is not ready',
-                        data: {
-                          code: 200,
-                          data: {
-                            id: 'upstream-task',
-                            status: 'failed',
-                            progress: 100,
-                            result: {},
-                            error: { message: 'source task is not ready' },
-                          },
-                        },
-                      }),
-                    },
-                  },
-                },
-              },
-            },
-            '400': {
-              description: '任务不存在或任务不属于当前用户',
-              content: {
-                'application/json': {
-                  schema: errorSchema,
-                  example: {
-                    code: 'task_not_exist',
-                    message: 'task_not_exist',
-                    data: null,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  };
-}
-
 function jsonFileName(id: string) {
-  return id === 'get-suno-task'
-    ? 'get-v1-music-generations-task-id.json'
-    : `post-v1-music-generations-${id}.json`;
+  return `post-v1-music-generations-${id}.json`;
 }
 
 function mdxContent(
@@ -2240,11 +1983,6 @@ async function generate() {
       createSubmitOpenApi(model)
     );
   }
-  await writeJson(
-    path.join(openApiDir, jsonFileName('get-suno-task')),
-    createQueryOpenApi()
-  );
-
   const locales = [
     {
       locale: 'zh',
@@ -2260,9 +1998,6 @@ ${details ? `\n${details}` : ''}
 - **提交接口**：统一通过 \`POST /v1/music/generations\` 提交，使用 \`model: "${model.id}"\` 选择此能力。
 - **任务查询**：提交返回 \`task_id\`，通过 \`GET /v1/music/generations/{task_id}\` 获取任务状态和结果。`;
       },
-      queryTitle: '查询 Suno 任务',
-      queryDescription:
-        '通过公共接口 `GET /v1/music/generations/{task_id}` 查询所有 Suno 模型的异步任务。',
     },
     {
       locale: 'en',
@@ -2270,9 +2005,6 @@ ${details ? `\n${details}` : ''}
       title: (model: ModelDoc) => model.enTitle,
       description: (model: ModelDoc) =>
         `Submit this Suno capability through \`POST /v1/music/generations\` with \`model: "${model.id}"\`.`,
-      queryTitle: 'Get Suno Task',
-      queryDescription:
-        'Query any asynchronous Suno task through `GET /v1/music/generations/{task_id}`.',
     },
     {
       locale: 'ja',
@@ -2280,13 +2012,10 @@ ${details ? `\n${details}` : ''}
       title: (model: ModelDoc) => model.jaTitle,
       description: (model: ModelDoc) =>
         `\`POST /v1/music/generations\` に \`model: "${model.id}"\` を指定して送信します。`,
-      queryTitle: 'Sunoタスク照会',
-      queryDescription:
-        '`GET /v1/music/generations/{task_id}` ですべてのSuno非同期タスクを照会します。',
     },
   ];
 
-  const pages = [...models.map((model) => model.id), 'get-suno-task'];
+  const pages = models.map((model) => model.id);
   for (const locale of locales) {
     const docsDir = path.join(
       root,
@@ -2309,19 +2038,11 @@ ${details ? `\n${details}` : ''}
         'utf8'
       );
     }
-    await writeFile(
-      path.join(docsDir, 'get-suno-task.mdx'),
-      mdxContent(
-        locale.queryTitle,
-        locale.queryDescription,
-        'get-suno-task',
-        'GET'
-      ),
-      'utf8'
-    );
   }
 
-  console.log(`Generated ${models.length} Suno model docs and one query doc.`);
+  console.log(
+    `Generated ${models.length} Suno model docs. Music task query lives at audio/get-music-task.`
+  );
 }
 
 generate().catch((error) => {

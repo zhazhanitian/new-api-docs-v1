@@ -1,0 +1,11 @@
+---
+title: 音乐视频
+full: true
+---
+
+按模板把音乐渲染成 mp4。`preset` 可选 `simple`、`modern`、`player`，默认 `simple`。
+
+- **提交接口**：`POST /v1/music/generations`，`model: "flowmusic-video"`。
+- 完成后读取 `result.music[0].video_url`。
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/FlowMusic/post-v1-music-generations-flowmusic-video.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

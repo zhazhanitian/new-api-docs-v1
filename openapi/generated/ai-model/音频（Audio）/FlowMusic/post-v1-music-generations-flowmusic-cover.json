@@ -1,0 +1,219 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Cover 改编",
+    "version": "1.0.0",
+    "description": "对整首歌做风格改编。产物是新的 `clip_id`。\n\n- `strength` 取值 0–1，越大改动越大。\n- `version` 为 `lyria-3-pro`（默认）或 `lyria-3.5`。\n- MAPI 只校验 `model`，其余字段原样转发。时长、强度、格式等取值由上游校验；上游拒绝时退回预扣。"
+  },
+  "tags": [
+    {
+      "name": "音频（Audio）/Flow Music"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "使用 MAPI Bearer Token 认证。格式：`Authorization: Bearer sk-xxxxxx`。"
+      }
+    }
+  },
+  "paths": {
+    "/v1/music/generations": {
+      "post": {
+        "tags": [
+          "音频（Audio）/Flow Music"
+        ],
+        "summary": "Cover 改编",
+        "description": "对整首歌做风格改编。产物是新的 `clip_id`。\n\n- `strength` 取值 0–1，越大改动越大。\n- `version` 为 `lyria-3-pro`（默认）或 `lyria-3.5`。\n- MAPI 只校验 `model`，其余字段原样转发。时长、强度、格式等取值由上游校验；上游拒绝时退回预扣。",
+        "operationId": "flowmusic-cover",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "const": "flowmusic-cover",
+                    "description": "固定填写 `flowmusic-cover`。",
+                    "examples": [
+                      "flowmusic-cover"
+                    ]
+                  },
+                  "version": {
+                    "type": "string",
+                    "enum": [
+                      "lyria-3-pro",
+                      "lyria-3.5"
+                    ],
+                    "default": "lyria-3-pro",
+                    "description": "模型版本。`lyria-3-pro` 为 Lyria 3 Pro，`lyria-3.5` 为 Lyria 3.5。不传时默认 `lyria-3-pro`。两个版本字段相同。",
+                    "examples": [
+                      "lyria-3-pro",
+                      "lyria-3.5"
+                    ]
+                  },
+                  "clip_id": {
+                    "type": "string",
+                    "description": "源音乐 `clip_id`，来自已成功任务的 `result.music[].clip_id`。外部音频先用 `flowmusic-upload` 导入。"
+                  },
+                  "instruction": {
+                    "type": "string",
+                    "description": "改编指令。",
+                    "examples": [
+                      "将这首歌曲改为爵士风格"
+                    ]
+                  },
+                  "strength": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "编辑强度，0–1，越大改动越大。"
+                  },
+                  "title": {
+                    "type": "string",
+                    "description": "改编后的标题。"
+                  },
+                  "seed": {
+                    "type": "string",
+                    "description": "随机种子。"
+                  },
+                  "task_id": {
+                    "type": "string",
+                    "description": "可选。产出该 `clip_id` 的 MAPI 公开任务 ID。多 Key 时用来把请求锁回原渠道，不会转发给上游。源片段本身仍传 `clip_id`。"
+                  }
+                },
+                "required": [
+                  "model",
+                  "clip_id",
+                  "instruction",
+                  "strength"
+                ]
+              },
+              "examples": {
+                "default": {
+                  "summary": "改成爵士",
+                  "value": {
+                    "model": "flowmusic-cover",
+                    "clip_id": "abc123-def456",
+                    "instruction": "将这首歌曲改为爵士风格",
+                    "strength": 0.5
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "任务提交成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "examples": [
+                        200
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "success"
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "submitted"
+                            ]
+                          },
+                          "task_id": {
+                            "type": "string",
+                            "description": "MAPI 公开任务 ID，用于 `GET /v1/music/generations/{task_id}`。",
+                            "examples": [
+                              "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "status",
+                          "task_id"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "code": 200,
+                  "message": "success",
+                  "data": [
+                    {
+                      "status": "submitted",
+                      "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "模型 ID 无效，或上游拒绝了参数",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "description": "错误代码",
+                      "examples": [
+                        "invalid_request",
+                        "upstream_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "错误说明"
+                    },
+                    "data": {
+                      "description": "错误附加数据，可为空"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                },
+                "example": {
+                  "code": "invalid_request",
+                  "message": "unknown flow music model",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

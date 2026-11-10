@@ -1,0 +1,226 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "片段替换",
+    "version": "1.0.0",
+    "description": "重生成 `start_s` 到 `end_s` 之间的片段。输出是整首新歌和新的 `clip_id`。\n\n- `end_s` 必须大于 `start_s`，且不能超过源片段时长。\n- `version` 为 `lyria-3-pro`（默认）或 `lyria-3.5`。\n- MAPI 只校验 `model`，其余字段原样转发。时长、强度、格式等取值由上游校验；上游拒绝时退回预扣。"
+  },
+  "tags": [
+    {
+      "name": "音频（Audio）/Flow Music"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "使用 MAPI Bearer Token 认证。格式：`Authorization: Bearer sk-xxxxxx`。"
+      }
+    }
+  },
+  "paths": {
+    "/v1/music/generations": {
+      "post": {
+        "tags": [
+          "音频（Audio）/Flow Music"
+        ],
+        "summary": "片段替换",
+        "description": "重生成 `start_s` 到 `end_s` 之间的片段。输出是整首新歌和新的 `clip_id`。\n\n- `end_s` 必须大于 `start_s`，且不能超过源片段时长。\n- `version` 为 `lyria-3-pro`（默认）或 `lyria-3.5`。\n- MAPI 只校验 `model`，其余字段原样转发。时长、强度、格式等取值由上游校验；上游拒绝时退回预扣。",
+        "operationId": "flowmusic-replace",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "const": "flowmusic-replace",
+                    "description": "固定填写 `flowmusic-replace`。",
+                    "examples": [
+                      "flowmusic-replace"
+                    ]
+                  },
+                  "version": {
+                    "type": "string",
+                    "enum": [
+                      "lyria-3-pro",
+                      "lyria-3.5"
+                    ],
+                    "default": "lyria-3-pro",
+                    "description": "模型版本。`lyria-3-pro` 为 Lyria 3 Pro，`lyria-3.5` 为 Lyria 3.5。不传时默认 `lyria-3-pro`。两个版本字段相同。",
+                    "examples": [
+                      "lyria-3-pro",
+                      "lyria-3.5"
+                    ]
+                  },
+                  "clip_id": {
+                    "type": "string",
+                    "description": "源音乐 `clip_id`，来自已成功任务的 `result.music[].clip_id`。外部音频先用 `flowmusic-upload` 导入。"
+                  },
+                  "start_s": {
+                    "type": "number",
+                    "description": "替换开始时间（秒）。"
+                  },
+                  "end_s": {
+                    "type": "number",
+                    "description": "替换结束时间（秒），必须大于 `start_s`，且不能超过源片段时长。"
+                  },
+                  "instruction": {
+                    "type": "string",
+                    "description": "替换片段的编辑指令。",
+                    "examples": [
+                      "替换为钢琴版本"
+                    ]
+                  },
+                  "title": {
+                    "type": "string",
+                    "description": "替换后的标题。"
+                  },
+                  "seed": {
+                    "type": [
+                      "string",
+                      "integer"
+                    ],
+                    "description": "随机种子，字符串或整数。"
+                  },
+                  "task_id": {
+                    "type": "string",
+                    "description": "可选。产出该 `clip_id` 的 MAPI 公开任务 ID。多 Key 时用来把请求锁回原渠道，不会转发给上游。源片段本身仍传 `clip_id`。"
+                  }
+                },
+                "required": [
+                  "model",
+                  "clip_id",
+                  "start_s",
+                  "end_s",
+                  "instruction"
+                ]
+              },
+              "examples": {
+                "default": {
+                  "summary": "把 10–20 秒换成钢琴",
+                  "value": {
+                    "model": "flowmusic-replace",
+                    "clip_id": "abc123-def456",
+                    "start_s": 10,
+                    "end_s": 20,
+                    "instruction": "替换为钢琴版本"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "任务提交成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "examples": [
+                        200
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "success"
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "submitted"
+                            ]
+                          },
+                          "task_id": {
+                            "type": "string",
+                            "description": "MAPI 公开任务 ID，用于 `GET /v1/music/generations/{task_id}`。",
+                            "examples": [
+                              "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "status",
+                          "task_id"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "code": 200,
+                  "message": "success",
+                  "data": [
+                    {
+                      "status": "submitted",
+                      "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "模型 ID 无效，或上游拒绝了参数",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "description": "错误代码",
+                      "examples": [
+                        "invalid_request",
+                        "upstream_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "错误说明"
+                    },
+                    "data": {
+                      "description": "错误附加数据，可为空"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                },
+                "example": {
+                  "code": "invalid_request",
+                  "message": "unknown flow music model",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

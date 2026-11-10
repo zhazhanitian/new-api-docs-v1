@@ -33,7 +33,6 @@
     "suno-sample",
     "suno-inspo",
     "suno-stems",
-    "suno-stems-all",
-    "get-suno-task"
+    "suno-stems-all"
   ]
 }

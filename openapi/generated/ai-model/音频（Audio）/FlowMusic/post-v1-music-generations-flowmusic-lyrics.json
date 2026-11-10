@@ -1,0 +1,181 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "生成歌词",
+    "version": "1.0.0",
+    "description": "根据提示词生成歌词。`prompt` 建议描述主题、风格和情绪，长度 ≤ 3000。本工具没有 `version`。\n\n- MAPI 只校验 `model`，其余字段原样转发。时长、强度、格式等取值由上游校验；上游拒绝时退回预扣。\n- 完成后读取 `result.lyrics[]` 的 `title`、`lyrics`，可回填到 `flowmusic`。"
+  },
+  "tags": [
+    {
+      "name": "音频（Audio）/Flow Music"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "使用 MAPI Bearer Token 认证。格式：`Authorization: Bearer sk-xxxxxx`。"
+      }
+    }
+  },
+  "paths": {
+    "/v1/music/generations": {
+      "post": {
+        "tags": [
+          "音频（Audio）/Flow Music"
+        ],
+        "summary": "生成歌词",
+        "description": "根据提示词生成歌词。`prompt` 建议描述主题、风格和情绪，长度 ≤ 3000。本工具没有 `version`。\n\n- MAPI 只校验 `model`，其余字段原样转发。时长、强度、格式等取值由上游校验；上游拒绝时退回预扣。\n- 完成后读取 `result.lyrics[]` 的 `title`、`lyrics`，可回填到 `flowmusic`。",
+        "operationId": "flowmusic-lyrics",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "const": "flowmusic-lyrics",
+                    "description": "固定填写 `flowmusic-lyrics`。",
+                    "examples": [
+                      "flowmusic-lyrics"
+                    ]
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "maxLength": 3000,
+                    "description": "歌词主题、风格、情绪。去掉首尾空白后不能为空，≤ 3000 字符。",
+                    "examples": [
+                      "一首关于坚持的摇滚歌曲"
+                    ]
+                  }
+                },
+                "required": [
+                  "model",
+                  "prompt"
+                ]
+              },
+              "examples": {
+                "default": {
+                  "summary": "按主题生成歌词",
+                  "value": {
+                    "model": "flowmusic-lyrics",
+                    "prompt": "一首关于坚持的摇滚歌曲"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "任务提交成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "examples": [
+                        200
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "success"
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "submitted"
+                            ]
+                          },
+                          "task_id": {
+                            "type": "string",
+                            "description": "MAPI 公开任务 ID，用于 `GET /v1/music/generations/{task_id}`。",
+                            "examples": [
+                              "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "status",
+                          "task_id"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "code": 200,
+                  "message": "success",
+                  "data": [
+                    {
+                      "status": "submitted",
+                      "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "模型 ID 无效，或上游拒绝了参数",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "description": "错误代码",
+                      "examples": [
+                        "invalid_request",
+                        "upstream_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "错误说明"
+                    },
+                    "data": {
+                      "description": "错误附加数据，可为空"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                },
+                "example": {
+                  "code": "invalid_request",
+                  "message": "unknown flow music model",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

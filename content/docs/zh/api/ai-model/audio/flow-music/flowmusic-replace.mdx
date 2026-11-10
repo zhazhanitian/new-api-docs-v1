@@ -1,0 +1,11 @@
+---
+title: 片段替换
+full: true
+---
+
+按指令重生成 `start_s` 到 `end_s` 之间的片段。输出是整首新歌，对应区间已被替换，`clip_id` 也是新的。
+
+- `end_s` 必须大于 `start_s`，且不能超过源片段时长。
+- **提交接口**：`POST /v1/music/generations`，`model: "flowmusic-replace"`。
+
+<APIPage document={"openapi/generated/ai-model/音频（Audio）/FlowMusic/post-v1-music-generations-flowmusic-replace.json"} operations={[{"path":"/v1/music/generations","method":"post"}]} />

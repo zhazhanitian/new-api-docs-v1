@@ -1,0 +1,229 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "生成音乐",
+    "version": "1.0.0",
+    "description": "Flow Music 文字生成音乐，每次一首。`version` 取 `lyria-3-pro`（默认，Lyria 3 Pro）或 `lyria-3.5`，字段相同。\n\n- `sound_prompt` 与 `lyrics` 至少传一个。\n- `bpm` 为字符串且 ≥ 1；`length` 为 1–240 秒。\n- MAPI 只校验 `model`，其余字段原样转发。时长、强度、格式等取值由上游校验；上游拒绝时退回预扣。\n- 完成后从 `result.music[]` 读取 `clip_id`、`audio_url`。后续延伸、替换、Cover、分离使用新的 `clip_id`。"
+  },
+  "tags": [
+    {
+      "name": "音频（Audio）/Flow Music"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "使用 MAPI Bearer Token 认证。格式：`Authorization: Bearer sk-xxxxxx`。"
+      }
+    }
+  },
+  "paths": {
+    "/v1/music/generations": {
+      "post": {
+        "tags": [
+          "音频（Audio）/Flow Music"
+        ],
+        "summary": "生成音乐",
+        "description": "Flow Music 文字生成音乐，每次一首。`version` 取 `lyria-3-pro`（默认，Lyria 3 Pro）或 `lyria-3.5`，字段相同。\n\n- `sound_prompt` 与 `lyrics` 至少传一个。\n- `bpm` 为字符串且 ≥ 1；`length` 为 1–240 秒。\n- MAPI 只校验 `model`，其余字段原样转发。时长、强度、格式等取值由上游校验；上游拒绝时退回预扣。\n- 完成后从 `result.music[]` 读取 `clip_id`、`audio_url`。后续延伸、替换、Cover、分离使用新的 `clip_id`。",
+        "operationId": "flowmusic",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "const": "flowmusic",
+                    "description": "固定填写 `flowmusic`。",
+                    "examples": [
+                      "flowmusic"
+                    ]
+                  },
+                  "version": {
+                    "type": "string",
+                    "enum": [
+                      "lyria-3-pro",
+                      "lyria-3.5"
+                    ],
+                    "default": "lyria-3-pro",
+                    "description": "模型版本。`lyria-3-pro` 为 Lyria 3 Pro，`lyria-3.5` 为 Lyria 3.5。不传时默认 `lyria-3-pro`。两个版本字段相同。",
+                    "examples": [
+                      "lyria-3-pro",
+                      "lyria-3.5"
+                    ]
+                  },
+                  "sound_prompt": {
+                    "type": "string",
+                    "description": "音乐风格或声音描述。与 `lyrics` 至少传一个。",
+                    "examples": [
+                      "upbeat pop music with piano"
+                    ]
+                  },
+                  "lyrics": {
+                    "type": "string",
+                    "description": "歌词文本。可先用 `flowmusic-lyrics` 生成后回填。与 `sound_prompt` 至少传一个。"
+                  },
+                  "title": {
+                    "type": "string",
+                    "description": "生成音乐标题。"
+                  },
+                  "bpm": {
+                    "type": "string",
+                    "description": "每分钟节拍数，字符串，必须 ≥ 1。例如 `\"120\"`。"
+                  },
+                  "length": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 240,
+                    "description": "目标时长（秒），范围 1–240。成品时长以任务结果为准。"
+                  },
+                  "seed": {
+                    "type": "string",
+                    "description": "随机种子。相同种子会得到相似结果，不保证完全一致。"
+                  }
+                },
+                "required": [
+                  "model"
+                ]
+              },
+              "examples": {
+                "lyria-3-pro": {
+                  "summary": "Lyria 3 Pro",
+                  "value": {
+                    "model": "flowmusic",
+                    "version": "lyria-3-pro",
+                    "title": "My Song",
+                    "sound_prompt": "upbeat pop music with piano",
+                    "bpm": "120",
+                    "length": 60
+                  }
+                },
+                "lyria-3-5": {
+                  "summary": "Lyria 3.5，歌词加风格",
+                  "value": {
+                    "model": "flowmusic",
+                    "version": "lyria-3.5",
+                    "title": "坚持",
+                    "lyrics": "[Verse 1]\n黑夜再长也会天亮",
+                    "sound_prompt": "energetic rock with electric guitar",
+                    "length": 120
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "任务提交成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "examples": [
+                        200
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "examples": [
+                        "success"
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "submitted"
+                            ]
+                          },
+                          "task_id": {
+                            "type": "string",
+                            "description": "MAPI 公开任务 ID，用于 `GET /v1/music/generations/{task_id}`。",
+                            "examples": [
+                              "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "status",
+                          "task_id"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "code": 200,
+                  "message": "success",
+                  "data": [
+                    {
+                      "status": "submitted",
+                      "task_id": "task_aehCmxJ5YUNOIQGgkhvxaco4T9P2h3Dw"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "模型 ID 无效，或上游拒绝了参数",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "description": "错误代码",
+                      "examples": [
+                        "invalid_request",
+                        "upstream_error"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "错误说明"
+                    },
+                    "data": {
+                      "description": "错误附加数据，可为空"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                },
+                "example": {
+                  "code": "invalid_request",
+                  "message": "unknown flow music model",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
